@@ -11,6 +11,8 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Stethoscope } from "lucide-react";
+import DentistListDialog from "@/components/DentistListDialog";
 
 interface Treatment {
     no: number;
@@ -41,7 +43,10 @@ export default function InvoiceServicePage() {
     const [invoiceServices, setInvoiceServices] = useState<InvoiceService[]>([]);
     const [treatmentGroups, setTreatmentGroups] = useState<Treatment[]>([]);
 
+    const [selectedServiceID, setSelectedServiceID] = useState<number>(0);
+
     const [fetchingData, setFetchingData] = useState(false);
+    const [showDentistList, setShowDentistList] = useState(false);
 
     const fetchInvoiceServices = async () => {
         setFetchingData(true);
@@ -69,6 +74,11 @@ export default function InvoiceServicePage() {
         } catch (err) {
             toast.error("Failed to fetch treatment groups")
         }
+    };
+
+    const handleViewDoctors = (serviceID: number) => {
+        setSelectedServiceID(serviceID);
+        setShowDentistList(true);
     };
 
     useEffect(() => {
@@ -111,7 +121,7 @@ export default function InvoiceServicePage() {
                                 <div className="bg-white rounded-xl shadow-md overflow-hidden flex-1 border border-gray-200">
                                     {/* Table Header */}
                                     <div className="bg-emerald-50 px-6 py-3 border-b border-emerald-200">
-                                        <div className="grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)] gap-4 text-sm font-semibold text-emerald-800">
+                                        <div className="grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)_120px] gap-4 text-sm font-semibold text-emerald-800">
                                             <div>ID</div>
                                             <div>Service Name</div>
                                             <div>Treatment Group</div>
@@ -119,6 +129,7 @@ export default function InvoiceServicePage() {
                                             <div>Amount</div>
                                             <div>Tax (%)</div>
                                             <div>Description</div>
+                                            <div>Actions</div>
                                         </div>
                                     </div>
 
@@ -137,7 +148,7 @@ export default function InvoiceServicePage() {
                                             invoiceServices.map((service, index) => (
                                                 <div
                                                     key={service.service_id}
-                                                    className={`px-6 py-4 grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)] gap-4 items-center text-sm ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                                    className={`px-6 py-4 grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)_120px] gap-4 items-center text-sm ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
                                                         }`}
                                                 >
                                                     <div className="text-gray-900 font-medium">{service.service_id}</div>
@@ -146,11 +157,18 @@ export default function InvoiceServicePage() {
                                                     <div className="text-gray-600">{service.treatment_type}</div>
                                                     <div className="text-gray-600">Rs. {service.amount.toFixed(2)}</div>
                                                     <div className="text-gray-600">{service.tax_percentage}%</div>
-                                                    <div
-                                                        className="text-gray-600 truncate"
-                                                        title={service.description}
-                                                    >
+                                                    <div className="text-gray-600 truncate" title={service.description}>
                                                         {service.description || "N/A"}
+                                                    </div>
+                                                    {/* Actions */}
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => handleViewDoctors(service.service_id)}
+                                                            className="text-purple-500 hover:text-purple-700 text-xs font-medium"
+                                                        >
+                                                            <Stethoscope className="h-4" />
+                                                        </button>
+
                                                     </div>
                                                 </div>
                                             ))
@@ -159,7 +177,14 @@ export default function InvoiceServicePage() {
                                 </div>
                             </div>
                         </div>
+                        <DentistListDialog
+                            open={showDentistList}
+                            onClose={() => setShowDentistList(false)}
+                            serviceID={selectedServiceID}
+                            apiClient={apiClient}
+                        />
                     </TabsContent>
+
 
                     <TabsContent value="treatment-groups" className="h-full">
                         <div className="bg-gray-50 p-4 md:p-6 lg:p-8 h-full">
