@@ -272,9 +272,9 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
               </DropdownMenuTrigger>
               <DropdownMenuContent className="mx-1 md:mx-0" align="end">
                 <DropdownMenuItem onClick={() => setCalendarView("week")}>Calendar view</DropdownMenuItem>
-                {userRole === 'admin' && (
+                {/*userRole === 'admin' && (
                   <DropdownMenuItem onClick={() => setCalendarView("schedule")}>Schedule view</DropdownMenuItem>
-                )}
+                )*/}
                 <DropdownMenuItem onClick={() => setCalendarView("list")}>List view</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setCalendarView("rooms")}>Room view</DropdownMenuItem>
               </DropdownMenuContent>
