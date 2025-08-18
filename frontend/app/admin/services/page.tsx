@@ -12,9 +12,10 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Eye, Stethoscope, Trash2 } from "lucide-react";
 import AddTreatmentDialog from "@/components/AddTreatmentDialog";
 import EditTreatmentDialog from "@/components/EditTreatmentDialog";
+import DentistListDialog from "@/components/DentistListDialog";
 
 interface Treatment {
     no: number;
@@ -47,13 +48,15 @@ export default function InvoiceServicePage() {
     const [treatmentGroups, setTreatmentGroups] = useState<Treatment[]>([]);
     const [serviceToEdit, setServiceToEdit] = useState<InvoiceService | null>(null);
 
+    const [selectedServiceID, setSelectedServiceID] = useState<number>(0);
+
     const [selectedTreatment, setSelectedTreatment] = useState<Treatment | null>(null);
     const [showAddTreatmentDialog, setShowAddTreatmentDialog] = useState(false);
     const [showEditTreatmentDialog, setShowEditTreatmentDialog] = useState(false);
 
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-
+    const [showDentistList, setShowDentistList] = useState(false);
 
     const [fetchingData, setFetchingData] = useState(false);
     const [editingInvoiceService, setEditingInvoiceService] = useState(false);
@@ -90,7 +93,12 @@ export default function InvoiceServicePage() {
     const handleEditInvoiceService = (service: InvoiceService) => {
         setServiceToEdit(service)
         setEditDialogOpen(true)
-    }
+    };
+
+    const handleViewDoctors = (serviceID: number) => {
+        setSelectedServiceID(serviceID);
+        setShowDentistList(true);
+    };
 
     const deleteInvoiceService = async (service_id: number) => {
         setDeletingInvoiceService(true);
@@ -210,6 +218,13 @@ export default function InvoiceServicePage() {
                                                             >
                                                                 <Trash2 className="h-4" />
                                                             </button>
+                                                            <button
+                                                                onClick={() => handleViewDoctors(service.service_id)}
+                                                                className="text-purple-500 hover:text-purple-700 text-xs font-medium"
+                                                            >
+                                                                <Stethoscope className="h-4" />
+                                                            </button>
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -231,6 +246,13 @@ export default function InvoiceServicePage() {
                                     apiClient={apiClient}
                                     service={serviceToEdit}
                                     treatmentGroups={treatmentGroups}
+                                />
+
+                                <DentistListDialog
+                                    open={showDentistList}
+                                    onClose={() => setShowDentistList(false)}
+                                    serviceID={selectedServiceID}
+                                    apiClient={apiClient}
                                 />
                             </div>
                         </div>
