@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-// ...existing code...
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Upload, Download, Eye, Edit, Trash2, Plus, Search, User, FileText, Clock, CheckCircle, XCircle, Check, Loader, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -68,11 +68,13 @@ const getStatusColor = (status: string) => {
 
 export default function ExpenseManagement() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [dentists, setDentists] = useState<Dentist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
-  // ...existing code...
+  const [isLoadingDentists, setIsLoadingDentists] = useState(false);
   const [isLoadingExpense, setIsLoadingExpenses] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -82,7 +84,7 @@ export default function ExpenseManagement() {
     description: '',
     amount: '',
     receipt_url: null,
-    dentist_id: 'knrsdent001',
+    dentist_id: '',
     status: 'pending'
   });
 
@@ -92,14 +94,14 @@ export default function ExpenseManagement() {
 
   useEffect(() => {
     fetchExpenses();
-    // fetchDentists(); // Dentist fetching removed
+    fetchDentists();
   }, []);
 
   useEffect(() => {
-    if (expenses) {
+    if (expenses && dentists) {
       setIsLoading(false);
     }
-  }, [expenses])
+  }, [dentists, expenses])
 
   useEffect(() => {
     if (!isLoadingAuth) {
@@ -117,7 +119,23 @@ export default function ExpenseManagement() {
     }
   }, [isLoadingAuth]);
 
-  // ...existing code...
+  const fetchDentists = async () => {
+    setIsLoadingDentists(true);
+    try {
+      const res = await apiClient.get(
+        `/dentists`
+      );
+      if (res.status == 500) {
+        throw new Error("Error fetching dentists");
+      }
+      setDentists(res.data);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+    finally {
+      setIsLoadingDentists(false);
+    }
+  };
 
   const fetchExpenses = async () => {
     setIsLoadingExpenses(true);
@@ -140,7 +158,6 @@ export default function ExpenseManagement() {
   const handleAddExpense = () => {
     setEditingExpense(null);
     resetForm();
-    setFormData(prev => ({ ...prev, dentist_id: 'knrsdent001' })); // Set dentist_id automatically
     setIsAddingExpense(true);
   };
 
@@ -152,7 +169,7 @@ export default function ExpenseManagement() {
       description: expense.description || '',
       amount: expense.amount.toString(),
       receipt_url: expense.receipt_url,
-    dentist_id: 'knrsdent001', // Set dentist_id automatically
+      dentist_id: expense.dentists.dentist_id,
       status: expense.status
     });
     setIsAddingExpense(true);
@@ -165,7 +182,7 @@ export default function ExpenseManagement() {
       description: '',
       amount: '',
       receipt_url: null,
-    dentist_id: 'knrsdent001', // Set dentist_id automatically
+      dentist_id: '',
       status: 'pending'
     });
   };
@@ -194,7 +211,7 @@ export default function ExpenseManagement() {
         description: formData.description,
         amount: parseFloat(formData.amount),
         receipt_url: uploadedUrl,
-  dentist_id: 'knrsdent001', // Set dentist_id automatically
+        dentist_id: formData.dentist_id,
         status: formData.status,
       };
 
@@ -227,7 +244,7 @@ export default function ExpenseManagement() {
             description: expenseData.description,
             amount: expenseData.amount,
             receipt_url: expenseData.receipt_url,
-            dentist_id: 'knrsdent001', // Set dentist_id automatically
+            dentist_id: expenseData.dentist_id,
             status: "pending",
             reciept_url:expenseData.receipt_url
           },
@@ -249,8 +266,8 @@ export default function ExpenseManagement() {
           amount: expenseData.amount,
           receipt_url: expenseData.receipt_url,
           dentists: {
-            dentist_id: 'knrsdent001',
-            name: 'knrsdent001' // Hardcoded dentist name
+            dentist_id: expenseData.dentist_id,
+            name: dentists.find((dent) => dent.dentist_id == expenseData.dentist_id)?.name || "N/A"
           },
           status: "pending"
         };
@@ -292,6 +309,7 @@ export default function ExpenseManagement() {
   const filteredExpenses = expenses.filter(expense =>
     expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    expense.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.amount.toString().includes(searchTerm) ||
     expense.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -457,10 +475,10 @@ export default function ExpenseManagement() {
                   <Calendar size={16} />
                   <span>{formatDate(expense.date)}</span>
                 </div>
-                {/*<div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <User size={16} />
                   <span>{expense.dentists?.name}</span>
-                </div>*/}
+                </div>
                 {expense.description && (
                   <div className="flex items-start gap-2 text-sm text-gray-600">
                     <FileText size={16} className="mt-0.5 flex-shrink-0" />
@@ -503,16 +521,36 @@ export default function ExpenseManagement() {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-medium">Date *</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => handleInputChange('date', e.target.value)}
-                  required
-                  className="w-full"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-sm font-medium">Date *</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    required
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dentist_id" className="text-sm font-medium">Dentist *</Label>
+                  <Select
+                    value={formData.dentist_id}
+                    onValueChange={(value) => handleInputChange('dentist_id', value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select dentist" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dentists.map((dentist) => (
+                        <SelectItem key={dentist.dentist_id} value={dentist.dentist_id}>
+                          {dentist?.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">
