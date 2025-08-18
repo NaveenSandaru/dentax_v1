@@ -123,7 +123,7 @@ router.post('/profile', authenticateToken, upload.single('profile_picture'), asy
       // Create new dentist
       dentist = await prisma.dentists.create({
         data: {
-          dentist_id: 'knrsdent001', // Fixed ID since there's only one dentist
+          dentist_id: 'dentaxdent001', // Fixed ID since there's only one dentist
           name,
           email,
           phone_number,
