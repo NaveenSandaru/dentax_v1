@@ -64,7 +64,7 @@ const DoctorHeader = () => {
       // Set doctor info with appropriate fallbacks for admin
       if (user.role === 'admin') {
         setDoctorInfo({
-          dentist_id: response.data.dentist_id || 'knrsdent001', 
+          dentist_id: response.data.dentist_id || 'dentaxdent001', 
           name: response.data.name || 'Admin', 
           service_types: 'Administrator', 
           profile_picture: response.data.profile_picture
@@ -82,7 +82,7 @@ const DoctorHeader = () => {
       // For admin users, if no dentist profile exists, set default values
       if (user.role === 'admin' && err.response?.status === 404) {
         setDoctorInfo({
-          dentist_id: 'knrsdent001',
+          dentist_id: 'dentaxdent001',
           name: 'Admin',
           service_types: 'Administrator',
           profile_picture: undefined

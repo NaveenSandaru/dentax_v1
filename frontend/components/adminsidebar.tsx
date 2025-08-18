@@ -75,21 +75,21 @@ const items = [
     url: "/admin/studies",
     icon: ClipboardList,
   },
-  /*{
+  {
     title: "Room Assignments",
     url: `/admin/room-assignments`,
     icon: Ticket,
-  },*/
+  },
   {
     title: "Lab Management",
     url: "/admin/labs",
     icon: DoorOpen,  
   },
-  /*{
+  {
     title: "HR Management",
     url: "/admin/hrm",
     icon: Users
-  },*/
+  },
   {
     title: "Inventory Management",
     url: "/admin/inventory",
