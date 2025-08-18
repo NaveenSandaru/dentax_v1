@@ -258,12 +258,12 @@ const DentalDashboard: React.FC = () => {
 
   // Metric cards data
   const metricCards = [
-    /*{
+    {
       title: 'Total Dentists',
       value: dashboardData.totalDentists,
       icon: Users,
       color: 'text-blue-500'
-    },*/
+    },
     {
       title: 'Total Patients',
       value: dashboardData.totalPatients,
@@ -579,7 +579,7 @@ const DentalDashboard: React.FC = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
           {metricCards.map((metric, index) => {
             const IconComponent = metric.icon;
             return (
