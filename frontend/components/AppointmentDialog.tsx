@@ -137,7 +137,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
 
   const [formData, setFormData] = useState<FormData>({
     patientId: '',
-    dentistId: selectedSlotInfo?.dentistId || 'knrsdent001',
+    dentistId: selectedSlotInfo?.dentistId || '',
     serviceId: '',
     timeSlot: '',
     note: '',
@@ -169,7 +169,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
       try {
         const [serviceRes, dentistRes] = await Promise.all([
           apiClient.get('/invoice-services'),
-          apiClient.get(`/dentists/knrsdent001`)
+          apiClient.get(`/dentists`)
         ])
         if (serviceRes.data) setInvoiceServices(serviceRes.data)
         if (dentistRes.data) {
