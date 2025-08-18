@@ -47,13 +47,12 @@ router.post('/',  async (req, res) => {
     const existingEmail = await prisma.receptionists.findUnique({ where: { email } });
     if (existingEmail) return res.status(409).json({ error: 'Email already in use' });
 
-    // Generate unique receptionist ID: knrsrecep001, knrsrecep002, ...
     let suffix = 1;
     let new_receptionist_id;
     let isUnique = false;
 
     while (!isUnique) {
-      new_receptionist_id = `knrsrecep${suffix.toString().padStart(3, '0')}`;
+      new_receptionist_id = `dentaxrecep${suffix.toString().padStart(3, '0')}`;
       const existing = await prisma.receptionists.findUnique({
         where: { receptionist_id: new_receptionist_id }
       });
