@@ -138,6 +138,8 @@ export default function InviteUserDialog({ open, onClose }: Props) {
               </SelectTrigger>
               <SelectContent>          
                 <SelectItem value="Receptionist">Receptionist</SelectItem>
+                <SelectItem value="Dentist">Dentist</SelectItem>
+                <SelectItem value="Radiologist">Radiologist</SelectItem>
               </SelectContent>
             </Select>
           </div>
