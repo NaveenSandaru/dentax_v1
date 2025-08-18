@@ -74,23 +74,25 @@ const getStatusColor = (status: string) => {
 
 export default function ExpenseManagement() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [dentists, setDentists] = useState<Dentist[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [isLoadingDentists, setIsLoadingDentists] = useState(false);
   const [isLoadingExpense, setIsLoadingExpenses] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-    const [formData, setFormData] = useState<ExpenseFormData>({
-      date: '',
-      title: '',
-      description: '',
-      amount: '',
-      receipt_url: null,
-      dentist_id: 'knrsdent001',
-      status: 'pending'
-    });
+  const [formData, setFormData] = useState<ExpenseFormData>({
+    date: '',
+    title: '',
+    description: '',
+    amount: '',
+    receipt_url: null,
+    dentist_id: '',
+    status: 'pending'
+  });
 
   const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const router = useRouter();
@@ -98,14 +100,14 @@ export default function ExpenseManagement() {
 
   useEffect(() => {
     fetchExpenses();
-    // fetchDentists(); // Removed dentist fetching
+    fetchDentists();
   }, []);
 
   useEffect(() => {
-    if (expenses) {
+    if (expenses && dentists) {
       setIsLoading(false);
     }
-  }, [expenses])
+  }, [dentists, expenses])
 
   useEffect(()=>{
     if(isLoadingAuth) return;
@@ -119,7 +121,23 @@ export default function ExpenseManagement() {
     }
   },[isLoadingAuth]);
 
-  // Dentist fetching removed
+  const fetchDentists = async () => {
+    setIsLoadingDentists(true);
+    try {
+      const res = await apiClient.get(
+        `/dentists`
+      );
+      if (res.status == 500) {
+        throw new Error("Error fetching dentists");
+      }
+      setDentists(res.data);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+    finally {
+      setIsLoadingDentists(false);
+    }
+  };
 
   const fetchExpenses = async () => {
     setIsLoadingExpenses(true);
@@ -153,7 +171,7 @@ export default function ExpenseManagement() {
       description: expense.description || '',
       amount: expense.amount.toString(),
       receipt_url: expense.receipt_url,
-      dentist_id: 'knrsdent001', // Hardcoded dentist_id
+      dentist_id: expense.dentists.dentist_id,
       status: expense.status
     });
     setIsAddingExpense(true);
@@ -195,7 +213,7 @@ export default function ExpenseManagement() {
         description: formData.description,
         amount: parseFloat(formData.amount),
         receipt_url: uploadedUrl,
-    dentist_id: 'knrsdent001', // Hardcoded dentist_id
+        dentist_id: formData.dentist_id,
         status: formData.status
       };
 
@@ -226,7 +244,7 @@ export default function ExpenseManagement() {
             description: expenseData.description,
             amount: expenseData.amount,
             receipt_url: expenseData.receipt_url,
-            dentist_id: 'knrsdent001', // Hardcoded dentist_id
+            dentist_id: expenseData.dentist_id,
             status: "approved",
             reciept_url:expenseData.receipt_url
           },
@@ -248,8 +266,8 @@ export default function ExpenseManagement() {
           amount: expenseData.amount,
           receipt_url: expenseData.receipt_url,
           dentists: {
-            dentist_id: 'knrsdent001', // Hardcoded dentist_id
-            name: 'knrsdent001' // Hardcoded name
+            dentist_id: expenseData.dentist_id,
+            name: dentists.find((dent) => dent.dentist_id == expenseData.dentist_id)?.name || "N/A"
           },
           status: "approved"
         };
@@ -322,6 +340,7 @@ export default function ExpenseManagement() {
   const filteredExpenses = expenses.filter(expense =>
     expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    expense.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.amount.toString().includes(searchTerm) ||
     expense.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -570,12 +589,21 @@ export default function ExpenseManagement() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dentist_id" className="text-sm font-medium">Dentist *</Label>
-                  <Input
-                    id="dentist_id"
-                    value="knrsdent001" // Hardcoded dentist_id
-                    readOnly
-                    className="w-full"
-                  />
+                  <Select
+                    value={formData.dentist_id}
+                    onValueChange={(value) => handleInputChange('dentist_id', value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select dentist" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dentists.map((dentist) => (
+                        <SelectItem key={dentist.dentist_id} value={dentist.dentist_id}>
+                          {dentist?.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

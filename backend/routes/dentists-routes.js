@@ -42,6 +42,40 @@ router.get('/count', authenticateToken, async (req, res) => {
   }
 });
 
+// Search dentists by name, ID, or email
+router.get('/search', authenticateToken, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
+    
+    const dentists = await prisma.dentists.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { dentist_id: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q, mode: 'insensitive' } }
+        ]
+      },
+      select: {
+        dentist_id: true,
+        name: true,
+        email: true,
+        phone_number: true,
+        profile_picture: true,
+        invoice_service_id: true
+      },
+      take: 10
+    });
+    
+    res.json(dentists);
+  } catch (error) {
+    console.error('Error searching dentists:', error);
+    res.status(500).json({ error: 'Failed to search dentists' });
+  }
+});
+
 router.get('/:dentist_id', authenticateToken, async (req, res) => {
   try {
     const dentist = await prisma.dentists.findUnique({

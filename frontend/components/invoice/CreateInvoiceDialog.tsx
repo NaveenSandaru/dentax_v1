@@ -26,6 +26,15 @@ interface Patient {
   address: string;
 }
 
+interface Dentist {
+  dentist_id: string;
+  name: string;
+  email: string;
+  phone_number: string;
+  profile_picture: string;
+  invoice_service_id: number | null;
+}
+
 interface InvoiceService {
   service_id: number;
   service_name: string;
@@ -81,6 +90,15 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
   const [patientErrorMessage, setPatientErrorMessage] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   
+  // Dentist search states
+  const [dentistSearchTerm, setDentistSearchTerm] = useState('');
+  const [dentistSearchResults, setDentistSearchResults] = useState<Dentist[]>([]);
+  const [showDentistDropdown, setShowDentistDropdown] = useState(false);
+  const [dentistValidated, setDentistValidated] = useState(false);
+  const [dentistErrorMessage, setDentistErrorMessage] = useState('');
+  const [selectedDentist, setSelectedDentist] = useState<Dentist | null>(null);
+  const [dentistServices, setDentistServices] = useState<InvoiceService[]>([]);
+  
   const { apiClient } = useContext(AuthContext);
 
   // Search for patients by name, ID, or email - similar to AppointmentDialog
@@ -107,6 +125,43 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
     }
   };
 
+  // Search for dentists by name, ID, or email
+  const searchDentists = async (term: string) => {
+    if (term.length < 2) {
+      setDentistSearchResults([]);
+      return;
+    }
+    
+    try {
+      const response = await apiClient.get(`/dentists/search?q=${encodeURIComponent(term)}`);
+      if (response.data) {
+        setDentistSearchResults(response.data);
+        
+        // If no dentists were found matching the search term
+        if (response.data.length === 0 && term.length > 2) {
+          setDentistValidated(false);
+          setDentistErrorMessage('No matching dentists found. Please select a dentist from the dropdown.');
+        }
+      }
+    } catch (err) {
+      console.error('Error searching dentists:', err);
+      setDentistSearchResults([]);
+    }
+  };
+
+  // Fetch services for selected dentist
+  const fetchDentistServices = async (dentistId: string) => {
+    try {
+      const response = await apiClient.get(`/invoice-services/dentist/${dentistId}`);
+      if (response.data) {
+        setDentistServices(response.data);
+      }
+    } catch (err) {
+      console.error('Error fetching dentist services:', err);
+      setDentistServices([]);
+    }
+  };
+
   // Handle patient selection from dropdown
   const handlePatientSelect = (patient: Patient) => {
     setFormData(prev => ({ ...prev, patient_id: patient.patient_id }));
@@ -115,6 +170,17 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
     setPatientValidated(true);
     setPatientErrorMessage('');
     setSelectedPatient(patient);
+  };
+
+  // Handle dentist selection from dropdown
+  const handleDentistSelect = (dentist: Dentist) => {
+    setFormData(prev => ({ ...prev, dentist_id: dentist.dentist_id, services: [] })); // Clear selected services
+    setDentistSearchTerm(`${dentist.name} (${dentist.dentist_id})`);
+    setShowDentistDropdown(false);
+    setDentistValidated(true);
+    setDentistErrorMessage('');
+    setSelectedDentist(dentist);
+    fetchDentistServices(dentist.dentist_id);
   };
 
   // Handle patient search term change
@@ -137,6 +203,27 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
     setShowPatientDropdown(true);
   };
 
+  // Handle dentist search term change
+  const handleDentistSearchChange = (value: string) => {
+    setDentistSearchTerm(value);
+    
+    // Reset dentistId if the input field is cleared or modified
+    if (!value || (formData.dentist_id && !value.includes(formData.dentist_id))) {
+      setFormData(prev => ({ ...prev, dentist_id: '', services: [] }));
+      setSelectedDentist(null);
+      setDentistValidated(false);
+      setDentistServices([]);
+      if (value.length > 0) {
+        setDentistErrorMessage('Please select a dentist from the dropdown list');
+      } else {
+        setDentistErrorMessage('');
+      }
+    }
+    
+    searchDentists(value);
+    setShowDentistDropdown(true);
+  };
+
   // Update form data when date changes
   useEffect(() => {
     if (date) {
@@ -144,18 +231,21 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
     }
   }, [date, setFormData]);
 
-  // Automatically set dentist_id to the hardcoded value
+  // Initialize dentist validation state only when dialog opens
   useEffect(() => {
-    setFormData(prev => ({ ...prev, dentist_id: 'knrsdent001' }));
-  }, [setFormData]);
+    if (isOpen) {
+      setDentistValidated(true);
+      setDentistErrorMessage('');
+    }
+  }, [isOpen]);
 
   const calculateSubtotal = () => {
-    const selectedServices = availableServices.filter(service => formData.services.includes(service.service_id));
+    const selectedServices = dentistServices.filter(service => formData.services.includes(service.service_id));
     return selectedServices.reduce((total, service) => total + service.amount, 0);
   };
 
   const calculateEstimatedTax = () => {
-    const selectedServices = availableServices.filter(service => formData.services.includes(service.service_id));
+    const selectedServices = dentistServices.filter(service => formData.services.includes(service.service_id));
     return selectedServices.reduce((totalTax, service) => {
       const taxAmount = (service.amount * Number(service.tax_percentage || 0)) / 100;
       return totalTax + taxAmount;
@@ -163,14 +253,14 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
   };
 
   const calculateEstimatedLabCost = () => {
-    const selectedServices = availableServices.filter(service => formData.services.includes(service.service_id));
+    const selectedServices = dentistServices.filter(service => formData.services.includes(service.service_id));
     return selectedServices.reduce((totalLabCost, service) => {
       return totalLabCost + Number(service.Lab_charge || 0);
     }, 0);
   };
 
   const calculateEstimatedConsumableCost = () => {
-    const selectedServices = availableServices.filter(service => formData.services.includes(service.service_id));
+    const selectedServices = dentistServices.filter(service => formData.services.includes(service.service_id));
     return selectedServices.reduce((totalConsumableCost, service) => {
       return totalConsumableCost + Number(service.Consumable_charge || 0);
     }, 0);
@@ -206,9 +296,12 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
       return;
     }
 
-    // Ensure dentist_id is set to the hardcoded value
-    if (formData.dentist_id !== 'knrsdent001') {
-      setFormData(prev => ({ ...prev, dentist_id: 'knrsdent001' }));
+    // Validate dentist selection
+    if (!formData.dentist_id) {
+      setDentistValidated(false);
+      setDentistErrorMessage('Please select a dentist from the dropdown');
+      toast.error('Dentist selection required');
+      return;
     }
 
     // Call the original onSubmit
@@ -325,6 +418,106 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
             </div>
           </div>
 
+          {/* Dentist Information Section */}
+          <div className="bg-white border rounded-lg shadow-sm overflow-visible">
+            <div className="bg-emerald-50 border-b border-emerald-100 px-5 py-3">
+              <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                <Users size={18} className="text-emerald-600" />
+                Dentist Information
+              </h4>
+            </div>
+            <div className="p-6 overflow-visible">
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <Label htmlFor="dentist" className="font-medium text-gray-900">
+                    Dentist <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative overflow-visible">
+                    <input
+                      type="text"
+                      value={dentistSearchTerm}
+                      onChange={(e) => handleDentistSearchChange(e.target.value)}
+                      onFocus={() => {
+                        setShowDentistDropdown(true);
+                        if (!formData.dentist_id && dentistSearchTerm.length > 0) {
+                          setDentistValidated(false);
+                          setDentistErrorMessage('Please select a dentist from the dropdown list');
+                        }
+                      }}
+                      onBlur={() => setTimeout(() => {
+                        setShowDentistDropdown(false);
+                        // Check if a valid dentist was selected
+                        if (!formData.dentist_id && dentistSearchTerm.length > 0) {
+                          setDentistValidated(false);
+                          setDentistErrorMessage('Please select a dentist from the dropdown list');
+                        }
+                      }, 200)}
+                      placeholder="Search by dentist name, ID, or email..."
+                      className={`w-full px-4 py-3 text-base border-2 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${!dentistValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
+                    />
+                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    
+                    {showDentistDropdown && dentistSearchResults.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white shadow-2xl max-h-60 rounded-lg py-1 text-base border-2 border-emerald-200 overflow-auto focus:outline-none z-[9999]" style={{ zIndex: 9999 }}>
+                        {dentistSearchResults.map((dentist) => (
+                          <div
+                            key={dentist.dentist_id}
+                            className="cursor-pointer hover:bg-emerald-50 px-4 py-3 text-sm text-gray-700 border-b border-gray-100 last:border-b-0 transition-colors"
+                            onMouseDown={(e) => {
+                              e.preventDefault(); // Prevent onBlur from firing before onClick
+                              handleDentistSelect(dentist);
+                            }}
+                          >
+                            <div className="font-semibold text-gray-900">{dentist.name}</div>
+                            <div className="text-xs text-gray-500 mt-1">ID: {dentist.dentist_id}</div>
+                            {dentist.email && <div className="text-xs text-emerald-600">{dentist.email}</div>}
+                            <div className="text-xs text-gray-500">{dentist.phone_number}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {!dentistValidated && dentistErrorMessage && (
+                      <div className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                        <X size={14} />
+                        {dentistErrorMessage}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {selectedDentist && (
+                    <div className="mt-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-semibold text-emerald-900 text-lg">{selectedDentist.name}</div>
+                          <div className="text-sm text-emerald-700 mt-1">{selectedDentist.email}</div>
+                          <div className="text-sm text-emerald-600">{selectedDentist.phone_number}</div>
+                          <div className="text-xs text-emerald-600 mt-1">ID: {selectedDentist.dentist_id}</div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, dentist_id: '', services: [] }));
+                            setDentistSearchTerm('');
+                            setSelectedDentist(null);
+                            setDentistValidated(false);
+                            setDentistErrorMessage('');
+                            setDentistServices([]);
+                          }}
+                          className="text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100"
+                        >
+                          <X size={18} />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Services Section */}
           <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
             <div className="bg-emerald-50 border-b border-emerald-100 px-5 py-3">
@@ -334,47 +527,56 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
               </h4>
             </div>
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
-                {availableServices.map((service) => (
-                  <div key={service.service_id} className="flex items-start space-x-3 p-3 bg-white border border-gray-200 hover:border-emerald-300 rounded-lg transition-colors">
-                    <input
-                      type="checkbox"
-                      id={`service-${service.service_id}`}
-                      checked={formData.services.includes(service.service_id)}
-                      onChange={() => handleServiceToggle(service.service_id)}
-                      className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4 mt-0.5"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <label 
-                        htmlFor={`service-${service.service_id}`} 
-                        className="block text-sm font-medium text-gray-900 cursor-pointer hover:text-emerald-600 leading-tight"
-                      >
-                        {service.service_name}
-                      </label>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-lg font-bold text-emerald-600">
-                          Rs. {service.amount.toFixed(2)}
-                        </span>
+              {!selectedDentist && (
+                <div className="text-center py-8 text-gray-500 border rounded-lg bg-gray-50">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <div className="text-lg font-medium mb-2">Select a dentist first</div>
+                  <div className="text-sm">Services will appear here after selecting a dentist</div>
+                </div>
+              )}
+              {selectedDentist && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-64 overflow-y-auto border rounded-lg p-4 bg-gray-50">
+                  {dentistServices.map((service) => (
+                    <div key={service.service_id} className="flex items-start space-x-3 p-3 bg-white border border-gray-200 hover:border-emerald-300 rounded-lg transition-colors">
+                      <input
+                        type="checkbox"
+                        id={`service-${service.service_id}`}
+                        checked={formData.services.includes(service.service_id)}
+                        onChange={() => handleServiceToggle(service.service_id)}
+                        className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4 mt-0.5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <label 
+                          htmlFor={`service-${service.service_id}`} 
+                          className="block text-sm font-medium text-gray-900 cursor-pointer hover:text-emerald-600 leading-tight"
+                        >
+                          {service.service_name}
+                        </label>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-lg font-bold text-emerald-600">
+                            Rs. {service.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                          <span>Tax: {service.tax_percentage || 0}%</span>
+                          {service.Lab_charge > 0 && <span>• Lab: Rs.{service.Lab_charge}</span>}
+                          {service.Consumable_charge > 0 && <span>• Mat: Rs.{service.Consumable_charge}</span>}
+                        </div>
+                        {service.description && (
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{service.description}</p>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                        <span>Tax: {service.tax_percentage || 0}%</span>
-                        {service.Lab_charge > 0 && <span>• Lab: Rs.{service.Lab_charge}</span>}
-                        {service.Consumable_charge > 0 && <span>• Mat: Rs.{service.Consumable_charge}</span>}
-                      </div>
-                      {service.description && (
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{service.description}</p>
-                      )}
                     </div>
-                  </div>
-                ))}
-                {availableServices.length === 0 && (
-                  <div className="col-span-full text-center py-8 text-gray-500">
-                    <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                    <div className="text-lg font-medium mb-2">No services available</div>
-                    <div className="text-sm">Services will appear here when loaded</div>
-                  </div>
-                )}
-              </div>
+                  ))}
+                  {dentistServices.length === 0 && selectedDentist && (
+                    <div className="col-span-full text-center py-8 text-gray-500">
+                      <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                      <div className="text-lg font-medium mb-2">No services available</div>
+                      <div className="text-sm">This dentist has no assigned services</div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -538,7 +740,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
             <Button
               type="submit"
               className="px-8 py-3 text-base font-medium bg-emerald-600 hover:bg-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200"
-              disabled={formSubmitting || !formData.patient_id}
+              disabled={formSubmitting || !formData.patient_id || !formData.dentist_id}
             >
               {formSubmitting ? (
                 <>
