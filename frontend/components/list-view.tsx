@@ -420,6 +420,10 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
                                 <div className="text-xs text-gray-500">
                                   {appointment.invoice_services?.amount ? `LKR ${appointment.invoice_services.amount}` : ''}
                                 </div>
+                               
+                                <div className="text-xs text-gray-500 mt-1">
+                                  <strong>Dentist:</strong> {appointment.dentist?.name || 'Unknown'}
+                                </div>
                               </div>
                             </td>
                             <td className="py-3 sm:py-4 px-2 sm:px-4">

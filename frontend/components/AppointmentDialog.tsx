@@ -76,6 +76,7 @@ interface AppointmentDialogProps {
 export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, selectedSlotInfo }: AppointmentDialogProps) {
   const [patients, setPatients] = useState<Record<string, Patient>>({})
   const [dentists, setDentists] = useState<Dentist[]>([])
+  const [availableDentists, setAvailableDentists] = useState<Dentist[]>([])
   const [selectedDentist, setSelectedDentist] = useState<Dentist | null>(null)
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [loading, setLoading] = useState(false)
@@ -100,13 +101,25 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
   const [invoiceServices, setInvoiceServices] = useState<InvoiceService[]>([])
   const [selectedServiceId, setSelectedServiceId] = useState<string>('')
   
-  // Update form data when service is selected
+  // Update form data when service is selected and fetch available dentists
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
       serviceId: selectedServiceId,
-      invoice_service: selectedServiceId
+      invoice_service: selectedServiceId,
+      dentistId: '' // Reset dentist selection when service changes
     }));
+    
+    // Reset dentist-related states when service changes
+    setSelectedDentist(null);
+    setTimeSlots([]);
+    
+    // Fetch dentists for the selected service
+    if (selectedServiceId) {
+      fetchDentistsForService(selectedServiceId);
+    } else {
+      setAvailableDentists([]);
+    }
     
     // Find the selected service to get its duration
     const selectedService = invoiceServices.find(service => 
@@ -163,18 +176,12 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
     }
   },[isLoadingAuth]);
 
-  // Fetch service types and fixed dentist on mount
+  // Fetch service types on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [serviceRes, dentistRes] = await Promise.all([
-          apiClient.get('/invoice-services'),
-          apiClient.get(`/dentists`)
-        ])
+        const serviceRes = await apiClient.get('/invoice-services')
         if (serviceRes.data) setInvoiceServices(serviceRes.data)
-        if (dentistRes.data) {
-          setSelectedDentist(dentistRes.data)
-        }
       } catch (err) {
         console.error('Error fetching initial data', err)
         toast.error('Failed loading initial data')
@@ -398,6 +405,21 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
       fetchDentists()
     }
   }, [open, backendURL])
+
+  // Function to fetch dentists for a specific service
+  const fetchDentistsForService = async (serviceId: string) => {
+    try {
+      setDebugInfo('Fetching dentists for service...')
+      const response = await apiClient.get(`/dentists/for-service/${serviceId}`)
+      setAvailableDentists(response.data)
+      setDebugInfo(`Found ${response.data.length} dentists for this service`)
+      console.log('✅ Loaded dentists for service:', response.data.length)
+    } catch (error) {
+      console.error('❌ Error fetching dentists for service:', error)
+      setAvailableDentists([])
+      setDebugInfo('Error loading dentists for service: ' + (error as Error).message)
+    }
+  }
 
   // Fetch specific dentist details when dentist is selected
   useEffect(() => {
@@ -683,8 +705,8 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
       }
     }
     
-    if (!formData.dentistId || !formData.timeSlot || !dateString) {
-      toast.error('Please fill in all required fields')
+    if (!formData.serviceId || !formData.dentistId || !formData.timeSlot || !dateString) {
+      toast.error('Please fill in all required fields (service, dentist, date, and time slot)')
       return
     }
 
@@ -739,7 +761,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
       // Reset form with all required fields
       setFormData({
         patientId: '',
-        dentistId: selectedSlotInfo?.dentistId || 'knrsdent001',
+        dentistId: selectedSlotInfo?.dentistId || '',
         serviceId: '',
         timeSlot: '',
         note: '',
@@ -757,6 +779,8 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
       setShowTempPatientDropdown(false);
       setDateString('');
       setSelectedDentist(null);
+      setAvailableDentists([]);
+      setSelectedServiceId('');
       setDebugInfo('');
       setAppointmentType('regular');
 
@@ -1100,6 +1124,35 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                   {invoiceServices.map((service) => (
                     <SelectItem key={service.service_id.toString()} value={service.service_id.toString()}>
                       {service.service_name} ({service.duration || '30 mins'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dentist Selection - Dynamic based on selected service */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dentist" className="text-right">
+                Dentist <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.dentistId}
+                onValueChange={(value) => handleChange('dentistId', value)}
+                disabled={!selectedServiceId}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder={
+                    !selectedServiceId 
+                      ? 'Select a service first' 
+                      : availableDentists.length === 0 
+                        ? 'No dentists available for this service' 
+                        : 'Select a dentist'
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDentists.map((dentist) => (
+                    <SelectItem key={dentist.dentist_id} value={dentist.dentist_id}>
+                      Dr. {dentist.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
