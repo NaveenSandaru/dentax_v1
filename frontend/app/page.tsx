@@ -15,7 +15,7 @@ export default function HomePage() {
   const router = useRouter();
 
   // Auto-redirect configuration - set this to true to redirect to login
-  const SHOULD_REDIRECT_TO_LOGIN = true; // Change this to true to enable auto-redirect
+  const SHOULD_REDIRECT_TO_LOGIN = false;
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("home")
