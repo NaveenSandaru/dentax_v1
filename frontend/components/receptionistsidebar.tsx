@@ -66,7 +66,7 @@ const ReceptionistSidebar = () => {
     url: `/receptionist/appointments`,
     icon: Calendar,
   },
-  /*{
+  {
     title: "Pending Appointments",
     url: `/receptionist/pendingappointments`,
     icon: UserCheck,
@@ -75,7 +75,7 @@ const ReceptionistSidebar = () => {
     title: "Dentists",
     url: `/receptionist/dentists`, 
     icon: Users,
-  },*/
+  },
   {
     title: "Patients",
     url: `/receptionist/patients`,
@@ -86,31 +86,31 @@ const ReceptionistSidebar = () => {
     url: `/receptionist/services`,
     icon: Settings
   },
- /* {
+  {
     title: "Payments",
     url: `/receptionist/payments`,
     icon: KanbanSquare,
-  },*/
+  },
   {
       title: "Invoice",
       url: "/receptionist/invoice",
       icon: BarChart3,
     },
- /* {
+  {
     title: "Room Assignments",
     url: `/receptionist/rooms`,
     icon: Ticket,
-  },*/
+  },
   {
     title: "Expenses",
     url: `/receptionist/expenses`,
     icon: DollarSign
   },
-  {
+  /*{
     title: "Inventory",
     url: `/receptionist/inventory`,
     icon: ClipboardList,
-  }
+  }*/
  
   
     ];
