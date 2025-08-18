@@ -49,7 +49,6 @@ model dentists {
   email                String                              @unique
   phone_number         String?
   language             String?
-  service_types        String?
   work_days_from       String?
   work_days_to         String?
   work_time_from       String?
@@ -59,11 +58,13 @@ model dentists {
   dentist_name         String?
   clinic_address       String?
   password             String?
+  invoice_service_id   Int?
   appointments         appointments[]
   blocked_dates        blocked_dates[]
   consent_forms        consent_form[]
   security_answers     dentist_security_question_answers[]
   dentistAssigns       DentistAssign[]
+  invoice_services     invoice_services?                   @relation(fields: [invoice_service_id], references: [service_id], onDelete: NoAction, onUpdate: NoAction)
   expenses             expense[]
   invoices             invoice[]
   notes                note[]
@@ -535,6 +536,7 @@ model invoice_services {
   is_active         Boolean                  @default(false)
   duration          Int?
   appointments      appointments[]
+  dentists          dentists[]
   assigned          invoice_service_assign[]
   treatment         treatment?               @relation(fields: [treatment_group], references: [no], onDelete: Cascade, onUpdate: NoAction, map: "fk_treatment")
 }
