@@ -421,7 +421,7 @@ const ProfilePage = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Appointment Fee */}
-                <div>
+                {/*<div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Appointment Fee
                   </label>
@@ -434,10 +434,10 @@ const ProfilePage = () => {
                       } text-gray-900 text-sm sm:text-base ${isEditing ? 'focus:ring-2 focus:ring-teal-500 focus:border-teal-500' : ''
                       }`}
                   />
-                </div>
+                </div>*/}
 
                 {/* Appointment Duration */}
-                <div>
+                {/*<div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Appointment Duration
                   </label>
@@ -450,7 +450,7 @@ const ProfilePage = () => {
                       } text-gray-900 text-sm sm:text-base ${isEditing ? 'focus:ring-2 focus:ring-teal-500 focus:border-teal-500' : ''
                       }`}
                   />
-                </div>
+                </div>*/}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">

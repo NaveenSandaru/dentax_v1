@@ -27,6 +27,11 @@ interface AddInvoiceServiceDialogProps {
   treatmentGroups: Treatment[]
 }
 
+interface Durations{
+  id: string;
+  value: number;
+}
+
 export default function AddInvoiceServiceDialog({
   open,
   onClose,
@@ -50,6 +55,25 @@ export default function AddInvoiceServiceDialog({
   })
 
   const [loading, setLoading] = useState(false);
+
+  const [durations, setDurations] = useState<Durations[]>([
+    {
+      id:"1",
+      value: 15
+    },
+    {
+      id:"2",
+      value: 30
+    },
+    {
+      id:"3",
+      value: 45
+    },
+    {
+      id: "4",
+      value: 60
+    }
+  ])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -78,7 +102,7 @@ export default function AddInvoiceServiceDialog({
         treatment_group: parseInt(form.treatment_group_no),
         treatment_type: form.treatment_type,
         consumable_charge: parseFloat(form.consumable_charge),
-        lab_charge: parseFloat(form.lab_charge ),
+        lab_charge: parseFloat(form.lab_charge),
         is_active: form.is_active,
         duration: Number(form.duration)
       })
@@ -203,12 +227,21 @@ export default function AddInvoiceServiceDialog({
             </div>
             <div className="space-y-2">
               <Label>Duration</Label>
-              <Input
-                type="number"
-                name="duration"
-                value={form.duration}
-                onChange={handleChange}
-              />
+              <Select
+                value={form.duration.toString()}
+                onValueChange={(value) => handleSelectChange("duration", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Treatment Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {durations.map(duration => (
+                    <SelectItem key={duration.id} value={String(duration.value)}>
+                      {duration.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

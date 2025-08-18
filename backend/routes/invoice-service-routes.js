@@ -59,7 +59,7 @@ router.delete('/treatment-groups/:id', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const services = await prisma.invoice_services.findMany({
       include: {
