@@ -66,11 +66,11 @@ const ReceptionistSidebar = () => {
     url: `/receptionist/appointments`,
     icon: Calendar,
   },
-  {
+/*  {
     title: "Pending Appointments",
     url: `/receptionist/pendingappointments`,
     icon: UserCheck,
-  },
+  },*/
   {
     title: "Dentists",
     url: `/receptionist/dentists`, 
