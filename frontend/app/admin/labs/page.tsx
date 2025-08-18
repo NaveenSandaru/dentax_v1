@@ -1698,7 +1698,7 @@ const DentalLabModule = () => {
           <nav className="flex space-x-8">
             {[
               { key: 'dashboard', label: 'Dashboard' },
-              /*{ key: 'requests', label: 'Requests' },*/
+              { key: 'requests', label: 'Requests' },
               { key: 'orders', label: 'Orders' },
               { key: 'labs', label: 'Partner Labs' }
             ].map((tab) => (
