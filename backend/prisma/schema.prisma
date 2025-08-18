@@ -1,0 +1,784 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model patients {
+  patient_id          String                              @id
+  hospital_patient_id String?
+  password            String
+  name                String
+  profile_picture     String?
+  email               String                              @unique
+  phone_number        String?
+  address             String?
+  nic                 String?                             @unique
+  blood_group         String?
+  date_of_birth       String?
+  gender              String?
+  appointments        appointments[]
+  consent_forms       consent_form[]
+  emergency_contact   emergency_contacts?
+  insurance_detail    insurance_details?
+  invoices            invoice[]
+  medical_histories   medical_history[]
+  medical_reports     medical_reports[]
+  orders              orders[]
+  security_answers    patient_security_question_answers[]
+  soap_notes          soap_notes[]
+  studies             study[]
+}
+
+model emergency_contacts {
+  emergency_contact_id Int      @id @default(autoincrement())
+  name                 String
+  relationship         String?
+  contact_number       String
+  patient_id           String   @unique
+  patient              patients @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+}
+
+model dentists {
+  dentist_id           String                              @id
+  name                 String
+  profile_picture      String?
+  email                String                              @unique
+  phone_number         String?
+  language             String?
+  service_types        String?
+  work_days_from       String?
+  work_days_to         String?
+  work_time_from       String?
+  work_time_to         String?
+  appointment_duration String?
+  appointment_fee      Decimal?                            @db.Decimal
+  dentist_name         String?
+  clinic_address       String?
+  password             String?
+  appointments         appointments[]
+  blocked_dates        blocked_dates[]
+  consent_forms        consent_form[]
+  security_answers     dentist_security_question_answers[]
+  dentistAssigns       DentistAssign[]
+  expenses             expense[]
+  invoices             invoice[]
+  notes                note[]
+  orders               orders[]
+  room_assigns         room_assign[]
+  soap_notes           soap_notes[]
+}
+
+model temp_patients {
+  temp_patient_id String         @id
+  name            String
+  phone_number    String
+  email           String?
+  created_at      DateTime       @default(now())
+  converted_to    String?
+  converted_at    DateTime?
+  appointments    appointments[]
+}
+
+model appointments {
+  appointment_id   Int               @id @default(autoincrement())
+  patient_id       String?
+  temp_patient_id  String?
+  dentist_id       String?
+  date             DateTime
+  time_from        String
+  time_to          String
+  fee              Decimal?          @db.Decimal
+  note             String?
+  status           String?
+  payment_status   String?
+  cancel_note      String?
+  invoice_service  Int?
+  invoice_services invoice_services? @relation(fields: [invoice_service], references: [service_id], onDelete: NoAction, onUpdate: NoAction, map: "appointment_invoice_services")
+  dentist          dentists?         @relation(fields: [dentist_id], references: [dentist_id])
+  patient          patients?         @relation(fields: [patient_id], references: [patient_id])
+  temp_patient     temp_patients?    @relation(fields: [temp_patient_id], references: [temp_patient_id])
+  payment_history  payment_history?
+}
+
+model payment_history {
+  appointment_id   Int          @id
+  payment_date     String?
+  payment_time     String?
+  reference_number String?
+  appointment      appointments @relation(fields: [appointment_id], references: [appointment_id])
+}
+
+model soap_notes {
+  note_id    Int       @id @default(autoincrement())
+  dentist_id String?
+  patient_id String
+  note       String
+  date       String
+  dentist    dentists? @relation(fields: [dentist_id], references: [dentist_id])
+  patient    patients  @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+}
+
+model blocked_dates {
+  blocked_date_id Int      @id @default(autoincrement())
+  dentist_id      String
+  date            String
+  time_from       String?
+  time_to         String?
+  dentist         dentists @relation(fields: [dentist_id], references: [dentist_id], onDelete: Cascade)
+}
+
+model medical_reports {
+  report_id   Int      @id @default(autoincrement())
+  patient_id  String
+  record_url  String
+  record_name String
+  patient     patients @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+}
+
+model medical_questions {
+  medical_question_id Int               @id @default(autoincrement())
+  question            String
+  medical_histories   medical_history[]
+}
+
+model medical_history {
+  patient_id              String
+  medical_question_id     Int
+  medical_question_answer String?
+  question                medical_questions @relation(fields: [medical_question_id], references: [medical_question_id])
+  patient                 patients          @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+
+  @@id([patient_id, medical_question_id])
+}
+
+model email_verifications {
+  email String @id
+  code  String
+}
+
+model security_questions {
+  security_question_id Int                                      @id @default(autoincrement())
+  question             String
+  dentist_answers      dentist_security_question_answers[]
+  lab_answers          lab_security_question_answers[]
+  patient_answers      patient_security_question_answers[]
+  radiologist_answers  radiologist_security_question_answers[]
+  receptionist_answers receptionist_security_question_answers[]
+}
+
+model patient_security_question_answers {
+  patient_id           String
+  security_question_id Int
+  answer               String
+  patient              patients           @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+  question             security_questions @relation(fields: [security_question_id], references: [security_question_id])
+
+  @@id([patient_id, security_question_id])
+}
+
+model dentist_security_question_answers {
+  dentist_id           String
+  security_question_id Int
+  answer               String
+  dentist              dentists           @relation(fields: [dentist_id], references: [dentist_id], onDelete: Cascade)
+  question             security_questions @relation(fields: [security_question_id], references: [security_question_id])
+
+  @@id([dentist_id, security_question_id])
+}
+
+model receptionists {
+  receptionist_id  String                                   @id
+  password         String
+  name             String
+  email            String                                   @unique
+  phone_number     String?
+  security_answers receptionist_security_question_answers[]
+}
+
+model receptionist_security_question_answers {
+  receptionist_id      String
+  security_question_id Int
+  answer               String
+  receptionist         receptionists      @relation(fields: [receptionist_id], references: [receptionist_id], onDelete: Cascade)
+  question             security_questions @relation(fields: [security_question_id], references: [security_question_id])
+
+  @@id([receptionist_id, security_question_id])
+}
+
+model radiologists {
+  radiologist_id   String                                  @id
+  password         String
+  name             String
+  profile_picture  String?
+  email            String                                  @unique
+  phone_number     String?
+  signature        String?
+  notes            note[]
+  security_answers radiologist_security_question_answers[]
+  studies          study[]
+}
+
+model radiologist_security_question_answers {
+  radiologist_id       String
+  security_question_id Int
+  answer               String
+  radiologist          radiologists       @relation(fields: [radiologist_id], references: [radiologist_id], onDelete: Cascade)
+  question             security_questions @relation(fields: [security_question_id], references: [security_question_id])
+
+  @@id([radiologist_id, security_question_id])
+}
+
+model insurance_details {
+  patient_id    String   @id
+  provider_name String?
+  policy_number String?
+  patient       patients @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+}
+
+model reports {
+  report_id       Int       @id @default(autoincrement())
+  status          String
+  report_file_url String?
+  content         String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now())
+  finalized_at    DateTime?
+  studies         study[]
+}
+
+model study {
+  study_id           Int             @id @default(autoincrement())
+  patient_id         String
+  radiologist_id     String?
+  date               DateTime        @db.Timestamp(6)
+  time               String
+  modality           String?
+  report_id          Int?
+  assertion_number   Int?
+  description        String?
+  source             String?
+  isurgent           Boolean?        @default(false)
+  dicom_file_url     String?
+  body_part          String?
+  reason             String?
+  status             String?
+  pacs_instance_id   String?
+  pacs_study_id      String?
+  study_instance_uid String?
+  dentistAssigns     DentistAssign[]
+  notes              note[]
+  patient            patients        @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade, onUpdate: NoAction)
+  radiologist        radiologists?   @relation(fields: [radiologist_id], references: [radiologist_id], onUpdate: NoAction)
+  report             reports?        @relation(fields: [report_id], references: [report_id], onUpdate: NoAction)
+}
+
+model DentistAssign {
+  study_id   Int
+  dentist_id String
+  dentist    dentists @relation(fields: [dentist_id], references: [dentist_id], onDelete: Cascade)
+  study      study    @relation(fields: [study_id], references: [study_id], onDelete: Cascade)
+
+  @@id([study_id, dentist_id])
+  @@map("dentistassign")
+}
+
+model service_types {
+  service_type_id Int    @id @default(autoincrement())
+  service_type    String
+}
+
+model admins {
+  admin_id String @id
+  password String
+}
+
+model rooms {
+  room_id      String        @id
+  description  String?
+  room_assigns room_assign[]
+}
+
+model room_assign {
+  room_id    String
+  dentist_id String
+  date       DateTime
+  time_to    String
+  time_from  String
+  dentists   dentists @relation(fields: [dentist_id], references: [dentist_id])
+  rooms      rooms    @relation(fields: [room_id], references: [room_id])
+
+  @@id([room_id, dentist_id, date, time_to, time_from])
+}
+
+model lab {
+  lab_id           String                          @id
+  name             String?
+  password         String?
+  contact_person   String?
+  contact_number   String?
+  email            String?                         @unique
+  address          String?
+  specialties      String?
+  security_answers lab_security_question_answers[]
+  orders           orders[]
+}
+
+model lab_security_question_answers {
+  lab_id               String
+  security_question_id Int
+  answer               String
+  lab                  lab                @relation(fields: [lab_id], references: [lab_id], onDelete: Cascade)
+  question             security_questions @relation(fields: [security_question_id], references: [security_question_id])
+
+  @@id([lab_id, security_question_id])
+}
+
+model work_types {
+  work_type_id Int      @id @default(autoincrement())
+  work_type    String?
+  orders       orders[]
+}
+
+model shades {
+  shade_type_id Int      @id @default(autoincrement())
+  shade         String?
+  orders        orders[]
+}
+
+model material_types {
+  material_id Int      @id @default(autoincrement())
+  material    String?
+  orders      orders[]
+}
+
+model orders {
+  order_id             Int             @id @default(autoincrement())
+  patient_id           String?
+  dentist_id           String?
+  lab_id               String?
+  work_type_id         Int?
+  due_date             DateTime?
+  file_types           String?
+  shade_type_id        Int?
+  material_id          Int?
+  priority             String?
+  special_instructions String?
+  status               String?
+  order_files          order_files[]
+  dentist              dentists?       @relation(fields: [dentist_id], references: [dentist_id])
+  lab                  lab?            @relation(fields: [lab_id], references: [lab_id])
+  material_type        material_types? @relation(fields: [material_id], references: [material_id])
+  patient              patients?       @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+  shade_type           shades?         @relation(fields: [shade_type_id], references: [shade_type_id])
+  work_type            work_types?     @relation(fields: [work_type_id], references: [work_type_id])
+  stage_assign         stage_assign[]
+}
+
+model order_files {
+  file_id  Int     @id @default(autoincrement())
+  url      String?
+  order_id Int?
+  order    orders? @relation(fields: [order_id], references: [order_id])
+}
+
+model stages {
+  stage_id     Int            @id @default(autoincrement())
+  name         String
+  stage_assign stage_assign[]
+}
+
+model stage_assign {
+  stage_assign_id Int      @id @default(autoincrement())
+  stage_id        Int
+  order_id        Int
+  completed       Boolean  @default(false)
+  date            DateTime
+  order           orders   @relation(fields: [order_id], references: [order_id])
+  stage           stages   @relation(fields: [stage_id], references: [stage_id])
+}
+
+model employees {
+  eid               Int                @id @default(autoincrement())
+  name              String
+  dob               String
+  gender            String
+  email             String             @unique
+  phone             String
+  address           String?
+  city              String?
+  state             String?
+  province          String?
+  zip_code          String?
+  job_title         String?
+  employment_status String
+  salary            Float?
+  bank_info         bank_info[]
+  emergency_contact emergency_contact?
+  attendance        employee_atd[]
+  leaves            leaves[]
+  payroll           payroll[]
+  shifts            shifts[]
+
+  @@map("employees")
+}
+
+model bank_info {
+  eid            Int
+  account_holder String
+  account_no     String    @unique
+  bank_name      String
+  branch         String?
+  account_type   String?
+  employee       employees @relation(fields: [eid], references: [eid], onDelete: Cascade)
+
+  @@id([eid, account_no])
+  @@map("bank_info")
+}
+
+model emergency_contact {
+  eid          Int       @id
+  name         String
+  relationship String
+  phone        String
+  email        String?
+  employee     employees @relation(fields: [eid], references: [eid], onDelete: Cascade)
+
+  @@map("emergency_contact")
+}
+
+model employee_atd {
+  eid       Int
+  clock_in  DateTime
+  clock_out DateTime?
+  employee  employees @relation(fields: [eid], references: [eid], onDelete: Cascade)
+
+  @@id([eid, clock_in])
+  @@map("employee_atd")
+}
+
+model leaves {
+  eid       Int
+  from_date DateTime
+  to_date   DateTime
+  type      String
+  status    String
+  employee  employees @relation(fields: [eid], references: [eid], onDelete: Cascade)
+
+  @@id([eid, from_date, to_date])
+  @@map("leaves")
+}
+
+model consent_form {
+  form_id           Int      @id @default(autoincrement())
+  patient_id        String
+  dentist_id        String
+  procedure_details String?
+  explanation_given String?
+  sign              String?
+  status            String?
+  created_date      String?
+  signed_date       String?
+  dentist           dentists @relation(fields: [dentist_id], references: [dentist_id], onDelete: Cascade)
+  patient           patients @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+}
+
+model payroll {
+  payroll_id Int       @id @default(autoincrement())
+  eid        Int
+  net_salary Float
+  epf        Boolean
+  etf        Boolean
+  status     String
+  employee   employees @relation(fields: [eid], references: [eid], onDelete: Cascade)
+
+  @@map("payroll")
+}
+
+model shifts {
+  shift_id  Int       @id @default(autoincrement())
+  eid       Int
+  from_time String?
+  to_time   String?
+  employee  employees @relation(fields: [eid], references: [eid], onDelete: Cascade)
+
+  @@map("shifts")
+}
+
+model expense {
+  expence_id  Int       @id @default(autoincrement())
+  date        DateTime
+  title       String
+  description String?
+  amount      Float
+  receipt_url String?
+  dentist_id  String?
+  status      String?
+  dentists    dentists? @relation(fields: [dentist_id], references: [dentist_id])
+}
+
+model invoice_services {
+  service_id        Int                      @id @default(autoincrement())
+  service_name      String
+  amount            Float
+  description       String?
+  ref_code          String                   @unique(map: "unique")
+  tax_type          String?
+  tax_percentage    Decimal                  @default(0) @db.Decimal
+  treatment_group   Int?
+  treatment_type    String?
+  Consumable_charge Decimal?                 @default(0) @db.Decimal
+  Lab_charge        Decimal?                 @default(0) @db.Decimal
+  is_active         Boolean                  @default(false)
+  duration          Int?
+  appointments      appointments[]
+  assigned          invoice_service_assign[]
+  treatment         treatment?               @relation(fields: [treatment_group], references: [no], onDelete: Cascade, onUpdate: NoAction, map: "fk_treatment")
+}
+
+model invoice {
+  invoice_id   Int                      @id @default(autoincrement())
+  patient_id   String?
+  dentist_id   String?
+  payment_type String?
+  discount     Float                    @default(0)
+  date         DateTime?
+  total_amount Float
+  note         String?
+  dentists     dentists?                @relation(fields: [dentist_id], references: [dentist_id])
+  patients     patients?                @relation(fields: [patient_id], references: [patient_id], onDelete: Cascade)
+  services     invoice_service_assign[]
+}
+
+model invoice_service_assign {
+  invoice_id Int
+  service_id Int
+  invoice    invoice          @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+  service    invoice_services @relation(fields: [service_id], references: [service_id], onDelete: Cascade)
+
+  @@id([invoice_id, service_id])
+}
+
+model note {
+  note_id        Int           @id @default(autoincrement())
+  dentist_id     String?
+  radiologist_id String?
+  note           String
+  created_at     DateTime      @default(now())
+  study_id       Int
+  dentist        dentists?     @relation(fields: [dentist_id], references: [dentist_id])
+  radiologist    radiologists? @relation(fields: [radiologist_id], references: [radiologist_id])
+  study          study         @relation(fields: [study_id], references: [study_id], onDelete: Cascade)
+
+  @@map("note")
+}
+
+model item {
+  item_id              Int                   @id @default(autoincrement())
+  item_name            String
+  unit_of_measurements String
+  unit_price           Float
+  storage_location     String
+  barcode              String
+  expiry_alert_days    Int
+  description          String
+  sub_category_id      Int?
+  supplier_id          Int?
+  batch_tracking       Boolean
+  batches              batch[]
+  sub_category         sub_category?         @relation(fields: [sub_category_id], references: [sub_category_id])
+  supplier             supplier?             @relation(fields: [supplier_id], references: [supplier_id])
+  purchase_order_items purchase_order_item[]
+
+  @@map("item")
+}
+
+model batch {
+  batch_id      Int           @id @default(autoincrement())
+  item_id       Int
+  current_stock Int
+  minimum_stock Int
+  expiry_date   String
+  stock_date    String
+  item          item          @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
+  stock_issues  stock_issue[]
+
+  @@map("batch")
+}
+
+model parent_category {
+  parent_category_id   Int            @id @default(autoincrement())
+  parent_category_name String
+  description          String
+  sub_categories       sub_category[]
+
+  @@map("parent_category")
+}
+
+model sub_category {
+  sub_category_id    Int              @id @default(autoincrement())
+  sub_category_name  String
+  description        String
+  parent_category_id Int?
+  items              item[]
+  parent_category    parent_category? @relation(fields: [parent_category_id], references: [parent_category_id])
+
+  @@map("sub_category")
+}
+
+model supplier {
+  supplier_id     Int              @id @default(autoincrement())
+  company_name    String
+  contact_person  String
+  email           String
+  phone_number    String
+  address         String
+  city            String
+  state           String
+  postal_code     String
+  country         String
+  website         String
+  notes           String
+  status          String
+  items           item[]
+  purchase_orders purchase_order[]
+
+  @@map("supplier")
+}
+
+model purchase_order {
+  purchase_order_id      Int                   @id @default(autoincrement())
+  supplier_id            Int
+  requested_by           String
+  expected_delivery_date String
+  payment_term_id        Int?
+  shipping_method_id     Int?
+  order_date             String
+  authorized_by          String
+  delivery_address       String
+  notes                  String
+  payment_term           payment_term?         @relation(fields: [payment_term_id], references: [payment_term_id])
+  shipping_method        shipping_method?      @relation(fields: [shipping_method_id], references: [shipping_method_id])
+  supplier               supplier              @relation(fields: [supplier_id], references: [supplier_id], onDelete: Cascade)
+  purchase_order_items   purchase_order_item[]
+  stock_receivings       stock_receiving[]
+
+  @@map("purchase_order")
+}
+
+model purchase_order_item {
+  purchase_order_id Int
+  item_id           Int
+  quantity          Int
+  item              item           @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
+  purchase_order    purchase_order @relation(fields: [purchase_order_id], references: [purchase_order_id], onDelete: Cascade)
+
+  @@id([purchase_order_id, item_id])
+  @@map("purchase_order_item")
+}
+
+model stock_receiving {
+  stock_receiving_id Int            @id @default(autoincrement())
+  purchase_order_id  Int
+  received_date      String
+  received_by        String
+  invoice_url        String
+  delivery_note_url  String
+  qc_report_url      String
+  notes              String
+  status             String
+  purchase_order     purchase_order @relation(fields: [purchase_order_id], references: [purchase_order_id], onDelete: Cascade)
+
+  @@map("stock_receiving")
+}
+
+model equipment {
+  equipment_id          Int                @id @default(autoincrement())
+  equipment_name        String
+  equipment_category_id Int
+  brand                 String
+  model                 String
+  serial_number         String
+  purchase_date         String
+  purchase_price        Float
+  location              String
+  warranty_start_date   String
+  warranty_end_date     String
+  status                String
+  notes                 String
+  equipment_category    equipment_category @relation(fields: [equipment_category_id], references: [equipment_category_id], onDelete: Cascade)
+  maintenances          maintenance[]
+
+  @@map("equipment")
+}
+
+model maintenance {
+  maintenance_id        Int       @id @default(autoincrement())
+  equipment_id          Int
+  maintain_type         String
+  maintenance_date      String
+  description           String
+  performed_by          String
+  cost                  Float
+  next_maintenance_date String
+  notes                 String
+  equipment             equipment @relation(fields: [equipment_id], references: [equipment_id], onDelete: Cascade)
+
+  @@map("maintenance")
+}
+
+model payment_term {
+  payment_term_id Int              @id @default(autoincrement())
+  payment_term    String
+  purchase_orders purchase_order[]
+
+  @@map("payment_term")
+}
+
+model shipping_method {
+  shipping_method_id Int              @id @default(autoincrement())
+  shipping_method    String
+  purchase_orders    purchase_order[]
+
+  @@map("shipping_method")
+}
+
+model equipment_category {
+  equipment_category_id Int         @id @default(autoincrement())
+  equipment_category    String
+  equipments            equipment[]
+
+  @@map("equipment_category")
+}
+
+model stock_issue {
+  stock_issue_id Int     @id @default(autoincrement())
+  batch_id       Int
+  quantity       Int
+  usage_type     String?
+  issued_to      String?
+  notes          String?
+  date           String
+  batch          batch   @relation(fields: [batch_id], references: [batch_id], onDelete: Cascade)
+
+  @@map("stock_issue")
+}
+
+model activity_log {
+  activity_log_id Int    @id @default(autoincrement())
+  subject         String
+  event           String
+  date            String
+  time            String
+
+  @@map("activity_log")
+}
+
+model treatment {
+  no               Int                @id @default(autoincrement())
+  treatment_group  String
+  invoice_services invoice_services[]
+}
