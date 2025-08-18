@@ -11,7 +11,7 @@ const SALT_ROUNDS = 10;
 
 function generateLabId(count) {
   const number = (count + 1).toString().padStart(3, '0');
-  return `knrslab${number}`;
+  return `dentaxlab${number}`;
 }
 
 router.get('/', authenticateToken, async (req, res) => {
@@ -65,7 +65,7 @@ router.post('/', async (req, res) => {
     let isUnique = false;
 
     while (!isUnique) {
-      lab_id = `knrslab${labSuffix.toString().padStart(3, '0')}`;
+      lab_id = `dentaxlab${labSuffix.toString().padStart(3, '0')}`;
       const existing = await prisma.lab.findUnique({
         where: { lab_id },
       });

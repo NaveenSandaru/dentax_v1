@@ -85,7 +85,7 @@ router.post('/', async (req, res) => {
     let exists = true;
 
     while (exists) {
-      new_dentist_id = `knrsdent${dentistIdSuffix.toString().padStart(3, '0')}`;
+      new_dentist_id = `dentaxdent${dentistIdSuffix.toString().padStart(3, '0')}`;
       const existing = await prisma.dentists.findUnique({
         where: { dentist_id: new_dentist_id }
       });

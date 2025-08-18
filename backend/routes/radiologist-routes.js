@@ -215,13 +215,12 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ error: 'Email already in use' });
     }
 
-    // Generate unique radiologist_id: knrsradio001, knrsradio002, ...
     let suffix = 1;
     let new_radiologist_id;
     let isUnique = false;
 
     while (!isUnique) {
-      new_radiologist_id = `knrsradio${suffix.toString().padStart(3, '0')}`;
+      new_radiologist_id = `dentaxradio${suffix.toString().padStart(3, '0')}`;
       const existingId = await prisma.radiologists.findUnique({
         where: { radiologist_id: new_radiologist_id }
       });
