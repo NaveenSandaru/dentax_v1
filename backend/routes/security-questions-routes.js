@@ -30,7 +30,8 @@ router.post('/', async (req, res) => {
     const { question } = req.body;
     const created = await prisma.security_questions.create({ data: { question } });
     res.status(201).json(created);
-  } catch {
+  } catch (err) {
+    console.log(err);
     res.status(500).json({ error: 'Failed to create security question' });
   }
 });

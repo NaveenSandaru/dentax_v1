@@ -15,12 +15,12 @@ const transporter = nodemailer.createTransport({
 
 const sendVerificationCode = async (email, code) => {
   const mailOptions = {
-    from: `"Kinross Dental Care" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental Care" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Verification Code for Your Kinross Dental Care Account',
+    subject: 'Verification Code for Your Dentax Dental Care Account',
     html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
-                <h2 style="color: #4A90E2;">Kinross Dental Clinic Email Verification</h2>
+                <h2 style="color: #4A90E2;">Dentax Dental System Email Verification</h2>
                 <p>Dear user,</p>
                 <p>Please use the following verification code to verify your email address:</p>
                 <div style="text-align: center; margin: 30px 0;">
@@ -29,9 +29,9 @@ const sendVerificationCode = async (email, code) => {
                     </span>
                 </div>
                 <p>If you did not request this, you can safely ignore this email.</p>
-                <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+                <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
                 <hr style="margin-top: 40px;">
-                <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+                <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
             </div>
         `,
   };
@@ -47,7 +47,7 @@ const sendVerificationCode = async (email, code) => {
 
 const sendAppointmentConfirmation = async (email, date, start_time) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Appointment Confirmation Notice',
     html: `
@@ -66,9 +66,9 @@ const sendAppointmentConfirmation = async (email, date, start_time) => {
                     </tr>
                 </table>
                 <p style="margin-top: 20px;">Please ensure to be on time. If you have any questions or need to reschedule, feel free to contact us.</p>
-                <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+                <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
                 <hr style="margin-top: 40px;">
-                <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+                <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
             </div>
         `,
   };
@@ -84,7 +84,7 @@ const sendAppointmentConfirmation = async (email, date, start_time) => {
 
 const sendtempAppointment = async (email, date, start_time) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Appointment Notice',
     html: `
@@ -103,9 +103,9 @@ const sendtempAppointment = async (email, date, start_time) => {
                     </tr>
                 </table>
                 <p style="margin-top: 20px;">Please ensure to be there before the time. Please be kind to inform the receptionist and complete the patient registration before the appointment time. If you have any questions or need to reschedule, feel free to contact us.</p>
-                <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+                <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
                 <hr style="margin-top: 40px;">
-                <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+                <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
             </div>
         `,
   };
@@ -128,7 +128,7 @@ const sendAppointmentCancelation = async (email, date, start_time, provider, can
   });
 
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Appointment Cancellation Notice',
     html: `
@@ -152,9 +152,9 @@ const sendAppointmentCancelation = async (email, date, start_time, provider, can
             </tr>` : ''}
           </table>
           <p style="margin-top: 20px;">You can reschedule another appointment with ${provider} at your convenience. If you have any questions, feel free to contact us.</p>
-          <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+          <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
           <hr style="margin-top: 40px;">
-          <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+          <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
         </div>
       `,
   };
@@ -184,7 +184,7 @@ const sendAppointmentRescheduleNotice = async (email, pastDate, pastTime, doctor
   });
 
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Appointment Rescheduled Notice',
     html: `
@@ -214,9 +214,9 @@ const sendAppointmentRescheduleNotice = async (email, pastDate, pastTime, doctor
 
         <p style="margin-top: 20px;">We apologize for any inconvenience this may have caused. If the new time doesn't work for you, please contact us to reschedule.</p>
 
-        <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+        <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
         <hr style="margin-top: 40px;">
-        <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+        <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
       </div>
     `,
   };
@@ -234,7 +234,7 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
   if (!appointments || appointments.length === 0) return;
 
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Overdue Appointments Notice',
     html: `
@@ -277,9 +277,9 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
 
         <p style="margin-top: 20px;">Please take the necessary follow-up actions as needed.</p>
 
-        <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+        <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
         <hr style="margin-top: 40px;">
-        <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+        <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
       </div>
     `,
   };
@@ -295,14 +295,14 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
 
 const sendAccountCreationInvite = async (email, role, link) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Your Kinross Dental Clinic Account Invitation',
+    subject: 'Your Dentax Dental System Account Invitation',
     html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
-          <h2 style="color: #43a047;">You're Invited to Join Kinross Dental Clinic</h2>
+          <h2 style="color: #43a047;">You're Invited to Join Dentax Dental System</h2>
           <p>Dear user,</p>
-          <p>You’ve been invited to join <strong>Kinross Dental Clinic</strong> as a <strong>${role}</strong>.</p>
+          <p>You’ve been invited to join <strong>Dentax Dental System</strong> as a <strong>${role}</strong>.</p>
           <p>Please click the button below to create your account and get started:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${link}" style="background-color: #43a047; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">Create Account</a>
@@ -310,9 +310,9 @@ const sendAccountCreationInvite = async (email, role, link) => {
           <p>If the button doesn't work, copy and paste the following link into your browser:</p>
           <p style="word-break: break-all;">${link}</p>
           <p>We're excited to have you on board. If you have any questions, feel free to reach out to our support team.</p>
-          <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+          <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
           <hr style="margin-top: 40px;">
-          <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+          <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
         </div>
       `,
   };
@@ -328,20 +328,20 @@ const sendAccountCreationInvite = async (email, role, link) => {
 
 const sendAccountCreationNotice = async (email, ID) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Your Kinross Dental Clinic Account Has Been Created',
+    subject: 'Your Dentax Dental System Account Has Been Created',
     html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
-          <h2 style="color: #43a047;">Welcome to Kinross Dental Clinic</h2>
+          <h2 style="color: #43a047;">Welcome to Dentax Dental System</h2>
           <p>Dear user,</p>
-          <p>Your account has been successfully created on <strong>Kinross Dental Clinic</strong>.</p>
+          <p>Your account has been successfully created on <strong>Dentax Dental System</strong>.</p>
           <p><strong>Your Account ID:</strong> ${ID}</p>
           <p>You can now log in using your account ID and the password provided by your administrator.</p>
           <p>If you have any questions or need help accessing your account, please contact our support team.</p>
-          <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+          <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
           <hr style="margin-top: 40px;">
-          <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+          <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
         </div>
       `,
   };
@@ -357,21 +357,21 @@ const sendAccountCreationNotice = async (email, ID) => {
 
 const sendAccountCreationNoticeWithPassword = async (email, ID, password) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Your Kinross Dental Clinic Account Has Been Created',
+    subject: 'Your Dentax Dental System Account Has Been Created',
     html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
-          <h2 style="color: #43a047;">Welcome to Kinross Dental Clinic</h2>
+          <h2 style="color: #43a047;">Welcome to Dentax Dental System</h2>
           <p>Dear user,</p>
-          <p>Your account has been successfully created on <strong>Kinross Dental Clinic</strong>.</p>
+          <p>Your account has been successfully created on <strong>Dentax Dental System</strong>.</p>
           <p><strong>Your Account ID:</strong> ${ID}</p>
           <p><strong>Your Account Password:</strong> ${password}</p>
           <p>You can now log in using your account ID and the password provided by your administrator.</p>
           <p>If you have any questions or need help accessing your account, please contact our support team.</p>
-          <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+          <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
           <hr style="margin-top: 40px;">
-          <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | Kinross Dental Clinic</p>
+          <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
         </div>
       `,
   };
@@ -387,14 +387,14 @@ const sendAccountCreationNoticeWithPassword = async (email, ID, password) => {
 
 const sendReminder = async (email, date, start_time, dentist_name) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Appointment Reminder – Kinross Dental Clinic',
+    subject: 'Appointment Reminder – Dentax Dental System',
     html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px; background-color: #ffffff;">
                 <h2 style="color: #4CAF50;">Upcoming Appointment Reminder</h2>
                 <p>Dear Patient,</p>
-                <p>This is a friendly reminder that you have a dental appointment <strong>scheduled for tomorrow</strong> at <strong>Kinross Dental Clinic</strong>. Please find the appointment details below:</p>
+                <p>This is a friendly reminder that you have a dental appointment <strong>scheduled for tomorrow</strong> at <strong>Dentax Dental System</strong>. Please find the appointment details below:</p>
                 
                 <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                     <tr>
@@ -415,10 +415,10 @@ const sendReminder = async (email, date, start_time, dentist_name) => {
 
                 <p>We look forward to seeing you tomorrow!</p>
 
-                <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+                <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
 
                 <hr style="margin-top: 40px;">
-                <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | kinrossdentalclinic.com</p>
+                <p style="font-size: 12px; color: #888;">Dentax Dental System | DentaxdentalSystem.com</p>
             </div>
         `,
   };
@@ -434,9 +434,9 @@ const sendReminder = async (email, date, start_time, dentist_name) => {
 
 const sendMedicalImageAddedNotice = async (email, date, patientName, url) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'New Medical Image Added – Kinross Dental Clinic',
+    subject: 'New Medical Image Added – Dentax Dental System',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px; background-color: #ffffff;">
         <h2 style="color: #4CAF50;">Medical Image Uploaded</h2>
@@ -455,9 +455,9 @@ const sendMedicalImageAddedNotice = async (email, date, patientName, url) => {
 
         <p>If you have any questions or concerns, feel free to contact our team.</p>
 
-        <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+        <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
         <hr style="margin-top: 40px;">
-        <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | kinrossdentalclinic.com</p>
+        <p style="font-size: 12px; color: #888;">Dentax Dental System | DentaxdentalSystem.com</p>
       </div>
     `,
   };
@@ -473,9 +473,9 @@ const sendMedicalImageAddedNotice = async (email, date, patientName, url) => {
 
 const sendMedicalReportAddedNotice = async (email, date, patientName) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'New Medical Report Added – Kinross Dental Clinic',
+    subject: 'New Medical Report Added – Dentax Dental System',
     html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px; background-color: #ffffff;">
               <h2 style="color: #4CAF50;">Medical Report Uploaded</h2>
@@ -485,9 +485,9 @@ const sendMedicalReportAddedNotice = async (email, date, patientName) => {
 
               <p>If you need further clarification or assistance, don’t hesitate to reach out.</p>
 
-              <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+              <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
               <hr style="margin-top: 40px;">
-              <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | kinrossdentalclinic.com</p>
+              <p style="font-size: 12px; color: #888;">Dentax Dental System | DentaxdentalSystem.com</p>
           </div>
       `,
   };
@@ -503,9 +503,9 @@ const sendMedicalReportAddedNotice = async (email, date, patientName) => {
 
 const sendMedicalImageAndReportAddedNotice = async (email, date, patientName, url) => {
   const mailOptions = {
-    from: `"Kinross Dental Clinic" <${process.env.EMAIL_USER}>`,
+    from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Medical Image and Report Added – Kinross Dental Clinic',
+    subject: 'Medical Image and Report Added – Dentax Dental System',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px; background-color: #ffffff;">
         <h2 style="color: #4CAF50;">Medical Image & Report Uploaded</h2>
@@ -524,10 +524,10 @@ const sendMedicalImageAndReportAddedNotice = async (email, date, patientName, ur
 
         <p>For questions or assistance, our team is always here to help.</p>
 
-        <p>Best regards,<br><strong>Kinross Dental Clinic Team</strong></p>
+        <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
 
         <hr style="margin-top: 40px;">
-        <p style="font-size: 12px; color: #888;">Kinross Dental Clinic | kinrossdentalclinic.com</p>
+        <p style="font-size: 12px; color: #888;">Dentax Dental System | DentaxdentalSystem.com</p>
       </div>
     `,
   };
