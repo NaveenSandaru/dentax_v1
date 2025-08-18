@@ -18,6 +18,21 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+//fetch for specific service type
+router.get('/for-service/:invoice_service_id', authenticateToken, async (req, res) => {
+  try {
+    const dentists = await prisma.dentists.findMany({
+      where:{
+        invoice_service_id: Number(req.params.invoice_service_id)
+      }
+    });
+    res.json(dentists);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 'Failed to fetch dentists' });
+  }
+});
+
 router.get('/count', authenticateToken, async (req, res) => {
   try {
     const count = await prisma.dentists.count();
