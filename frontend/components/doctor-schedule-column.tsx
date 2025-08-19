@@ -296,7 +296,7 @@ export function DoctorScheduleColumn({
                   pointerEvents: 'auto'
                 }}
               >
-                <div className="text-sm font-medium whitespace-nowrap">
+                <div className="text-[10px]  md:text-sm md:font-medium whitespace-nowrap">
                   {appointment.time_from} - {appointment.time_to}
                 </div>
                 {isNoShow && (
@@ -648,7 +648,7 @@ export function DoctorScheduleColumn({
   
 
   return (
-    <Card className="min-w-[400px] sm:min-w-[600px] lg:min-w-[900px] flex-shrink-0 relative">
+    <Card className="min-w-[600px] lg:min-w-[900px] flex-shrink-0 relative">
         {/* Cancel Selected Button */}
         {selectedAppointments.length > 0 && (
           <div className="absolute top-2 right-2 z-10">
