@@ -162,14 +162,41 @@ export function DoctorScheduleColumn({
     const block = getBlockedForSlot(day.date, timeSlot);
     const occupiedByAppointment = isSlotOccupiedByAppointment(day.date, timeSlot);
 
-    if (occupiedByAppointment && !appointment) {
+    // Check if this slot is part of a multi-slot appointment but not the first slot
+    const isContinuationSlot = occupiedByAppointment && !appointment;
+    if (isContinuationSlot) {
+      const slotSpan = calculateSlotSpan(occupiedByAppointment);
+      const isLastSlot = timeSlot === occupiedByAppointment.time_to;
+      const isMiddleSlot = !isLastSlot && timeSlot !== occupiedByAppointment.time_from;
+      
+      // Get the status colors for the appointment
+      const statusColours: Record<string, { bg: string; border: string; text: string }> = {
+        confirmed: { bg: 'bg-green-100', border: 'border-green-200', text: 'text-green-800' },
+        pending: { bg: 'bg-yellow-100', border: 'border-yellow-200', text: 'text-yellow-800' },
+        completed: { bg: 'bg-gray-100', border: 'border-gray-200', text: 'text-gray-800' },
+        noshow: { bg: 'bg-red-100', border: 'border-2 border-red-500', text: 'text-red-900 font-extrabold' },
+        cancelled: { bg: 'bg-gray-100', border: 'border border-gray-300 border-dashed', text: 'text-gray-500' },
+      };
+      
+      const status = occupiedByAppointment.status?.toLowerCase() || 'confirmed';
+      const colours = statusColours[status] || statusColours.confirmed;
+      
       return (
-        <div className="h-16 sm:h-20 bg-green-100 border-1 border-gray-200 p-1 sm:p-2 flex items-center justify-center">
-          <div className="text-xs text-gray-500 text-center">
-            <div className="font-medium">{occupiedByAppointment.temp_patient?.name || occupiedByAppointment.patient?.name || "Patient"}</div>
-            <div className="text-[10px] opacity-75">Continued</div>
-          </div>
-        </div>
+        <div 
+          className={`h-16 sm:h-20 p-1 sm:p-2 relative ${colours.bg}`}
+          style={{ 
+            height: '100%',
+            border: 'none',
+            marginTop: '-1px',
+            borderRight: '1px solid #e5e7eb',
+            borderLeft: '1px solid #e5e7eb',
+            // Apply the same border color as the main appointment
+            ...(occupiedByAppointment.status?.toLowerCase() === 'noshow' ? {
+              borderRight: '2px solid #ef4444',
+              borderLeft: '2px solid #ef4444',
+            } : {})
+          }}
+        />
       );
     }
 
@@ -195,9 +222,17 @@ export function DoctorScheduleColumn({
     }
 
     if (appointment) {
-      const appointmentHeight = viewMode === "day" ? 80 : 80; // Standard slot height
+      const slotSpan = calculateSlotSpan(appointment);
+      const appointmentHeight = viewMode === "day" ? 80 * slotSpan : 80; // Height based on slot span
+      const isMultiSlot = slotSpan > 1;
       
       if (viewMode === "week") {
+        // Calculate the total height needed for the appointment
+        const slotHeight = 80; // 80px per slot
+        const totalHeight = slotHeight * slotSpan;
+        // Calculate the vertical position to center the content
+        const contentTop = Math.max(0, (totalHeight - 60) / 2); // 60px is the approximate height of the content
+        
         const statusColours: Record<string, { bg: string; border: string; text: string }> = {
           confirmed: { bg: "bg-green-100", border: "border-green-200", text: "text-green-800" },
           pending: { bg: "bg-yellow-100", border: "border-yellow-200", text: "text-yellow-800" },
@@ -214,8 +249,29 @@ export function DoctorScheduleColumn({
         
         return (
           <div
-            className={`${colours.bg} border-2 ${isSelected ? 'border-blue-500 border-4' : colours.border} flex flex-col items-center justify-center text-[10px] sm:text-xs font-semibold ${colours.text} relative group`}
-            style={{ height: `${appointmentHeight}px`, minHeight: `${appointmentHeight}px` }}
+            className={`${colours.bg} flex flex-col items-center text-[10px] sm:text-xs font-semibold ${colours.text} relative group`}
+            style={{ 
+              height: `${appointmentHeight}px`, 
+              minHeight: `${appointmentHeight}px`,
+              gridRowEnd: isMultiSlot ? `span ${slotSpan}` : 'auto',
+              position: 'relative',
+              overflow: 'visible',
+              zIndex: isMultiSlot ? 1 : 'auto',
+              // Border styling for multi-slot appointments
+              border: '1px solid #e5e7eb',
+              borderBottom: timeSlot === appointment.time_to ? '1px solid #e5e7eb' : 'none',
+              borderTop: timeSlot === appointment.time_from ? '1px solid #e5e7eb' : 'none',
+              borderLeft: '1px solid #e5e7eb',
+              borderRight: '1px solid #e5e7eb',
+              // Special border for selected state
+              ...(isSelected ? {
+                border: '2px solid #3b82f6',
+                borderBottom: timeSlot === appointment.time_to ? '2px solid #3b82f6' : 'none',
+                borderTop: timeSlot === appointment.time_from ? '2px solid #3b82f6' : 'none',
+                borderRight: '2px solid #3b82f6',
+                borderLeft: '2px solid #3b82f6'
+              } : {})
+            }}
             onClick={(e) => {
               e.stopPropagation();
               toggleAppointmentSelection(parseInt(appointment.appointment_id));
@@ -227,9 +283,23 @@ export function DoctorScheduleColumn({
             }}
             title={isNoShow ? "NO SHOW - " : "" + "Left click to select, Right click to cancel"}
           >
-              <div className="flex flex-col items-center justify-center w-full h-full p-1">
+              <div 
+                className="flex flex-col items-center w-full p-1"
+                style={{
+                  position: 'absolute',
+                  top: isMultiSlot ? `${contentTop}px` : '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 'calc(100% - 16px)',
+                  zIndex: 2,
+                  pointerEvents: 'auto'
+                }}
+              >
+                <div className="text-sm font-medium whitespace-nowrap">
+                  {appointment.time_from} - {appointment.time_to}
+                </div>
                 {isNoShow && (
-                  <div className="bg-red-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-red-700 shadow-sm whitespace-nowrap mb-1">
+                  <div className="bg-red-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-red-700 shadow-sm whitespace-nowrap mt-1">
                     NO SHOW
                   </div>
                 )}
@@ -244,11 +314,17 @@ export function DoctorScheduleColumn({
               </div>
             
             {isSelected && (
-              <div className="absolute top-1 right-1 w-3 h-3 bg-blue-500 "></div>
+              <div 
+                className="absolute top-1 right-1 w-3 h-3 bg-blue-500"
+                style={{ zIndex: 3 }}
+              ></div>
             )}
             
             {/* Cancel button on hover */}
-            <div className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div 
+              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ zIndex: 3 }}
+            >
               <button
                 className="w-4 h-4 bg-red-500 text-white text-[8px] flex items-center justify-center hover:bg-red-600"
                 onClick={(e) => {
