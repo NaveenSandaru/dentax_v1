@@ -19,6 +19,19 @@ import {
 } from "lucide-react";
 
 // Extended User interface to include all fields from the three tables
+interface Service {
+  service_id: number;
+  service_name: string;
+  amount: number;
+  description: string;
+}
+
+interface DentistServiceAssign {
+  dentist_id: string;
+  service_id: number;
+  invoice_services: Service;
+}
+
 interface User {
   // Common fields
   name: string;
@@ -35,7 +48,8 @@ interface User {
   work_time_from?: string;
   work_time_to?: string;
   appointment_duration?: string;
-  appointment_fee?: number;
+  appointment_fee?: number | string;
+  dentist_service_assign?: DentistServiceAssign[];
   
   // Role identifier - now includes radiologist
   role: 'Dentist' | 'Receptionist' | 'Radiologist';
@@ -52,9 +66,10 @@ interface User {
 interface Props {
   user: User | null;
   onClose: () => void;
+  loading?: boolean;
 }
 
-export default function ViewUserDialog({ user, onClose }: Props) {
+export default function ViewUserDialog({ user, onClose, loading = false }: Props) {
   if (!user) return null;
 
   const isDentist = user.role === 'Dentist';
@@ -144,7 +159,7 @@ export default function ViewUserDialog({ user, onClose }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Profile Header */}
           <div className="flex items-start gap-6">
             <div className="relative w-20 h-20">
@@ -250,18 +265,25 @@ export default function ViewUserDialog({ user, onClose }: Props) {
           )}
 
           {/* Services - Only for Dentists */}
-          {isDentist && formatServiceTypes() && (
+          {isDentist && user.dentist_service_assign && user.dentist_service_assign.length > 0 && (
             <Card className="border border-gray-200">
               <CardContent className="p-6">
-                <h4 className="font-semibold text-gray-900 mb-4">Services</h4>
-                <div className="flex flex-wrap gap-2">
-                  {formatServiceTypes()?.map((service, index) => (
-                    <span 
-                      key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200"
-                    >
-                      {service}
-                    </span>
+                <h4 className="font-semibold text-gray-900 mb-4">Dental Services</h4>
+                <div className="space-y-4">
+                  {user.dentist_service_assign.map((serviceAssign, index) => (
+                    <div key={index} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0 last:mb-0">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h5 className="font-medium text-gray-900">{serviceAssign.invoice_services.service_name}</h5>
+                          {serviceAssign.invoice_services.description && (
+                            <p className="text-sm text-gray-600 mt-1">{serviceAssign.invoice_services.description}</p>
+                          )}
+                        </div>
+                        <span className="font-medium text-gray-900 whitespace-nowrap ml-4">
+                          LKR {Number(serviceAssign.invoice_services.amount).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </CardContent>

@@ -12,6 +12,19 @@ import DoctorPerformanceDashboard from "@/components/DoctorPerformance";
 
 type Role = "Dentist" | "Receptionist" | "Radiologist";
 
+interface Service {
+  service_id: number;
+  service_name: string;
+  amount: number;
+  description: string;
+}
+
+interface DentistServiceAssign {
+  dentist_id: string;
+  service_id: number;
+  invoice_services: Service;
+}
+
 interface User {
   id: string;
   name: string;
@@ -19,6 +32,7 @@ interface User {
   phone_number?: string;
   role: Role;
   profile_picture?: string;
+  dentist_service_assign?: DentistServiceAssign[];
   [key: string]: any; // Allow additional properties
 }
 
@@ -31,6 +45,7 @@ export default function UserTable() {
 
   // Separate state for each dialog
   const [selectedUserForView, setSelectedUserForView] = useState<User | null>(null);
+  const [loadingUserDetails, setLoadingUserDetails] = useState(false);
   const [selectedUserForAnalytics, setSelectedUserForAnalytics] = useState<User | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -132,6 +147,27 @@ export default function UserTable() {
     setSelectedUserForAnalytics(user);
   };
   
+  const handleViewUser = async (user: User) => {
+    if (user.role === 'Dentist') {
+      setLoadingUserDetails(true);
+      try {
+        const response = await apiClient.get(`/dentists/${user.id}`);
+        setSelectedUserForView({
+          ...user,
+          ...response.data,
+          dentist_service_assign: response.data.dentist_service_assign || []
+        });
+      } catch (error) {
+        console.error('Error fetching dentist details:', error);
+        setSelectedUserForView(user);
+      } finally {
+        setLoadingUserDetails(false);
+      }
+    } else {
+      setSelectedUserForView(user);
+    }
+  };
+
   // Filter users based on search term
   const filteredUsers = users?.filter(user => {
     const searchLower = searchTerm.toLowerCase();
@@ -328,7 +364,7 @@ export default function UserTable() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => setSelectedUserForView(inuser)}
+                          onClick={() => handleViewUser(inuser)}
                           className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
                           title="View User"
                         >
@@ -428,7 +464,7 @@ export default function UserTable() {
                 {/* Actions */}
                 <div className="flex flex-row sm:flex-col gap-2">
                   <button
-                    onClick={() => setSelectedUserForView(user)}
+                    onClick={() => handleViewUser(user)}
                     className="flex items-center justify-center p-3 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
                     title="View User"
                   >
@@ -479,7 +515,8 @@ export default function UserTable() {
         {/* Dialogs with separate state */}
         <ViewUserDialog 
           user={selectedUserForView} 
-          onClose={() => setSelectedUserForView(null)} 
+          onClose={() => setSelectedUserForView(null)}
+          loading={loadingUserDetails}
         />
         <InviteUserDialog 
           open={inviteDialogOpen} 
