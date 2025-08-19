@@ -1130,7 +1130,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        {/*<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Schedule Management</h1>
             <p className="text-gray-600">Manage your appointments and blocked time slots</p>
@@ -1169,7 +1169,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
               />
             </Dialog>
           </div>
-        </div>*/}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Daily Schedule */}
@@ -1375,7 +1375,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
         </div>
 
         {/* Appointment Management */}
-        {/*<Card>
+        <Card>
           <CardHeader>
             <CardTitle className="text-lg">Appointment Management</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -1419,7 +1419,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
               </TabsContent>
             </Tabs>
           </CardContent>
-        </Card>*/}
+        </Card>
       </div>
     </div>
   );

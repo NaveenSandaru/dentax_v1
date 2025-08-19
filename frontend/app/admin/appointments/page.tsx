@@ -21,7 +21,7 @@ export default function AdminAppointmentsPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl mt-0 md:mt-0 font-bold text-gray-900">
+              <h1 className="text-3xl font-bold mt-12 md:mt-0 text-gray-900">
                 {calendarView === "schedule" ? "Schedule Management" : "Appointments"}
               </h1>
               <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
