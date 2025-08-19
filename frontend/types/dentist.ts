@@ -63,4 +63,6 @@ export interface DayOfWeek {
   name: string
   date: string
   dayIndex: number
+  fullName?: string
+  isToday?: boolean
 }
