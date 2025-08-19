@@ -243,14 +243,28 @@ export const LabOrderForm: React.FC<LabOrderFormProps> = ({
                   )}
                 </div>
               </div>
-
-              {/* Hidden dentist field with hardcoded value TODO:sandx*/}
-              <input name="dentist_id" value="Enter dentist id" />
+              
+              {/*Dentist selection*/}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
-                <div className="w-full px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
-                  {dentists.find(d => d.dentist_id === 'dentaxdent001')?.name || 'Default Dentist'}
-                </div>
+                <Controller
+                  name="dentist_id"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Dentist</option>
+                      {dentists.map((dent) => (
+                        <option key={dent.dentist_id} value={dent.dentist_id}>
+                          {dent.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
               </div>
 
               <div>
