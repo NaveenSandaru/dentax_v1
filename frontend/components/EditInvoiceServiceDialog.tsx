@@ -46,6 +46,11 @@ interface EditInvoiceServiceDialogProps {
   treatmentGroups: Treatment[]
 }
 
+interface Durations{
+  id: string;
+  value: number;
+}
+
 export default function EditInvoiceServiceDialog({
   open,
   onClose,
@@ -89,6 +94,25 @@ export default function EditInvoiceServiceDialog({
       })
     }
   }, [service])
+
+    const [durations, setDurations] = useState<Durations[]>([
+      {
+        id:"1",
+        value: 15
+      },
+      {
+        id:"2",
+        value: 30
+      },
+      {
+        id:"3",
+        value: 45
+      },
+      {
+        id: "4",
+        value: 60
+      }
+    ])
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -239,12 +263,21 @@ export default function EditInvoiceServiceDialog({
 
             <div className="space-y-2">
               <Label>Duration</Label>
-              <Input
-                type="number"
-                name="duration"
-                value={form.duration}
-                onChange={handleChange}
-              />
+              <Select
+                value={form.duration.toString()}
+                onValueChange={(value) => handleSelectChange("duration", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Treatment Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {durations.map(duration => (
+                    <SelectItem key={duration.id} value={String(duration.value)}>
+                      {duration.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

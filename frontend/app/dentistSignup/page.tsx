@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 
 // Types
@@ -43,6 +44,11 @@ interface DentistFormData {
   securityQuestions: SecurityQuestionAnswer[];
 }
 
+interface InvoiceServices {
+  service_id: number;
+  service_name: string;
+}
+
 const DentistSignUp: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
@@ -51,7 +57,8 @@ const DentistSignUp: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState<string>('');
   const router = useRouter();
-  
+  const [invoiceServices, setInvoiceServices] = useState<InvoiceServices[]>([]);
+
   const [formData, setFormData] = useState<DentistFormData>({
     name: '',
     email: '',
@@ -77,6 +84,7 @@ const DentistSignUp: React.FC = () => {
   const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const [securityQuestions, setSecurityQuestions] = useState<SecurityQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingServices, setLoadingServices] = useState(false);
   const [error, setError] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [generatedId, setGeneratedId] = useState('');
@@ -100,8 +108,30 @@ const DentistSignUp: React.FC = () => {
         setError('Failed to load security questions. Please try again later.');
       }
     };
-
     fetchSecurityQuestions();
+  }, []);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      setLoadingServices(true);
+      try {
+        const res = await fetch(
+          `${backendURL}/invoice-services`
+        );
+        if (res.status == 500) {
+          throw new Error("Error fetching services");
+        }
+        const data = await res.json();
+        setInvoiceServices(data);
+      }
+      catch (err: any) {
+        toast.error(err.message);
+      }
+      finally {
+        setLoadingServices(false);
+      }
+    }
+    fetchServices();
   }, []);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -116,7 +146,7 @@ const DentistSignUp: React.FC = () => {
   const handleSecurityQuestionChange = (index: number, field: keyof SecurityQuestionAnswer, value: string) => {
     setFormData(prev => ({
       ...prev,
-      securityQuestions: prev.securityQuestions.map((sq, i) => 
+      securityQuestions: prev.securityQuestions.map((sq, i) =>
         i === index ? { ...sq, [field]: value } : sq
       )
     }));
@@ -125,28 +155,28 @@ const DentistSignUp: React.FC = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     setUploadError('');
-    
+
     if (file) {
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
       if (!validTypes.includes(file.type)) {
         setUploadError('Please upload a valid image file (JPEG, PNG, or GIF)');
         return;
       }
-      
+
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       if (file.size > maxSize) {
         setUploadError('File size must be less than 5MB');
         return;
       }
-      
+
       // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-      
+
       // Update form data
       setFormData(prev => ({
         ...prev,
@@ -176,7 +206,7 @@ const DentistSignUp: React.FC = () => {
     const hasRequiredFields = required.every(field => formData[field].trim() !== '');
     const passwordsMatch = formData.password === formData.confirmPassword;
     const passwordLengthValid = formData.password.length >= 8;
-    
+
     return hasRequiredFields && passwordsMatch && passwordLengthValid;
   };
 
@@ -217,7 +247,7 @@ const DentistSignUp: React.FC = () => {
     try {
       // First, create the dentist
       const { securityQuestions: securityAnswers, profilePicture, ...dentistData } = formData;
-      
+
       // Prepare dentist data in the exact format expected by the backend
       const dentistPayload = {
         email: dentistData.email.trim().toLowerCase(),
@@ -225,7 +255,7 @@ const DentistSignUp: React.FC = () => {
         name: dentistData.name.trim(),
         phone_number: dentistData.phoneNumber,
         language: dentistData.language || '',
-        service_types: dentistData.serviceTypes || 'general',
+        invoice_service_id: Number(dentistData.serviceTypes) || Number('1'),
         work_days_from: dentistData.workDaysFrom || 'Monday',
         work_days_to: dentistData.workDaysTo || 'Friday',
         work_time_from: dentistData.workTimeFrom || '08:00',
@@ -250,7 +280,7 @@ const DentistSignUp: React.FC = () => {
 
       const dentist = await receptionistResponse.json();
       const dentistId = dentist.dentist_id;
-      
+
       // Store the generated ID for display
       setGeneratedId(dentistId);
 
@@ -259,12 +289,12 @@ const DentistSignUp: React.FC = () => {
         console.log("There is a profile picture.");
         const formData = new FormData();
         formData.append('image', profilePicture);
-        
+
         const uploadResponse = await fetch(`${backendURL}/photos`, {
           method: 'POST',
           body: formData,
         });
-        
+
         if (uploadResponse.ok) {
           const { url } = await uploadResponse.json();
           await fetch(`${backendURL}/dentists/forPicture/${dentist.dentist_id}`, {
@@ -282,7 +312,7 @@ const DentistSignUp: React.FC = () => {
       // Save security questions answers
       const securityQuestionPromises = securityAnswers.map(async (sq) => {
         if (!sq.questionId || !sq.answer.trim()) return null;
-        
+
         return fetch(`${backendURL}/dentist-security-questions-answers`, {
           method: 'POST',
           headers: {
@@ -297,10 +327,10 @@ const DentistSignUp: React.FC = () => {
       });
 
       await Promise.all(securityQuestionPromises);
-      
+
       // Mark registration as successful
       setRegistrationSuccess(true);
-      
+
       // Clear form
       setFormData({
         name: '',
@@ -320,7 +350,7 @@ const DentistSignUp: React.FC = () => {
         securityQuestions: Array(3).fill({ questionId: '', answer: '' })
       });
       setProfileImagePreview(null);
-      
+
     } catch (err) {
       console.error('Registration failed:', err);
       setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
@@ -333,7 +363,7 @@ const DentistSignUp: React.FC = () => {
     const selectedIds = formData.securityQuestions
       .map((sq, index) => index !== currentIndex ? sq.questionId : null)
       .filter((id): id is string => id !== null && id !== '');
-    
+
     return securityQuestions.filter(q => !selectedIds.includes(q.security_question_id.toString()));
   };
 
@@ -358,7 +388,7 @@ const DentistSignUp: React.FC = () => {
             Please check your inbox and keep your ID safe.
           </p>
           <div className="mt-6">
-            <Button 
+            <Button
               onClick={() => router.push('/')}
               className="w-full bg-emerald-600 hover:bg-emerald-700"
             >
@@ -443,7 +473,7 @@ const DentistSignUp: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Upload Button */}
                       <div className="text-center">
                         <Button
@@ -459,7 +489,7 @@ const DentistSignUp: React.FC = () => {
                           JPG, PNG or GIF. Max size 5MB.
                         </p>
                       </div>
-                      
+
                       {/* Hidden File Input */}
                       <input
                         ref={fileInputRef}
@@ -468,7 +498,7 @@ const DentistSignUp: React.FC = () => {
                         onChange={handleFileUpload}
                         className="hidden"
                       />
-                      
+
                       {/* Upload Error */}
                       {uploadError && (
                         <Alert variant="destructive" className="max-w-md">
@@ -591,15 +621,24 @@ const DentistSignUp: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="serviceTypes">Service Types</Label>
-                      <Input
-                        id="serviceTypes"
-                        type="text"
+                      <Select
                         value={formData.serviceTypes}
-                        onChange={(e) => handleInputChange('serviceTypes', e.target.value)}
-                        placeholder="General, Orthodontics, etc."
-                        className="focus-visible:ring-emerald-200"
-                      />
+                        onValueChange={(value) => handleInputChange('serviceTypes', value)}
+                      >
+                        <SelectTrigger className="focus:ring-emerald-200">
+                          <SelectValue placeholder="Select Service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {invoiceServices.map(service => (
+                            <SelectItem key={service.service_id} value={service.service_id.toString()}>
+                              {service.service_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                     </div>
+
                   </div>
 
                   {/* Work Days */}
@@ -664,7 +703,7 @@ const DentistSignUp: React.FC = () => {
 
                   {/* Appointment Duration & Fee */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    {/*<div className="space-y-2">
                       <Label htmlFor="duration">Appointment Duration (minutes)</Label>
                       <Input
                         id="duration"
@@ -674,8 +713,8 @@ const DentistSignUp: React.FC = () => {
                         placeholder="30"
                         className="focus-visible:ring-emerald-200"
                       />
-                    </div>
-                    <div className="space-y-2">
+                    </div>*/}
+                    {/*<div className="space-y-2">
                       <Label htmlFor="fee" className="flex items-center">
                         Appointment Fee (Rs.)
                       </Label>
@@ -688,7 +727,7 @@ const DentistSignUp: React.FC = () => {
                         placeholder="100.00"
                         className="focus-visible:ring-emerald-200"
                       />
-                    </div>
+                    </div>*/}
                   </div>
 
                   {passwordErrors.length > 0 && (
@@ -736,8 +775,8 @@ const DentistSignUp: React.FC = () => {
                           <Label>
                             Select a security question <span className="text-red-500 ml-1">*</span>
                           </Label>
-                          <Select 
-                            value={securityQuestion.questionId} 
+                          <Select
+                            value={securityQuestion.questionId}
                             onValueChange={(value) => handleSecurityQuestionChange(index, 'questionId', value)}
                           >
                             <SelectTrigger className="focus:ring-emerald-500">
@@ -777,7 +816,7 @@ const DentistSignUp: React.FC = () => {
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       Back
                     </Button>
-                    
+
                     <Button
                       onClick={handleSubmit}
                       disabled={!validateStep2() || isLoading}
