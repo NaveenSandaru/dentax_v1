@@ -146,6 +146,7 @@ router.get('/getworkinfo/:dentist_id', authenticateToken, async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
+  console.debug(req);
   try {
     console.log('Received request body:', JSON.stringify(req.body, null, 2));
     const { password, email, service_ids, ...rest } = req.body;
@@ -212,7 +213,7 @@ router.post('/', async (req, res) => {
         },
       });
 
-      // Create service assignments if provided
+      // Service assignments
       if (serviceIds.length > 0) {
         const serviceAssignments = serviceIds.map(serviceId => ({
           dentist_id: new_dentist_id,
@@ -223,6 +224,9 @@ router.post('/', async (req, res) => {
           data: serviceAssignments
         });
       }
+      else{
+        return res.status(500).json({ error: 'No services provided' });
+      }
     });
 
     console.log('Dentist created successfully:', newDentist);
@@ -230,27 +234,7 @@ router.post('/', async (req, res) => {
     if (newDentist.phone_number) {
       sendAccountCreationNoticeWhatsApp(newDentist.phone_number, new_dentist_id)
     }
-
-    // Fetch dentist with service assignments for response
-    const dentistWithServices = await prisma.dentists.findUnique({
-      where: { dentist_id: new_dentist_id },
-      include: {
-        dentist_service_assign: {
-          include: {
-            invoice_services: {
-              select: {
-                service_id: true,
-                service_name: true,
-                amount: true,
-                description: true
-              }
-            }
-          }
-        }
-      }
-    });
-
-    res.status(201).json(dentistWithServices);
+      
   } catch (error) {
     console.error('Error creating dentist:', error);
     res.status(500).json({
@@ -286,7 +270,7 @@ router.put('/:dentist_id', authenticateToken, async (req, res) => {
 
     let updatedDentist;
 
-    // Use transaction if we need to update services
+    // Use the fk tx file for updates put method
     if (updateServices) {
       await prisma.$transaction(async (tx) => {
         // Update dentist data
@@ -295,7 +279,6 @@ router.put('/:dentist_id', authenticateToken, async (req, res) => {
           data,
         });
 
-        // Update service assignments
         // Remove existing service assignments
         await tx.dentist_service_assign.deleteMany({
           where: { dentist_id }
