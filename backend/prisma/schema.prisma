@@ -43,34 +43,33 @@ model emergency_contacts {
 }
 
 model dentists {
-  dentist_id           String                              @id
-  name                 String
-  profile_picture      String?
-  email                String                              @unique
-  phone_number         String?
-  language             String?
-  work_days_from       String?
-  work_days_to         String?
-  work_time_from       String?
-  work_time_to         String?
-  appointment_duration String?
-  appointment_fee      Decimal?                            @db.Decimal
-  dentist_name         String?
-  clinic_address       String?
-  password             String?
-  invoice_service_id   Int?
-  appointments         appointments[]
-  blocked_dates        blocked_dates[]
-  consent_forms        consent_form[]
-  security_answers     dentist_security_question_answers[]
-  dentistAssigns       DentistAssign[]
-  invoice_services     invoice_services?                   @relation(fields: [invoice_service_id], references: [service_id], onDelete: NoAction, onUpdate: NoAction)
-  expenses             expense[]
-  invoices             invoice[]
-  notes                note[]
-  orders               orders[]
-  room_assigns         room_assign[]
-  soap_notes           soap_notes[]
+  dentist_id             String                              @id
+  name                   String
+  profile_picture        String?
+  email                  String                              @unique
+  phone_number           String?
+  language               String?
+  work_days_from         String?
+  work_days_to           String?
+  work_time_from         String?
+  work_time_to           String?
+  appointment_duration   String?
+  appointment_fee        Decimal?                            @db.Decimal
+  dentist_name           String?
+  clinic_address         String?
+  password               String?
+  appointments           appointments[]
+  blocked_dates          blocked_dates[]
+  consent_forms          consent_form[]
+  security_answers       dentist_security_question_answers[]
+  dentist_service_assign dentist_service_assign[]
+  dentistAssigns         DentistAssign[]
+  expenses               expense[]
+  invoices               invoice[]
+  notes                  note[]
+  orders                 orders[]
+  room_assigns           room_assign[]
+  soap_notes             soap_notes[]
 }
 
 model temp_patients {
@@ -522,23 +521,23 @@ model expense {
 }
 
 model invoice_services {
-  service_id        Int                      @id @default(autoincrement())
-  service_name      String
-  amount            Float
-  description       String?
-  ref_code          String                   @unique(map: "unique")
-  tax_type          String?
-  tax_percentage    Decimal                  @default(0) @db.Decimal
-  treatment_group   Int?
-  treatment_type    String?
-  Consumable_charge Decimal?                 @default(0) @db.Decimal
-  Lab_charge        Decimal?                 @default(0) @db.Decimal
-  is_active         Boolean                  @default(false)
-  duration          Int?
-  appointments      appointments[]
-  dentists          dentists[]
-  assigned          invoice_service_assign[]
-  treatment         treatment?               @relation(fields: [treatment_group], references: [no], onDelete: Cascade, onUpdate: NoAction, map: "fk_treatment")
+  service_id             Int                      @id @default(autoincrement())
+  service_name           String
+  amount                 Float
+  description            String?
+  ref_code               String                   @unique(map: "unique")
+  tax_type               String?
+  tax_percentage         Decimal                  @default(0) @db.Decimal
+  treatment_group        Int?
+  treatment_type         String?
+  Consumable_charge      Decimal?                 @default(0) @db.Decimal
+  Lab_charge             Decimal?                 @default(0) @db.Decimal
+  is_active              Boolean                  @default(false)
+  duration               Int?
+  appointments           appointments[]
+  dentist_service_assign dentist_service_assign[]
+  assigned               invoice_service_assign[]
+  treatment              treatment?               @relation(fields: [treatment_group], references: [no], onDelete: Cascade, onUpdate: NoAction, map: "fk_treatment")
 }
 
 model invoice {
@@ -783,4 +782,13 @@ model treatment {
   no               Int                @id @default(autoincrement())
   treatment_group  String
   invoice_services invoice_services[]
+}
+
+model dentist_service_assign {
+  dentist_id       String
+  service_id       Int
+  dentists         dentists         @relation(fields: [dentist_id], references: [dentist_id], onDelete: Cascade, onUpdate: NoAction, map: "dentist_fk1")
+  invoice_services invoice_services @relation(fields: [service_id], references: [service_id], onDelete: Cascade, onUpdate: NoAction, map: "service_fk2")
+
+  @@id([dentist_id, service_id], map: "pk_service_dentist")
 }

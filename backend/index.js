@@ -40,6 +40,7 @@ import studyRouter from './routes/study-routes.js';
 import radiologistRouter from './routes/radiologist-routes.js';
 import reportsRouter from './routes/reports-routes.js';
 import dentistAssignRouter from './routes/dentist-assign-routes.js';
+import dentistServiceAssignRouter from './routes/dentist-service-assign-routes.js';
 
 import workTypesRouter from './routes/work-types-routes.js';
 import shadesRouter from './routes/shades-routes.js';
@@ -144,6 +145,7 @@ app.use('/studies', studyRouter);
 app.use('/radiologists', radiologistRouter);
 app.use('/reports', reportsRouter);
 app.use('/dentist-assign', dentistAssignRouter);
+app.use('/dentist-service-assign', dentistServiceAssignRouter);
 
 app.use('/work-types', workTypesRouter);
 app.use('/shades', shadesRouter);

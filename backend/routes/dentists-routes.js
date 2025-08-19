@@ -19,11 +19,22 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 //fetch for specific service type
-router.get('/for-service/:invoice_service_id', authenticateToken, async (req, res) => {
+router.get('/for-service/:service_id', authenticateToken, async (req, res) => {
   try {
     const dentists = await prisma.dentists.findMany({
       where:{
-        invoice_service_id: Number(req.params.invoice_service_id)
+        dentist_service_assign: {
+          some: {
+            service_id: Number(req.params.service_id)
+          }
+        }
+      },
+      include:{
+        dentist_service_assign: {
+          include: {
+            invoice_services: true
+          }
+        }
       }
     });
     res.json(dentists);
@@ -63,8 +74,19 @@ router.get('/search', authenticateToken, async (req, res) => {
         name: true,
         email: true,
         phone_number: true,
-        profile_picture: true,
-        invoice_service_id: true
+        profile_picture: true
+      },
+      include: {
+        dentist_service_assign: {
+          include: {
+            invoice_services: {
+              select: {
+                service_id: true,
+                service_name: true
+              }
+            }
+          }
+        }
       },
       take: 10
     });
@@ -80,6 +102,20 @@ router.get('/:dentist_id', authenticateToken, async (req, res) => {
   try {
     const dentist = await prisma.dentists.findUnique({
       where: { dentist_id: req.params.dentist_id },
+      include: {
+        dentist_service_assign: {
+          include: {
+            invoice_services: {
+              select: {
+                service_id: true,
+                service_name: true,
+                amount: true,
+                description: true
+              }
+            }
+          }
+        }
+      }
     });
     if (!dentist) return res.status(404).json({ error: 'Not found' });
     res.json(dentist);
@@ -112,7 +148,7 @@ router.get('/getworkinfo/:dentist_id', authenticateToken, async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     console.log('Received request body:', JSON.stringify(req.body, null, 2));
-    const { password, email, ...rest } = req.body;
+    const { password, email, service_ids, ...rest } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -151,14 +187,42 @@ router.post('/', async (req, res) => {
       ...rest
     });
 
+    // Parse service_ids if provided
+    let serviceIds = [];
+    if (service_ids) {
+      try {
+        serviceIds = Array.isArray(service_ids) ? service_ids : JSON.parse(service_ids);
+      } catch (e) {
+        serviceIds = service_ids.toString().split(',').filter(id => id.trim());
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const newDentist = await prisma.dentists.create({
-      data: {
-        dentist_id: new_dentist_id,
-        password: hashedPassword,
-        email,
-        ...rest
-      },
+    
+    let newDentist;
+    
+    // Use transaction to create dentist and assign services
+    await prisma.$transaction(async (tx) => {
+      newDentist = await tx.dentists.create({
+        data: {
+          dentist_id: new_dentist_id,
+          password: hashedPassword,
+          email,
+          ...rest
+        },
+      });
+
+      // Create service assignments if provided
+      if (serviceIds.length > 0) {
+        const serviceAssignments = serviceIds.map(serviceId => ({
+          dentist_id: new_dentist_id,
+          service_id: parseInt(serviceId)
+        }));
+
+        await tx.dentist_service_assign.createMany({
+          data: serviceAssignments
+        });
+      }
     });
 
     console.log('Dentist created successfully:', newDentist);
@@ -166,7 +230,27 @@ router.post('/', async (req, res) => {
     if (newDentist.phone_number) {
       sendAccountCreationNoticeWhatsApp(newDentist.phone_number, new_dentist_id)
     }
-    res.status(201).json(newDentist);
+
+    // Fetch dentist with service assignments for response
+    const dentistWithServices = await prisma.dentists.findUnique({
+      where: { dentist_id: new_dentist_id },
+      include: {
+        dentist_service_assign: {
+          include: {
+            invoice_services: {
+              select: {
+                service_id: true,
+                service_name: true,
+                amount: true,
+                description: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(201).json(dentistWithServices);
   } catch (error) {
     console.error('Error creating dentist:', error);
     res.status(500).json({
@@ -179,18 +263,101 @@ router.post('/', async (req, res) => {
 
 router.put('/:dentist_id', authenticateToken, async (req, res) => {
   try {
-    const { password, ...rest } = req.body;
+    const { password, service_ids, ...rest } = req.body;
+    const dentist_id = req.params.dentist_id;
+    
     let data = { ...rest };
     if (password) {
       const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
       data.password = hashedPassword;
     }
-    const updatedDentist = await prisma.dentists.update({
-      where: { dentist_id: req.params.dentist_id },
-      data,
-    });
-    res.json(updatedDentist);
-  } catch {
+
+    // Parse service_ids if provided
+    let serviceIds = [];
+    let updateServices = false;
+    if (service_ids !== undefined) {
+      updateServices = true;
+      try {
+        serviceIds = Array.isArray(service_ids) ? service_ids : JSON.parse(service_ids);
+      } catch (e) {
+        serviceIds = service_ids.toString().split(',').filter(id => id.trim());
+      }
+    }
+
+    let updatedDentist;
+
+    // Use transaction if we need to update services
+    if (updateServices) {
+      await prisma.$transaction(async (tx) => {
+        // Update dentist data
+        updatedDentist = await tx.dentists.update({
+          where: { dentist_id },
+          data,
+        });
+
+        // Update service assignments
+        // Remove existing service assignments
+        await tx.dentist_service_assign.deleteMany({
+          where: { dentist_id }
+        });
+
+        // Create new service assignments if any
+        if (serviceIds.length > 0) {
+          const serviceAssignments = serviceIds.map(serviceId => ({
+            dentist_id,
+            service_id: parseInt(serviceId)
+          }));
+
+          await tx.dentist_service_assign.createMany({
+            data: serviceAssignments
+          });
+        }
+      });
+
+      // Fetch dentist with service assignments for response
+      const dentistWithServices = await prisma.dentists.findUnique({
+        where: { dentist_id },
+        include: {
+          dentist_service_assign: {
+            include: {
+              invoice_services: {
+                select: {
+                  service_id: true,
+                  service_name: true,
+                  amount: true,
+                  description: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      res.json(dentistWithServices);
+    } else {
+      // Just update dentist data without services
+      updatedDentist = await prisma.dentists.update({
+        where: { dentist_id },
+        data,
+        include: {
+          dentist_service_assign: {
+            include: {
+              invoice_services: {
+                select: {
+                  service_id: true,
+                  service_name: true,
+                  amount: true,
+                  description: true
+                }
+              }
+            }
+          }
+        }
+      });
+      res.json(updatedDentist);
+    }
+  } catch (error) {
+    console.error('Error updating dentist:', error);
     res.status(500).json({ error: 'Failed to update dentist' });
   }
 });

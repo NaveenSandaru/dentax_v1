@@ -78,32 +78,38 @@ router.get('/dentist/:dentist_id', authenticateToken, async (req, res) => {
   try {
     const { dentist_id } = req.params;
     
-    // First get the dentist to find their associated service
-    const dentist = await prisma.dentists.findUnique({
+    // Get services assigned to the dentist through dentist_service_assign table
+    const dentistWithServices = await prisma.dentists.findUnique({
       where: { dentist_id },
-      select: { invoice_service_id: true }
+      include: {
+        dentist_service_assign: {
+          include: {
+            invoice_services: {
+              include: {
+                treatment: true
+              }
+            }
+          }
+        }
+      }
     });
     
-    if (!dentist) {
+    if (!dentistWithServices) {
       return res.status(404).json({ error: 'Dentist not found' });
     }
     
-    // If dentist has a specific service, return only that service
-    if (dentist.invoice_service_id) {
-      const service = await prisma.invoice_services.findUnique({
-        where: { service_id: dentist.invoice_service_id },
-        include: {
-          treatment: true
-        }
-      });
-      
-      if (service) {
-        return res.json([service]);
-      }
+    // Extract services from the assignments
+    const services = dentistWithServices.dentist_service_assign.map(
+      assignment => assignment.invoice_services
+    );
+    
+    // If dentist has assigned services, return them
+    if (services.length > 0) {
+      return res.json(services);
     }
     
-    // If no specific service assigned, return all active services
-    const services = await prisma.invoice_services.findMany({
+    // If no specific services assigned, return all active services
+    const allServices = await prisma.invoice_services.findMany({
       where: {
         is_active: true
       },
@@ -112,7 +118,7 @@ router.get('/dentist/:dentist_id', authenticateToken, async (req, res) => {
       }
     });
     
-    res.json(services);
+    res.json(allServices);
   } catch (error) {
     console.error('Error fetching dentist services:', error);
     res.status(500).json({ error: 'Failed to fetch services for dentist' });
