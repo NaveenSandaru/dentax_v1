@@ -234,7 +234,26 @@ router.post('/', async (req, res) => {
     if (newDentist.phone_number) {
       sendAccountCreationNoticeWhatsApp(newDentist.phone_number, new_dentist_id)
     }
-      
+
+    const dentistWithServices = await prisma.dentists.findUnique({
+      where: { dentist_id: new_dentist_id },
+      include: {
+        dentist_service_assign: {
+          include: {
+            invoice_services: {
+              select: {
+                service_id: true,
+                service_name: true,
+                amount: true,
+                description: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(201).json(dentistWithServices);  
   } catch (error) {
     console.error('Error creating dentist:', error);
     res.status(500).json({
