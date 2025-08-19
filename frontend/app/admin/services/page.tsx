@@ -140,7 +140,7 @@ export default function InvoiceServicePage() {
     return (
         <div className="flex flex-col h-full">
             <Tabs defaultValue="invoice-services" className="flex-1 flex flex-col">
-                <TabsList className="md:mt-5 mb-4 mx-auto my-auto h-16 md:h-8">
+                <TabsList className="md:mt-2 mb-4 mx-auto my-auto h-16 md:h-8">
                     <TabsTrigger value="invoice-services">Invoice Services</TabsTrigger>
                     <TabsTrigger value="treatment-groups">Treatment Groups</TabsTrigger>
                 </TabsList>
