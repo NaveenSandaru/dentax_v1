@@ -41,6 +41,19 @@ interface Appointment {
     phone_number: string,
     created_at: string
   } | null;
+  invoice_services?: {
+    service_id: number;
+    service_name: string;
+    amount: number;
+  };
+}
+
+interface InvoiceService {
+  service_id: number;
+  service_name: string;
+  amount: number;
+  description: string;
+  duration: number;
 }
 
 interface BlockedDate {
@@ -93,6 +106,10 @@ interface NewAppointmentFormProps {
   setPatientValidated: (value: boolean) => void;
   patientErrorMessage: string;
   setPatientErrorMessage: (value: string) => void;
+  service_id: string;
+  setService_id: (value: string) => void;
+  availableServices: InvoiceService[];
+  loadingServices: boolean;
 }
 
 const NewAppointmentForm = ({
@@ -117,7 +134,11 @@ const NewAppointmentForm = ({
   patientValidated,
   setPatientValidated,
   patientErrorMessage,
-  setPatientErrorMessage
+  setPatientErrorMessage,
+  service_id,
+  setService_id,
+  availableServices,
+  loadingServices
 }: NewAppointmentFormProps) => (
   <DialogContent className="max-h-screen overflow-y-auto">
     <DialogHeader>
@@ -196,6 +217,31 @@ const NewAppointmentForm = ({
         {!patientValidated && patientErrorMessage && (
           <div className="text-red-500 text-xs mt-1">{patientErrorMessage}</div>
         )}
+      </div>
+      <div>
+        <Label className='mb-2' htmlFor="service">Service <span className="text-red-500">*</span></Label>
+        <Select value={service_id} onValueChange={(value) => setService_id(value)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a service" />
+          </SelectTrigger>
+          <SelectContent>
+            {loadingServices ? (
+              <SelectItem value="" disabled>
+                Loading services...
+              </SelectItem>
+            ) : availableServices.length === 0 ? (
+              <SelectItem value="" disabled>
+                No services available
+              </SelectItem>
+            ) : (
+              availableServices.map((service) => (
+                <SelectItem key={service.service_id} value={service.service_id.toString()}>
+                  {service.service_name} - Rs {service.amount}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
       </div>
       <div>
         <Label className='mb-2' htmlFor="date">Date <span className="text-red-500">*</span></Label>
@@ -380,6 +426,11 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
   const [time_from, setTimeFrom] = useState("");
   const [time_to, setTimeTo] = useState("");
   const [note, setNote] = useState("");
+  const [service_id, setService_id] = useState("");
+
+  // Service states
+  const [availableServices, setAvailableServices] = useState<InvoiceService[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
 
   // States for creating new block slot
   const [blockDate, setBlockDate] = useState("");
@@ -463,6 +514,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
       setDate("");
       setTimeFrom("");
       setNote("");
+      setService_id("");
       setPatientValidated(true);
       setPatientErrorMessage("");
     }
@@ -604,6 +656,26 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
     }
   };
 
+  const fetchDentistServices = async () => {
+    setLoadingServices(true);
+    try {
+      const response = await apiClient.get(
+        `/dentist-service-assign/dentist/${user.id}`
+      );
+      if (response.status === 200) {
+        // Extract services from the assignments
+        const services = response.data.map((assignment: any) => assignment.invoice_services);
+        setAvailableServices(services);
+      }
+    } catch (err: any) {
+      console.error("Error fetching dentist services:", err);
+      toast.error("Failed to load services");
+      setAvailableServices([]);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
+
   // Memoize time slot generation to prevent unnecessary recalculations
   const generateTimeSlots = async (workInfo: DentistWorkInfo) => {
     if (!date || !workInfo) {
@@ -721,6 +793,11 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
       return;
     }
 
+    if (!service_id) {
+      toast.error('Please select a service');
+      return;
+    }
+
     if (!date || !time_from) {
       toast.error('Please fill in all required fields');
       return;
@@ -735,6 +812,11 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
         throw new Error("This time slot is no longer available");
       }
 
+      // Get selected service details
+      const selectedService = availableServices.find(service => 
+        service.service_id.toString() === service_id
+      );
+
       // 1. Create the appointment
       const response = await apiClient.post(
         `/appointments/`,
@@ -744,10 +826,11 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
           date: date,
           time_from: time_from,
           time_to: timeTo,
-          fee: dentistWorkInfo?.appointment_fee,
+          fee: selectedService?.amount || dentistWorkInfo?.appointment_fee,
           note: note,
           status: "confirmed",
-          payment_status: "not-paid"
+          payment_status: "not-paid",
+          invoice_service: service_id
         }
       );
 
@@ -786,6 +869,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
         setDate("");
         setTimeFrom("");
         setNote("");
+        setService_id("");
         setPatientValidated(true);
         setPatientErrorMessage("");
       }
@@ -980,7 +1064,8 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
       Promise.all([
         fetchAppointments(),
         fetchBlockedSlots(),
-        fetchDentistWorkInfo()
+        fetchDentistWorkInfo(),
+        fetchDentistServices()
       ]);
     }
   }, [user?.id, isLoadingAuth, isLoggedIn]);
@@ -1130,7 +1215,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        {/*<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Schedule Management</h1>
             <p className="text-gray-600">Manage your appointments and blocked time slots</p>
@@ -1166,10 +1251,14 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
                 setPatientSearchResults={setPatientSearchResults}
                 showPatientDropdown={showPatientDropdown}
                 setShowPatientDropdown={setShowPatientDropdown}
+                service_id={service_id}
+                setService_id={setService_id}
+                availableServices={availableServices}
+                loadingServices={loadingServices}
               />
             </Dialog>
           </div>
-        </div>*/}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Daily Schedule */}
@@ -1375,7 +1464,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
         </div>
 
         {/* Appointment Management */}
-        {/*<Card>
+        <Card>
           <CardHeader>
             <CardTitle className="text-lg">Appointment Management</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -1419,7 +1508,7 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
               </TabsContent>
             </Tabs>
           </CardContent>
-        </Card>*/}
+        </Card>
       </div>
     </div>
   );
