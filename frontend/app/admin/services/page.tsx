@@ -7,6 +7,7 @@ import {
     TabsTrigger,
     TabsContent
 } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
@@ -140,27 +141,27 @@ export default function InvoiceServicePage() {
     return (
         <div className="flex flex-col h-full">
             <Tabs defaultValue="invoice-services" className="flex-1 flex flex-col">
-                <TabsList className="md:mt-2 mb-4 mx-auto my-auto h-16 md:h-8">
-                    <TabsTrigger value="invoice-services">Invoice Services</TabsTrigger>
-                    <TabsTrigger value="treatment-groups">Treatment Groups</TabsTrigger>
-                </TabsList>
-
                 <div className="flex-1 overflow-auto">
                     <TabsContent value="invoice-services" className="h-full">
                         <div className="bg-gray-50 p-4 md:p-6 lg:p-8 h-full">
                             <div className="max-w-7xl mx-auto h-full flex flex-col">
-                                <div className="mb-6">
+                                <div className="md:mb-2 mx-auto md:mx-0">
                                     <h1 className="text-2xl font-bold text-gray-900">Invoice Services</h1>
                                     <p className="text-gray-600">Manage available invoice services</p>
                                 </div>
 
-                                <div className="flex justify-end mb-4">
-                                    <button
+                                <TabsList className="md:mt-2 mb-4 md:my-auto my-4 h-8 mx-auto md:mx-0">
+                                    <TabsTrigger value="invoice-services">Invoice Services</TabsTrigger>
+                                    <TabsTrigger value="treatment-groups">Treatment Groups</TabsTrigger>
+                                </TabsList>
+
+                                <div className="w-full mb-4 md:w-auto md:flex md:justify-end">
+                                    <Button
                                         onClick={() => { setShowAddDialog(true) }}
-                                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                                        className="bg-emerald-500 hover:bg-emerald-600 text-white w-full md:w-auto px-4 py-2 rounded-md text-sm font-medium"
                                     >
                                         + Add Invoice Service
-                                    </button>
+                                    </Button>
                                 </div>
 
                                 <div className="bg-white rounded-lg shadow overflow-x-auto flex-1">
@@ -168,14 +169,14 @@ export default function InvoiceServicePage() {
                                     <div className="hidden md:block">
                                         <div className="bg-green-50 px-6 py-3 border-b border-green-200">
                                             <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-                                                <div className="col-span-1">ID</div>
-                                                <div className="col-span-2">Service Name</div>
-                                                <div className="col-span-2">Treatment Group</div>
-                                                <div className="col-span-1">Type</div>
-                                                <div className="col-span-1">Amount</div>
-                                                <div className="col-span-1">Tax (%)</div>
-                                                <div className="col-span-2">Description</div>
-                                                <div className="col-span-2">Actions</div>
+                                                <div className="col-span-1 text-center">ID</div>
+                                                <div className="col-span-2 text-center">Service Name</div>
+                                                <div className="col-span-2 text-center">Treatment Group</div>
+                                                <div className="col-span-1 text-center">Type</div>
+                                                <div className="col-span-2 text-center">Amount</div>
+                                                <div className="col-span-1 text-center">Tax (%)</div>
+                                                <div className="col-span-2 text-center">Description</div>
+                                                <div className="col-span-1 text-center">Actions</div>
                                             </div>
                                         </div>
 
@@ -196,18 +197,18 @@ export default function InvoiceServicePage() {
                                                         className="px-6 py-4 hover:bg-gray-50"
                                                     >
                                                         <div className="grid grid-cols-12 gap-4 items-center text-sm">
-                                                            <div className="text-gray-900 col-span-1">{service.service_id}</div>
-                                                            <div className="text-gray-900 col-span-2">{service.service_name}</div>
-                                                            <div className="text-gray-700 col-span-2">
+                                                            <div className="text-gray-900 col-span-1 text-center">{service.service_id}</div>
+                                                            <div className="text-gray-900 col-span-2 text-center">{service.service_name}</div>
+                                                            <div className="text-gray-700 col-span-2 text-center">
                                                                 {service.treatment?.treatment_group}
                                                             </div>
-                                                            <div className="text-gray-700 col-span-1">{service.treatment_type}</div>
-                                                            <div className="text-gray-700 col-span-1">Rs. {service.amount.toFixed(2)}</div>
-                                                            <div className="text-gray-700 col-span-1">{service.tax_percentage}%</div>
-                                                            <div className="text-gray-700 col-span-2 truncate" title={service.description}>
+                                                            <div className="text-gray-700 col-span-1 text-center">{service.treatment_type}</div>
+                                                            <div className="text-gray-700 col-span-2 text-center">Rs. {service.amount.toFixed(2)}</div>
+                                                            <div className="text-gray-700 col-span-1 text-center">{service.tax_percentage}%</div>
+                                                            <div className="text-gray-700 col-span-2 truncate text-center" title={service.description}>
                                                                 {service.description || 'N/A'}
                                                             </div>
-                                                            <div className="col-span-2 flex space-x-2">
+                                                            <div className="col-span-1 flex justify-center space-x-2 text-center">
                                                                 <button
                                                                     onClick={() => handleViewDoctors(service.service_id)}
                                                                     className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
@@ -341,15 +342,20 @@ export default function InvoiceServicePage() {
                     <TabsContent value="treatment-groups" className="h-full">
                         <div className="bg-gray-50 p-4 md:p-6 lg:p-8 h-full">
                             <div className="max-w-7xl mx-auto h-full flex flex-col">
-                                <div className="mb-6">
+                                <div className="md:mb-2 mx-auto md:mx-0">
                                     <h1 className="text-2xl font-bold text-gray-900">Treatment Groups</h1>
                                     <p className="text-gray-600">Manage available treatment groups</p>
                                 </div>
 
-                                <div className="flex justify-end mb-4">
+                                <TabsList className="md:mt-2 mb-4 md:my-auto my-4 h-8 mx-auto md:mx-0">
+                                    <TabsTrigger value="invoice-services">Invoice Services</TabsTrigger>
+                                    <TabsTrigger value="treatment-groups">Treatment Groups</TabsTrigger>
+                                </TabsList>
+
+                                <div className="w-full mb-4 md:w-auto md:flex md:justify-end">
                                     <button
                                         onClick={() => setShowAddTreatmentDialog(true)}
-                                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                                        className="bg-emerald-500 hover:bg-emerald-600 text-white w-full md:w-auto px-4 py-2 rounded-md text-sm font-medium"
                                     >
                                         + Add Treatment Group
                                     </button>
