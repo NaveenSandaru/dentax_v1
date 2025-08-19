@@ -650,36 +650,50 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                   value="details"
                   className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 font-medium text-xs py-2 transition-all duration-200"
                 >
-                  <User className="w-3 h-3 mr-1" />
+                  <User className="hidden sm:block w-3 h-3 mr-1" />
                   Details
                 </TabsTrigger>
                 <TabsTrigger
                   value="medical-history"
                   className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 font-medium text-xs py-2 transition-all duration-200"
                 >
-                  <FileText className="w-3 h-3 mr-1" />
-                  Medical History
+                  <FileText className="hidden sm:block w-3 h-3 mr-1" />
+                    {/* Mobile: short text */}
+  <span className="block sm:hidden">History</span>
+  
+  {/* Tablet/Desktop: full text */}
+  <span className="hidden sm:block"> Medical History</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="reports"
                   className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 font-medium text-xs py-2 transition-all duration-200"
                 >
-                  <FileText className="w-3 h-3 mr-1" />
+                  <FileText className=" hidden sm:block w-3 h-3 mr-1" />
                   Reports
                 </TabsTrigger>
                 <TabsTrigger
                   value="soap-notes"
                   className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 font-medium text-xs py-2 transition-all duration-200"
                 >
-                  <FileText className="w-3 h-3 mr-1" />
-                  SOAP Notes
+                  <FileText className=" hidden sm:block w-3 h-3 mr-1" />
+                   {/* Mobile: short text */}
+  <span className="block sm:hidden">SOAP</span>
+  
+  {/* Tablet/Desktop: full text */}
+  <span className="hidden sm:block">SOAP Notes</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="consent-forms"
                   className="data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 font-medium text-xs py-2 transition-all duration-200"
                 >
-                  <FileText className="w-3 h-3 mr-1" />
-                  Consent Forms
+                  <FileText className=" hidden sm:block w-3 h-3 mr-1" />
+
+                   {/* Mobile: short text */}
+  <span className="block sm:hidden">Consent</span>
+  
+  {/* Tablet/Desktop: full text */}
+  <span className="hidden sm:block">Consent Forms</span>
+
                 </TabsTrigger>
               </TabsList>
 
@@ -807,7 +821,11 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                       onClick={() => setIsUploadReportDialogOpen(true)}
                     >
                       <Upload className="h-3 w-3 mr-1" />
-                      Upload Report
+                       
+
+  
+  {/* Tablet/Desktop: full text */}
+  <span className="hidden sm:block">Upload Report</span>
                     </Button>
                   </div>
 
@@ -904,7 +922,10 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                       onClick={() => setIsAddNoteDialogOpen(true)}
                     >
                       <Plus className="h-3 w-3 mr-1" />
-                      Add Note
+
+  
+  {/* Tablet/Desktop: full text */}
+  <span className="hidden sm:block">Add Note</span>
                     </Button>
                   </div>
 
@@ -1266,7 +1287,10 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                           className="bg-emerald-500 hover:bg-emerald-600"
                         >
                           <Plus className="h-4 w-4 mr-2" />
-                          New Consent Form
+                         
+  
+  {/* Tablet/Desktop: full text */}
+  <span className="hidden sm:block">New Consent Form</span>
                         </Button>
                       </div>
 
