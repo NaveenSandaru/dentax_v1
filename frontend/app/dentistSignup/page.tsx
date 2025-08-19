@@ -312,6 +312,9 @@ const DentistSignUp: React.FC = () => {
     setError("");
 
     try {
+      // Show loading state
+      toast.loading('Creating your account...');
+      
       // First, create the dentist
       const {
         securityQuestions: securityAnswers,
@@ -363,29 +366,37 @@ const DentistSignUp: React.FC = () => {
         const formData = new FormData();
         formData.append("image", profilePicture);
 
-        const uploadResponse = await fetch(`${backendURL}/photos`, {
-          method: "POST",
-          body: formData,
-        });
+        try {
+          const uploadResponse = await fetch(`${backendURL}/photos`, {
+            method: "POST",
+            body: formData,
+          });
 
-        if (uploadResponse.ok) {
-          const { url } = await uploadResponse.json();
-          await fetch(
-            `${backendURL}/dentists/forPicture/${dentist.dentist_id}`,
-            {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                profile_picture: url,
-              }),
-            }
-          );
+          if (uploadResponse.ok) {
+            const { url } = await uploadResponse.json();
+            await fetch(
+              `${backendURL}/dentists/forPicture/${dentist.dentist_id}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  profile_picture: url,
+                }),
+              }
+            );
+          }
+        } catch (uploadError) {
+          console.error('Profile picture upload failed:', uploadError);
+          // Continue with registration even if upload fails
+          toast.warning('Profile picture upload failed. Continuing without it.');
         }
       }
 
       // Save security questions answers
+      toast.loading('Saving your security questions...');
+      
       const securityQuestionPromises = securityAnswers.map(async (sq) => {
         if (!sq.questionId || !sq.answer.trim()) return null;
 
@@ -402,32 +413,59 @@ const DentistSignUp: React.FC = () => {
         });
       });
 
-      await Promise.all(securityQuestionPromises);
+      try {
+        // Wait for all security questions to be saved
+        await Promise.all(securityQuestionPromises);
+        
+        // Dismiss loading and show success
+        toast.dismiss();
+        toast.success('Registration successful! Redirecting to login...');
+        
+        // Mark registration as successful
+        setRegistrationSuccess(true);
 
-      // Mark registration as successful
-      setRegistrationSuccess(true);
-
-      // Clear form
-      setFormData({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        phoneNumber: "",
-        language: "",
-        selectedServices: [], // Reset to empty array
-        workDaysFrom: "Monday",
-        workDaysTo: "Friday",
-        workTimeFrom: "08:00",
-        workTimeTo: "17:00",
-        appointmentDuration: "30",
-        appointmentFee: "",
-        profilePicture: null,
-        securityQuestions: Array(3).fill({ questionId: "", answer: "" }),
-      });
-      setProfileImagePreview(null);
+        // Clear form
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          phoneNumber: "",
+          language: "",
+          selectedServices: [], // Reset to empty array
+          workDaysFrom: "Monday",
+          workDaysTo: "Friday",
+          workTimeFrom: "08:00",
+          workTimeTo: "17:00",
+          appointmentDuration: "30",
+          appointmentFee: "",
+          profilePicture: null,
+          securityQuestions: Array(3).fill({ questionId: "", answer: "" }),
+        });
+        setProfileImagePreview(null);
+        
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+        
+      } catch (securityError) {
+        console.error('Failed to save security questions:', securityError);
+        toast.error('Account created but failed to save security questions. Please update them in your profile.');
+        // Still show success since account was created
+        setRegistrationSuccess(true);
+        setTimeout(() => {
+          router.push('/');
+        }, 3000);
+      }
     } catch (err) {
       console.error("Registration failed:", err);
+      toast.dismiss(); // Dismiss any loading toasts
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please try again."
+      );
       setError(
         err instanceof Error
           ? err.message
