@@ -7,11 +7,11 @@ const router = express.Router()
 const SALT_ROUNDS = 10;
 
 const findRoleById = (userID) => {
-  if (userID.startsWith("knrsrecep")) return "receptionist";
-  if (userID.startsWith("knrsdent")) return "dentist";
+  if (userID.startsWith("dentaxrecep")) return "receptionist";
+  if (userID.startsWith("dentaxdent")) return "dentist";
   if (userID.startsWith("P")) return "patient";
-  if (userID.startsWith("knrslab")) return "lab";
-  if (userID.startsWith("knrsradio")) return "radiologist";
+  if (userID.startsWith("dentaxlab")) return "lab";
+  if (userID.startsWith("dentaxradio")) return "radiologist";
   if (userID.startsWith("admin")) return "admin";
   return null;
 };

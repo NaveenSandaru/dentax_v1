@@ -116,13 +116,14 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
         date: dateStr,
         name: currentDate.toLocaleDateString("en-US", { weekday: "short" }),
         fullName: currentDate.toLocaleDateString("en-US", { weekday: "long" }),
+        dayIndex: currentDate.getDay(), // Add dayIndex property (0 = Sunday, 1 = Monday, etc.)
         isToday: dateStr === new Date().toISOString().split("T")[0]
       }
     })
   }
 
   // Generate week days for room view (Sunday to Saturday)
-  const generateRoomViewWeekDays = (baseDate: string) => {
+  const generateRoomViewWeekDays = (baseDate: string): DayOfWeek[] => {
     const base = new Date(baseDate)
     const startOfWeek = new Date(base)
     startOfWeek.setDate(base.getDate() - base.getDay()) // Start from Sunday
@@ -134,8 +135,9 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
       const dateStr = date.toISOString().split("T")[0]
       return {
         date: dateStr,
-        dayOfWeek: dayNames[date.getDay()],
-        dayOfMonth: date.getDate(),
+        name: date.toLocaleDateString("en-US", { weekday: "short" }),
+        fullName: dayNames[date.getDay()],
+        dayIndex: date.getDay(),
         isToday: dateStr === new Date().toISOString().split("T")[0]
       }
     })
@@ -521,9 +523,9 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
           <ListView selectedDate={selectedDate} refreshKey={refreshKey} searchQuery={searchQuery} />
         ) : (
           /* Doctor Schedule Columns */
-          <div className="w-full">
+          <div className=" flex gap-2 sm:gap-4 overflow-x-auto pb-4">
             {filteredDentists?.map((dentist) => (
-              <div key={`${dentist.dentist_id}-${refreshKey}`} className="w-full">
+              <div key={`${dentist.dentist_id}-${refreshKey}`} >
                 <DoctorScheduleColumn
                   dentist={dentist}
                   weekDays={weekDays}

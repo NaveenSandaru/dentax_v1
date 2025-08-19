@@ -13,6 +13,7 @@ import axios from "axios"
 import { toast } from "sonner"
 import { CancelAppointmentDialog } from "./cancel-appointment-dialog"
 
+
 interface DoctorScheduleColumnProps {
   dentist: Dentist
   weekDays: DayOfWeek[]
@@ -647,7 +648,7 @@ export function DoctorScheduleColumn({
   
 
   return (
-    <Card className="w-full relative">
+    <Card className="min-w-[400px] sm:min-w-[600px] lg:min-w-[900px] flex-shrink-0 relative">
         {/* Cancel Selected Button */}
         {selectedAppointments.length > 0 && (
           <div className="absolute top-2 right-2 z-10">
@@ -684,9 +685,58 @@ export function DoctorScheduleColumn({
         )}
       
       <CardHeader className="pb-2 sm:pb-3">
+         {/* Doctor Header */}
+        <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
+          <div className="relative">
+            <Avatar className="h-12 w-12 sm:h-16 sm:w-16 ">
+              <AvatarImage 
+                src={dentist.profile_picture ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${dentist.profile_picture}` : "/placeholder.svg"} 
+                alt={dentist.name}
+                className="object-cover"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.nextElementSibling as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+              />
+              <AvatarFallback className="text-sm sm:text-lg bg-emerald-100 text-emerald-700 w-full h-full flex items-center justify-center">
+                {dentist.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-base sm:text-xl truncate">{dentist.name}</h3>
+              {appointments.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={toggleSelectAll}
+                  className="ml-2 text-xs h-6 px-2"
+                >
+                  {selectAll ? 'Deselect All' : 'Select All'}
+                </Button>
+              )}
+            </div>
+            {/*<div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base text-gray-600 mt-1">
+              <span className="font-medium">Rs: {dentist.appointment_fee}</span>
+              <span>•</span>
+              <span>{dentist.appointment_duration}min slots</span>
+            </div>*/}
+          </div>
+        </div>
+
         {/* Working Hours and Days Info with Select All Button */}
         <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            
             <Badge variant="outline" className="text-xs px-2 sm:px-3 py-1">
               {dentist.work_time_from} - {dentist.work_time_to}
             </Badge>
@@ -768,15 +818,24 @@ export function DoctorScheduleColumn({
       <CardContent className="pt-0">
         {/* Time Slots Grid */}
        <div className=" ">
-  {dentistTimeSlots.map((timeSlot) => {
-    // Check if the time slot is exactly on the hour (e.g., "09:00", "10:00")
-    const isHourly = timeSlot.endsWith(":00");
+  {dentistTimeSlots.map((timeSlot, index) => {
+    // Show time label at 60-minute intervals starting from the first slot
+    const [hours, minutes] = timeSlot.split(':').map(Number);
+    const [firstHours, firstMinutes] = dentistTimeSlots[0]?.split(':').map(Number) || [0, 0];
+    
+    // Calculate minutes from the start time
+    const currentMinutes = hours * 60 + minutes;
+    const startMinutes = firstHours * 60 + firstMinutes;
+    const minutesFromStart = currentMinutes - startMinutes;
+    
+    // Show label if it's the first slot or every 60 minutes from the start
+    const shouldShowLabel = index === 0 || minutesFromStart % 60 === 0;
 
     return (
       <div key={timeSlot} className="flex items-center gap-3">
-        {/* Time Label (only for hourly slots) */}
+        {/* Time Label (at 60-minute intervals from start time) */}
         <div className="w-12 sm:w-16 text-xs sm:text-sm font-semibold text-gray-700 flex-shrink-0">
-          {isHourly ? timeSlot : ""}
+          {shouldShowLabel ? timeSlot : ""}
         </div>
 
         {/* Appointment Slots for each day */}
@@ -807,7 +866,7 @@ export function DoctorScheduleColumn({
         )}
 
         {/* Doctor Details */}
-        {/*<div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-600">
+        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-600">
           <div>
             <span className="font-semibold text-gray-800">Services:</span>
             <div className="mt-1 text-xs sm:text-sm leading-relaxed">{dentist.service_types}</div>
@@ -826,7 +885,7 @@ export function DoctorScheduleColumn({
               <span className="ml-2 break-all">{dentist.email}</span>
             </div>
           </div>
-        </div>*/}
+        </div>
       </CardContent>
     </Card>
   )
