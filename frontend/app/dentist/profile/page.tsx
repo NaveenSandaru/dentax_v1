@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useContext } from 'react';
-import { User, Mail, Phone, Lock, Shield, Camera, X } from 'lucide-react';
+import { User, Mail, Phone, Lock, Shield, Camera, X as CloseIcon, Search, Plus, Check } from 'lucide-react';
 import axios from 'axios';
 import { AuthContext } from '@/context/auth-context';
 import { toast } from 'sonner';
@@ -11,6 +11,29 @@ import { Carattere } from 'next/font/google';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+
+interface InvoiceService {
+  service_id: number;
+  service_name: string;
+  amount: number;
+  description?: string;
+  ref_code: string;
+  tax_type?: string;
+  tax_percentage: number;
+  treatment_group?: number;
+  treatment_type?: string;
+  Consumable_charge?: number;
+  Lab_charge?: number;
+  is_active: boolean;
+  duration?: number;
+  treatment?: {
+    no: number;
+    treatment_group: string;
+  };
+}
 
 interface DentistData {
   dentist_id: string;
@@ -32,6 +55,14 @@ const ProfilePage = () => {
   const [DentistData, setDentistData] = useState<DentistData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [assignedServices, setAssignedServices] = useState<InvoiceService[]>([]);
+  const [allServices, setAllServices] = useState<InvoiceService[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [servicesDialogOpen, setServicesDialogOpen] = useState(false);
+  const [serviceSearchQuery, setServiceSearchQuery] = useState('');
+  const [selectedTreatmentGroup, setSelectedTreatmentGroup] = useState<string>('all');
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -63,6 +94,7 @@ const ProfilePage = () => {
       return;
     }
     fetchDentistData();
+    fetchServices();
   }, [isLoadingAuth]);
 
   const fetchDentistData = async () => {
@@ -93,6 +125,35 @@ const ProfilePage = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchServices = async () => {
+    if (!user?.id) return;
+    
+    setLoadingServices(true);
+    try {
+      // Fetch all available services
+      const allServicesResponse = await apiClient.get('/invoice-services');
+      console.log('All services response:', allServicesResponse.data);
+      
+      // Don't filter by is_active - show all services for selection
+      setAllServices(allServicesResponse.data);
+
+      // Fetch services assigned to this dentist
+      const assignedResponse = await apiClient.get(`/dentist-service-assign/dentist/${user.id}`);
+      console.log('Assigned services response:', assignedResponse.data);
+      
+      const assignedServicesList = assignedResponse.data.map((assignment: any) => assignment.invoice_services);
+      setAssignedServices(assignedServicesList);
+      setSelectedServiceIds(assignedServicesList.map((service: InvoiceService) => service.service_id));
+    } catch (error: any) {
+      console.error('Error fetching services:', error);
+      toast.error("Failed to fetch services", {
+        description: error.response?.data?.error || "An error occurred"
+      });
+    } finally {
+      setLoadingServices(false);
     }
   };
 
@@ -162,6 +223,7 @@ const ProfilePage = () => {
   const handleSave = async () => {
     if (!DentistData || !user?.id) return;
 
+    setSavingProfile(true);
     try {
       let profilePicturePath = DentistData.profile_picture;
 
@@ -185,7 +247,7 @@ const ProfilePage = () => {
         }
       }
 
-      // Update client information
+      // Update dentist information
       const response = await apiClient.put(`/dentists/${user.id}`, {
         name: `${editedData.firstName} ${editedData.lastName}`.trim(),
         phone_number: editedData.phone_number,
@@ -198,14 +260,77 @@ const ProfilePage = () => {
         work_time_to: editedData.work_time_to
       });
 
+      // Update service assignments
+      await apiClient.put(`/dentist-service-assign/dentist/${user.id}`, {
+        service_ids: selectedServiceIds
+      });
+
       setDentistData(response.data);
+      await fetchServices(); // Refresh services
       setIsEditing(false);
       toast.success("Profile updated successfully");
     } catch (error: any) {
       toast.error("Failed to update profile", {
         description: error.response?.data?.error || "An error occurred"
       });
+    } finally {
+      setSavingProfile(false);
     }
+  };
+
+  const handleServiceToggle = (serviceId: number) => {
+    setSelectedServiceIds(prev => {
+      if (prev.includes(serviceId)) {
+        return prev.filter(id => id !== serviceId);
+      } else {
+        return [...prev, serviceId];
+      }
+    });
+  };
+
+  const getSelectedServicesText = () => {
+    if (selectedServiceIds.length === 0) return "No services selected";
+    if (selectedServiceIds.length === 1) {
+      const service = allServices.find(s => s.service_id === selectedServiceIds[0]);
+      return service?.service_name || "1 service selected";
+    }
+    return `${selectedServiceIds.length} services selected`;
+  };
+
+  const getFilteredServices = () => {
+    let filtered = allServices;
+
+    // Filter by search query
+    if (serviceSearchQuery) {
+      filtered = filtered.filter(service =>
+        service.service_name.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+        service.description?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+        service.ref_code.toLowerCase().includes(serviceSearchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by treatment group
+    if (selectedTreatmentGroup !== 'all') {
+      filtered = filtered.filter(service => 
+        service.treatment?.treatment_group === selectedTreatmentGroup
+      );
+    }
+
+    return filtered;
+  };
+
+  const getTreatmentGroups = () => {
+    const groups = new Set<string>();
+    allServices.forEach(service => {
+      if (service.treatment?.treatment_group) {
+        groups.add(service.treatment.treatment_group);
+      }
+    });
+    return Array.from(groups).sort();
+  };
+
+  const removeService = (serviceId: number) => {
+    setSelectedServiceIds(prev => prev.filter(id => id !== serviceId));
   };
 
   const handleChangePassword = () => {
@@ -291,7 +416,7 @@ const ProfilePage = () => {
                   onClick={handleRemoveImage}
                   className="text-sm text-red-600 hover:text-red-700 flex items-center justify-center mx-auto space-x-1"
                 >
-                  <X className="h-4 w-4" />
+                  <CloseIcon className="h-4 w-4" />
                   <span>Remove new image</span>
                 </button>
               )}
@@ -327,8 +452,9 @@ const ProfilePage = () => {
                     onClick={handleSave}
                     variant="default"
                     className="text-sm bg-teal-600 hover:bg-teal-700 text-white"
+                    disabled={savingProfile}
                   >
-                    Save
+                    {savingProfile ? "Saving..." : "Save"}
                   </Button>
                   <Button
                     onClick={handleCancel}
@@ -420,40 +546,6 @@ const ProfilePage = () => {
             {/* Form Fields */}
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                {/* Appointment Fee */}
-                {/*<div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Appointment Fee
-                  </label>
-                  <input
-                    type="text"
-                    value={isEditing ? editedData.appointment_fee : DentistData.appointment_fee}
-                    onChange={(e) => setEditedData({ ...editedData, appointment_fee: Number(e.target.value) })}
-                    readOnly={!isEditing}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md ${isEditing ? 'bg-white' : 'bg-gray-50'
-                      } text-gray-900 text-sm sm:text-base ${isEditing ? 'focus:ring-2 focus:ring-teal-500 focus:border-teal-500' : ''
-                      }`}
-                  />
-                </div>*/}
-
-                {/* Appointment Duration */}
-                {/*<div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Appointment Duration
-                  </label>
-                  <input
-                    type="text"
-                    value={isEditing ? editedData.appointment_duration : DentistData.appointment_duration}
-                    onChange={(e) => setEditedData({ ...editedData, appointment_duration: e.target.value })}
-                    readOnly={!isEditing}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md ${isEditing ? 'bg-white' : 'bg-gray-50'
-                      } text-gray-900 text-sm sm:text-base ${isEditing ? 'focus:ring-2 focus:ring-teal-500 focus:border-teal-500' : ''
-                      }`}
-                  />
-                </div>*/}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* Work Days From */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -480,7 +572,6 @@ const ProfilePage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
 
                 {/* Work Days To */}
                 <div>
@@ -548,8 +639,209 @@ const ProfilePage = () => {
             </div>
           </div>
 
+          {/* Services Section */}
+          <div className="border-t border-gray-200 px-6 py-6 sm:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-medium text-gray-900">Assigned Services</h2>
+            </div>
+
+            <div className="space-y-6">
+              {/* Services Display/Edit */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Services
+                </label>
+                {isEditing ? (
+                  <div className="space-y-3">
+                    {/* Selected Services Display */}
+                    {selectedServiceIds.length > 0 && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-gray-600">Selected Services:</label>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedServiceIds.map(serviceId => {
+                            const service = allServices.find(s => s.service_id === serviceId);
+                            if (!service) return null;
+                            return (
+                              <Badge
+                                key={serviceId}
+                                variant="secondary"
+                                className="flex items-center gap-1 px-2 py-1"
+                              >
+                                <span className="text-xs">{service.service_name}</span>
+                                <button
+                                  onClick={() => removeService(serviceId)}
+                                  className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                                >
+                                  <CloseIcon className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Add Services Button */}
+                    <Dialog open={servicesDialogOpen} onOpenChange={setServicesDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-center"
+                          disabled={loadingServices}
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          {loadingServices ? "Loading services..." : "Add Services"}
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+                        <DialogHeader>
+                          <DialogTitle>Select Services</DialogTitle>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4">
+                          {/* Search and Filter Controls */}
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="relative flex-1">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <Input
+                                placeholder="Search services..."
+                                value={serviceSearchQuery}
+                                onChange={(e) => setServiceSearchQuery(e.target.value)}
+                                className="pl-10"
+                              />
+                            </div>
+                            <Select
+                              value={selectedTreatmentGroup}
+                              onValueChange={setSelectedTreatmentGroup}
+                            >
+                              <SelectTrigger className="w-full sm:w-48">
+                                <SelectValue placeholder="Filter by category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {getTreatmentGroups().map(group => (
+                                  <SelectItem key={group} value={group}>
+                                    {group}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Services Grid */}
+                          <div className="max-h-96 overflow-y-auto border rounded-lg">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
+                              {getFilteredServices().map((service) => (
+                                <div
+                                  key={service.service_id}
+                                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                                    selectedServiceIds.includes(service.service_id)
+                                      ? 'border-teal-500 bg-teal-50'
+                                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                  onClick={() => handleServiceToggle(service.service_id)}
+                                >
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <Checkbox
+                                          checked={selectedServiceIds.includes(service.service_id)}
+                                          onChange={() => handleServiceToggle(service.service_id)}
+                                        />
+                                        <div className="font-medium text-sm text-gray-900 truncate">
+                                          {service.service_name}
+                                        </div>
+                                      </div>
+                                      <div className="mt-1 text-xs text-gray-500">
+                                        <div className="font-semibold text-teal-600">
+                                          Rs {service.amount.toFixed(2)}
+                                        </div>
+                                        {service.description && (
+                                          <div className="mt-1 line-clamp-2">
+                                            {service.description}
+                                          </div>
+                                        )}
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+                                            {service.ref_code}
+                                          </span>
+                                          {service.treatment && (
+                                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                                              {service.treatment.treatment_group}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {selectedServiceIds.includes(service.service_id) && (
+                                      <Check className="h-4 w-4 text-teal-600 flex-shrink-0" />
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {getFilteredServices().length === 0 && (
+                              <div className="p-8 text-center text-gray-500">
+                                <Search className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                                <div className="text-sm">
+                                  {serviceSearchQuery || selectedTreatmentGroup !== 'all'
+                                    ? 'No services match your search criteria'
+                                    : 'No services available'
+                                  }
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Summary */}
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            <div className="text-sm text-gray-600">
+                              {selectedServiceIds.length} service{selectedServiceIds.length !== 1 ? 's' : ''} selected
+                            </div>
+                            <Button
+                              onClick={() => setServicesDialogOpen(false)}
+                              className="bg-teal-600 hover:bg-teal-700"
+                            >
+                              Done
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {assignedServices.length > 0 ? (
+                      assignedServices.map((service) => (
+                        <div key={service.service_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {service.service_name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Rs {service.amount.toFixed(2)}
+                              {service.description && ` • ${service.description}`}
+                            </div>
+                          </div>
+                          {service.treatment && (
+                            <div className="text-xs text-gray-400 bg-gray-200 px-2 py-1 rounded">
+                              {service.treatment.treatment_group}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-3 text-sm text-gray-500 text-center bg-gray-50 rounded-md">
+                        No services assigned
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Password Section */}
-          
           <div className="border-t border-gray-200 px-6 py-6 sm:px-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-medium text-gray-900">Password</h2>
