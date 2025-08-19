@@ -1,18 +1,43 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ArrowLeft, User, Mail, Phone, Clock, DollarSign, Calendar, Globe, Upload, X, Camera, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
-
+import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Phone,
+  Clock,
+  Calendar,
+  Globe,
+  Upload,
+  X,
+  Camera,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Types
 interface SecurityQuestion {
@@ -33,7 +58,7 @@ interface DentistFormData {
   confirmPassword: string;
   phoneNumber: string;
   language: string;
-  serviceTypes: string;
+  selectedServices: number[]; // Changed from serviceTypes to selectedServices as array
   workDaysFrom: string;
   workDaysTo: string;
   workTimeFrom: string;
@@ -51,122 +76,145 @@ interface InvoiceServices {
 
 const DentistSignUp: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(
+    null
+  );
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadError, setUploadError] = useState<string>('');
+  const [uploadError, setUploadError] = useState<string>("");
   const router = useRouter();
   const [invoiceServices, setInvoiceServices] = useState<InvoiceServices[]>([]);
 
   const [formData, setFormData] = useState<DentistFormData>({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phoneNumber: '',
-    language: '',
-    serviceTypes: '',
-    workDaysFrom: '',
-    workDaysTo: '',
-    workTimeFrom: '',
-    workTimeTo: '',
-    appointmentDuration: '',
-    appointmentFee: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phoneNumber: "",
+    language: "",
+    selectedServices: [],
+    workDaysFrom: "",
+    workDaysTo: "",
+    workTimeFrom: "",
+    workTimeTo: "",
+    appointmentDuration: "",
+    appointmentFee: "",
     profilePicture: null,
     securityQuestions: [
-      { questionId: '', answer: '' },
-      { questionId: '', answer: '' },
-      { questionId: '', answer: '' }
-    ]
+      { questionId: "", answer: "" },
+      { questionId: "", answer: "" },
+      { questionId: "", answer: "" },
+    ],
   });
 
   const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL;
-  const [securityQuestions, setSecurityQuestions] = useState<SecurityQuestion[]>([]);
+  const [securityQuestions, setSecurityQuestions] = useState<
+    SecurityQuestion[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingServices, setLoadingServices] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
-  const [generatedId, setGeneratedId] = useState('');
+  const [generatedId, setGeneratedId] = useState("");
 
   useEffect(() => {
     const fetchSecurityQuestions = async () => {
       try {
         const response = await fetch(`${backendURL}/security-questions`);
         if (!response.ok) {
-          throw new Error('Failed to fetch security questions');
+          throw new Error("Failed to fetch security questions");
         }
         const data: SecurityQuestion[] = await response.json();
         // Map the data to include both id and security_question_id for backward compatibility
-        const questions = data.map(q => ({
+        const questions = data.map((q) => ({
           ...q,
-          id: q.security_question_id // Add id for backward compatibility
+          id: q.security_question_id, // Add id for backward compatibility
         }));
         setSecurityQuestions(questions);
       } catch (err) {
-        console.error('Error fetching security questions:', err);
-        setError('Failed to load security questions. Please try again later.');
+        console.error("Error fetching security questions:", err);
+        setError("Failed to load security questions. Please try again later.");
       }
     };
     fetchSecurityQuestions();
-  }, []);
+  }, [backendURL]);
 
   useEffect(() => {
     const fetchServices = async () => {
       setLoadingServices(true);
       try {
-        const res = await fetch(
-          `${backendURL}/invoice-services`
-        );
+        const res = await fetch(`${backendURL}/invoice-services`);
         if (res.status == 500) {
           throw new Error("Error fetching services");
         }
         const data = await res.json();
         setInvoiceServices(data);
-      }
-      catch (err: any) {
-        toast.error(err.message);
-      }
-      finally {
+      } catch (err: unknown) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Error fetching services";
+        toast.error(errorMessage);
+      } finally {
         setLoadingServices(false);
       }
-    }
+    };
     fetchServices();
-  }, []);
+  }, [backendURL]);
 
-  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   const handleInputChange = (field: keyof DentistFormData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleSecurityQuestionChange = (index: number, field: keyof SecurityQuestionAnswer, value: string) => {
-    setFormData(prev => ({
+  const handleSecurityQuestionChange = (
+    index: number,
+    field: keyof SecurityQuestionAnswer,
+    value: string
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       securityQuestions: prev.securityQuestions.map((sq, i) =>
         i === index ? { ...sq, [field]: value } : sq
-      )
+      ),
+    }));
+  };
+
+  const handleServiceToggle = (serviceId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedServices: prev.selectedServices.includes(serviceId)
+        ? prev.selectedServices.filter((id) => id !== serviceId)
+        : [...prev.selectedServices, serviceId],
     }));
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    setUploadError('');
+    setUploadError("");
 
     if (file) {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
       if (!validTypes.includes(file.type)) {
-        setUploadError('Please upload a valid image file (JPEG, PNG, or GIF)');
+        setUploadError("Please upload a valid image file (JPEG, PNG, or GIF)");
         return;
       }
 
       // Validate file size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       if (file.size > maxSize) {
-        setUploadError('File size must be less than 5MB');
+        setUploadError("File size must be less than 5MB");
         return;
       }
 
@@ -178,22 +226,22 @@ const DentistSignUp: React.FC = () => {
       reader.readAsDataURL(file);
 
       // Update form data
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        profilePicture: file
+        profilePicture: file,
       }));
     }
   };
 
   const removeProfilePicture = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      profilePicture: null
+      profilePicture: null,
     }));
     setProfileImagePreview(null);
-    setUploadError('');
+    setUploadError("");
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -202,27 +250,46 @@ const DentistSignUp: React.FC = () => {
   };
 
   const validateStep1 = (): boolean => {
-    const required: (keyof DentistFormData)[] = ['name', 'email', 'password', 'confirmPassword'];
-    const hasRequiredFields = required.every(field => formData[field].trim() !== '');
+    const required = ["name", "email", "password", "confirmPassword"] as const;
+    const hasRequiredFields = required.every((field) => {
+      const value = formData[field];
+      return typeof value === "string" && value.trim() !== "";
+    });
     const passwordsMatch = formData.password === formData.confirmPassword;
     const passwordLengthValid = formData.password.length >= 8;
+    const hasServices = formData.selectedServices.length > 0;
 
-    return hasRequiredFields && passwordsMatch && passwordLengthValid;
+    return (
+      hasRequiredFields && passwordsMatch && passwordLengthValid && hasServices
+    );
   };
 
   const validateStep2 = (): boolean => {
-    return formData.securityQuestions.every(sq => sq.questionId && sq.answer.trim() !== '');
+    return formData.securityQuestions.every(
+      (sq) => sq.questionId && sq.answer.trim() !== ""
+    );
   };
 
   const getPasswordErrors = (): string[] => {
     const errors: string[] = [];
     if (formData.password && formData.password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
+      errors.push("Password must be at least 8 characters long");
     }
-    if (formData.password !== formData.confirmPassword && formData.confirmPassword) {
-      errors.push('Passwords do not match');
+    if (
+      formData.password !== formData.confirmPassword &&
+      formData.confirmPassword
+    ) {
+      errors.push("Passwords do not match");
     }
     return errors;
+  };
+
+  const getValidationErrors = (): string[] => {
+    const errors: string[] = [];
+    if (formData.selectedServices.length === 0) {
+      errors.push("Please select at least one service");
+    }
+    return [...getPasswordErrors(), ...errors];
   };
 
   const handleNext = () => {
@@ -237,16 +304,23 @@ const DentistSignUp: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateStep2()) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
+      // Show loading state
+      toast.loading('Creating your account...');
+      
       // First, create the dentist
-      const { securityQuestions: securityAnswers, profilePicture, ...dentistData } = formData;
+      const {
+        securityQuestions: securityAnswers,
+        profilePicture,
+        ...dentistData
+      } = formData;
 
       // Prepare dentist data in the exact format expected by the backend
       const dentistPayload = {
@@ -254,28 +328,30 @@ const DentistSignUp: React.FC = () => {
         password: dentistData.password,
         name: dentistData.name.trim(),
         phone_number: dentistData.phoneNumber,
-        language: dentistData.language || '',
-        invoice_service_id: Number(dentistData.serviceTypes) || Number('1'),
-        work_days_from: dentistData.workDaysFrom || 'Monday',
-        work_days_to: dentistData.workDaysTo || 'Friday',
-        work_time_from: dentistData.workTimeFrom || '08:00',
-        work_time_to: dentistData.workTimeTo || '17:00',
-        appointment_duration: dentistData.appointmentDuration || '30',
-        appointment_fee: dentistData.appointmentFee ? parseFloat(dentistData.appointmentFee) : 0,
+        language: dentistData.language || "",
+        service_ids: formData.selectedServices, // Use new service_ids array
+        work_days_from: dentistData.workDaysFrom || "Monday",
+        work_days_to: dentistData.workDaysTo || "Friday",
+        work_time_from: dentistData.workTimeFrom || "08:00",
+        work_time_to: dentistData.workTimeTo || "17:00",
+        appointment_duration: dentistData.appointmentDuration || "30",
+        appointment_fee: dentistData.appointmentFee
+          ? parseFloat(dentistData.appointmentFee)
+          : 0,
       };
 
       // Create dentist
       const receptionistResponse = await fetch(`${backendURL}/dentists`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(dentistPayload),
       });
 
       if (!receptionistResponse.ok) {
         const errorData = await receptionistResponse.json();
-        throw new Error(errorData.error || 'Failed to create dentist account');
+        throw new Error(errorData.error || "Failed to create dentist account");
       }
 
       const dentist = await receptionistResponse.json();
@@ -288,35 +364,46 @@ const DentistSignUp: React.FC = () => {
       if (profilePicture) {
         console.log("There is a profile picture.");
         const formData = new FormData();
-        formData.append('image', profilePicture);
+        formData.append("image", profilePicture);
 
-        const uploadResponse = await fetch(`${backendURL}/photos`, {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (uploadResponse.ok) {
-          const { url } = await uploadResponse.json();
-          await fetch(`${backendURL}/dentists/forPicture/${dentist.dentist_id}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              profile_picture: url,
-            }),
+        try {
+          const uploadResponse = await fetch(`${backendURL}/photos`, {
+            method: "POST",
+            body: formData,
           });
+
+          if (uploadResponse.ok) {
+            const { url } = await uploadResponse.json();
+            await fetch(
+              `${backendURL}/dentists/forPicture/${dentist.dentist_id}`,
+              {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  profile_picture: url,
+                }),
+              }
+            );
+          }
+        } catch (uploadError) {
+          console.error('Profile picture upload failed:', uploadError);
+          // Continue with registration even if upload fails
+          toast.warning('Profile picture upload failed. Continuing without it.');
         }
       }
 
       // Save security questions answers
+      toast.loading('Saving your security questions...');
+      
       const securityQuestionPromises = securityAnswers.map(async (sq) => {
         if (!sq.questionId || !sq.answer.trim()) return null;
 
         return fetch(`${backendURL}/dentist-security-questions-answers`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             dentist_id: dentistId,
@@ -326,34 +413,64 @@ const DentistSignUp: React.FC = () => {
         });
       });
 
-      await Promise.all(securityQuestionPromises);
+      try {
+        // Wait for all security questions to be saved
+        await Promise.all(securityQuestionPromises);
+        
+        // Dismiss loading and show success
+        toast.dismiss();
+        toast.success('Registration successful! Redirecting to login...');
+        
+        // Mark registration as successful
+        setRegistrationSuccess(true);
 
-      // Mark registration as successful
-      setRegistrationSuccess(true);
-
-      // Clear form
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phoneNumber: '',
-        language: '',
-        serviceTypes: 'general',
-        workDaysFrom: 'Monday',
-        workDaysTo: 'Friday',
-        workTimeFrom: '08:00',
-        workTimeTo: '17:00',
-        appointmentDuration: '30',
-        appointmentFee: '',
-        profilePicture: null,
-        securityQuestions: Array(3).fill({ questionId: '', answer: '' })
-      });
-      setProfileImagePreview(null);
-
+        // Clear form
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          phoneNumber: "",
+          language: "",
+          selectedServices: [], // Reset to empty array
+          workDaysFrom: "Monday",
+          workDaysTo: "Friday",
+          workTimeFrom: "08:00",
+          workTimeTo: "17:00",
+          appointmentDuration: "30",
+          appointmentFee: "",
+          profilePicture: null,
+          securityQuestions: Array(3).fill({ questionId: "", answer: "" }),
+        });
+        setProfileImagePreview(null);
+        
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+        
+      } catch (securityError) {
+        console.error('Failed to save security questions:', securityError);
+        toast.error('Account created but failed to save security questions. Please update them in your profile.');
+        // Still show success since account was created
+        setRegistrationSuccess(true);
+        setTimeout(() => {
+          router.push('/');
+        }, 3000);
+      }
     } catch (err) {
-      console.error('Registration failed:', err);
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      console.error("Registration failed:", err);
+      toast.dismiss(); // Dismiss any loading toasts
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please try again."
+      );
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Registration failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -361,25 +478,39 @@ const DentistSignUp: React.FC = () => {
 
   const getAvailableQuestions = (currentIndex: number): SecurityQuestion[] => {
     const selectedIds = formData.securityQuestions
-      .map((sq, index) => index !== currentIndex ? sq.questionId : null)
-      .filter((id): id is string => id !== null && id !== '');
+      .map((sq, index) => (index !== currentIndex ? sq.questionId : null))
+      .filter((id): id is string => id !== null && id !== "");
 
-    return securityQuestions.filter(q => !selectedIds.includes(q.security_question_id.toString()));
+    return securityQuestions.filter(
+      (q) => !selectedIds.includes(q.security_question_id.toString())
+    );
   };
 
   const progressValue = (currentStep / 2) * 100;
-  const passwordErrors = getPasswordErrors();
+  const validationErrors = getValidationErrors();
 
   if (registrationSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="p-6 max-w-md w-full bg-white rounded-lg shadow-md text-center">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="h-6 w-6 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h2 className="mt-3 text-xl font-semibold text-gray-900">Registration Successful!</h2>
+          <h2 className="mt-3 text-xl font-semibold text-gray-900">
+            Registration Successful!
+          </h2>
           <p className="mt-2 text-gray-600">
             Your dentist ID is: <span className="font-bold">{generatedId}</span>
           </p>
@@ -389,7 +520,7 @@ const DentistSignUp: React.FC = () => {
           </p>
           <div className="mt-6">
             <Button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="w-full bg-emerald-600 hover:bg-emerald-700"
             >
               Go to Login
@@ -406,7 +537,7 @@ const DentistSignUp: React.FC = () => {
         <div className="p-6 max-w-md w-full bg-white rounded-lg shadow-md">
           <h2 className="text-xl font-semibold text-red-600 mb-4">Error</h2>
           <p className="text-gray-700 mb-4">{error}</p>
-          <Button onClick={() => setError('')} className="w-full">
+          <Button onClick={() => setError("")} className="w-full">
             Go Back
           </Button>
         </div>
@@ -424,7 +555,7 @@ const DentistSignUp: React.FC = () => {
               Step {currentStep} of 2
             </span>
             <span className="text-sm font-medium text-gray-600">
-              {currentStep === 1 ? 'Basic Information' : 'Security Questions'}
+              {currentStep === 1 ? "Basic Information" : "Security Questions"}
             </span>
           </div>
           <Progress value={progressValue} className="h-2 bg-emerald-200" />
@@ -436,7 +567,9 @@ const DentistSignUp: React.FC = () => {
               // Step 1: Basic Information
               <div>
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="text-3xl font-bold text-center">Create Your Account</CardTitle>
+                  <CardTitle className="text-3xl font-bold text-center">
+                    Create Your Account
+                  </CardTitle>
                   <CardDescription className="text-center mb-8">
                     Enter your professional information to get started
                   </CardDescription>
@@ -454,9 +587,11 @@ const DentistSignUp: React.FC = () => {
                       <div className="relative">
                         {profileImagePreview ? (
                           <div className="relative">
-                            <img
+                            <Image
                               src={profileImagePreview}
                               alt="Profile preview"
+                              width={128}
+                              height={128}
                               className="w-32 h-32 rounded-full object-cover border-4 border-emerald-200 shadow-lg"
                             />
                             <button
@@ -483,7 +618,9 @@ const DentistSignUp: React.FC = () => {
                           className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                         >
                           <Upload className="w-4 h-4 mr-2" />
-                          {profileImagePreview ? 'Change Picture' : 'Upload Picture'}
+                          {profileImagePreview
+                            ? "Change Picture"
+                            : "Upload Picture"}
                         </Button>
                         <p className="text-sm text-gray-500 mt-2">
                           JPG, PNG or GIF. Max size 5MB.
@@ -519,7 +656,9 @@ const DentistSignUp: React.FC = () => {
                       type="text"
                       required
                       value={formData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       placeholder="Dr. John Smith"
                       className="focus-visible:ring-emerald-200"
                     />
@@ -536,7 +675,9 @@ const DentistSignUp: React.FC = () => {
                       type="email"
                       required
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       placeholder="john.smith@email.com"
                       className="focus-visible:ring-emerald-200"
                     />
@@ -545,13 +686,17 @@ const DentistSignUp: React.FC = () => {
                   {/* Password */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="password">
+                        Password <span className="text-red-500">*</span>
+                      </Label>
                       <div className="relative">
                         <Input
                           id="password"
                           type={showPassword ? "text" : "password"}
                           value={formData.password}
-                          onChange={(e) => handleInputChange('password', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("password", e.target.value)
+                          }
                           placeholder="••••••••"
                           className="focus-visible:ring-emerald-200 pr-10"
                         />
@@ -560,28 +705,44 @@ const DentistSignUp: React.FC = () => {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500">Minimum 8 characters</p>
+                      <p className="text-xs text-gray-500">
+                        Minimum 8 characters
+                      </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password <span className="text-red-500">*</span></Label>
+                      <Label htmlFor="confirmPassword">
+                        Confirm Password <span className="text-red-500">*</span>
+                      </Label>
                       <div className="relative">
                         <Input
                           id="confirmPassword"
                           type={showConfirmPassword ? "text" : "password"}
                           value={formData.confirmPassword}
-                          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("confirmPassword", e.target.value)
+                          }
                           placeholder="••••••••"
                           className="focus-visible:ring-emerald-200 pr-10"
                         />
                         <button
                           type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
                         >
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -597,48 +758,30 @@ const DentistSignUp: React.FC = () => {
                       id="phone"
                       type="tel"
                       value={formData.phoneNumber}
-                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("phoneNumber", e.target.value)
+                      }
                       placeholder="+1 (555) 123-4567"
                       className="focus-visible:ring-emerald-200"
                     />
                   </div>
 
                   {/* Language & Service Types */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="language" className="flex items-center">
-                        <Globe className="w-4 h-4 mr-2" />
-                        Language
-                      </Label>
-                      <Input
-                        id="language"
-                        type="text"
-                        value={formData.language}
-                        onChange={(e) => handleInputChange('language', e.target.value)}
-                        placeholder="English, Spanish, French..."
-                        className="focus-visible:ring-emerald-200"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="serviceTypes">Service Types</Label>
-                      <Select
-                        value={formData.serviceTypes}
-                        onValueChange={(value) => handleInputChange('serviceTypes', value)}
-                      >
-                        <SelectTrigger className="focus:ring-emerald-200">
-                          <SelectValue placeholder="Select Service" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {invoiceServices.map(service => (
-                            <SelectItem key={service.service_id} value={service.service_id.toString()}>
-                              {service.service_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
-                    </div>
-
+                  <div className="space-y-2">
+                    <Label htmlFor="language" className="flex items-center">
+                      <Globe className="w-4 h-4 mr-2" />
+                      Language
+                    </Label>
+                    <Input
+                      id="language"
+                      type="text"
+                      value={formData.language}
+                      onChange={(e) =>
+                        handleInputChange("language", e.target.value)
+                      }
+                      placeholder="English, Spanish, French..."
+                      className="focus-visible:ring-emerald-200"
+                    />
                   </div>
 
                   {/* Work Days */}
@@ -648,26 +791,40 @@ const DentistSignUp: React.FC = () => {
                         <Calendar className="w-4 h-4 mr-2" />
                         Work Days From
                       </Label>
-                      <Select value={formData.workDaysFrom} onValueChange={(value) => handleInputChange('workDaysFrom', value)}>
+                      <Select
+                        value={formData.workDaysFrom}
+                        onValueChange={(value) =>
+                          handleInputChange("workDaysFrom", value)
+                        }
+                      >
                         <SelectTrigger className="focus:ring-emerald-200">
                           <SelectValue placeholder="Select Day" />
                         </SelectTrigger>
                         <SelectContent>
-                          {daysOfWeek.map(day => (
-                            <SelectItem key={day} value={day}>{day}</SelectItem>
+                          {daysOfWeek.map((day) => (
+                            <SelectItem key={day} value={day}>
+                              {day}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Work Days To</Label>
-                      <Select value={formData.workDaysTo} onValueChange={(value) => handleInputChange('workDaysTo', value)}>
+                      <Select
+                        value={formData.workDaysTo}
+                        onValueChange={(value) =>
+                          handleInputChange("workDaysTo", value)
+                        }
+                      >
                         <SelectTrigger className="focus:ring-emerald-200">
                           <SelectValue placeholder="Select Day" />
                         </SelectTrigger>
                         <SelectContent>
-                          {daysOfWeek.map(day => (
-                            <SelectItem key={day} value={day}>{day}</SelectItem>
+                          {daysOfWeek.map((day) => (
+                            <SelectItem key={day} value={day}>
+                              {day}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -677,7 +834,10 @@ const DentistSignUp: React.FC = () => {
                   {/* Work Time */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="workTimeFrom" className="flex items-center">
+                      <Label
+                        htmlFor="workTimeFrom"
+                        className="flex items-center"
+                      >
                         <Clock className="w-4 h-4 mr-2" />
                         Work Time From
                       </Label>
@@ -685,7 +845,9 @@ const DentistSignUp: React.FC = () => {
                         id="workTimeFrom"
                         type="time"
                         value={formData.workTimeFrom}
-                        onChange={(e) => handleInputChange('workTimeFrom', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("workTimeFrom", e.target.value)
+                        }
                         className="focus-visible:ring-emerald-200"
                       />
                     </div>
@@ -695,11 +857,60 @@ const DentistSignUp: React.FC = () => {
                         id="workTimeTo"
                         type="time"
                         value={formData.workTimeTo}
-                        onChange={(e) => handleInputChange('workTimeTo', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("workTimeTo", e.target.value)
+                        }
                         className="focus-visible:ring-emerald-200"
                       />
                     </div>
                   </div>
+
+                  {/*service selection */}
+                  <Label>Services Offered</Label>
+                  <div className="space-y-3 max-h-60 overflow-y-auto border rounded-md p-4">
+                    {loadingServices ? (
+                      <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600 mx-auto"></div>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Loading services...
+                        </p>
+                      </div>
+                    ) : invoiceServices.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {invoiceServices.map((service) => (
+                          <div
+                            key={service.service_id}
+                            className="flex items-center space-x-2"
+                          >
+                            <Checkbox
+                              id={`service-${service.service_id}`}
+                              checked={formData.selectedServices.includes(
+                                service.service_id
+                              )}
+                              onCheckedChange={() =>
+                                handleServiceToggle(service.service_id)
+                              }
+                            />
+                            <Label
+                              htmlFor={`service-${service.service_id}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {service.service_name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No services available
+                      </p>
+                    )}
+                  </div>
+                  {formData.selectedServices.length > 0 && (
+                    <p className="text-xs text-gray-600">
+                      {formData.selectedServices.length} service(s) selected
+                    </p>
+                  )}
 
                   {/* Appointment Duration & Fee */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -730,11 +941,11 @@ const DentistSignUp: React.FC = () => {
                     </div>*/}
                   </div>
 
-                  {passwordErrors.length > 0 && (
+                  {validationErrors.length > 0 && (
                     <Alert variant="destructive">
                       <AlertDescription>
                         <ul className="list-disc list-inside space-y-1">
-                          {passwordErrors.map((error, index) => (
+                          {validationErrors.map((error, index) => (
                             <li key={index}>{error}</li>
                           ))}
                         </ul>
@@ -756,35 +967,51 @@ const DentistSignUp: React.FC = () => {
               // Step 2: Security Questions
               <div>
                 <CardHeader className="px-0 pt-0">
-                  <CardTitle className="text-3xl font-bold text-center">Security Questions</CardTitle>
+                  <CardTitle className="text-3xl font-bold text-center">
+                    Security Questions
+                  </CardTitle>
                   <CardDescription className="text-center">
-                    Please select and answer three security questions. These will help protect your account.
+                    Please select and answer three security questions. These
+                    will help protect your account.
                   </CardDescription>
                 </CardHeader>
 
                 <div className="space-y-6">
                   {formData.securityQuestions.map((securityQuestion, index) => (
-                    <Card key={index} className="bg-emerald-50 border-emerald-100">
+                    <Card
+                      key={index}
+                      className="bg-emerald-50 border-emerald-100"
+                    >
                       <CardHeader>
                         <CardTitle className="text-lg text-emerald-900">
-                          Question {index + 1} <span className="text-red-500 ml-1">*</span>
+                          Question {index + 1}{" "}
+                          <span className="text-red-500 ml-1">*</span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="space-y-2">
                           <Label>
-                            Select a security question <span className="text-red-500 ml-1">*</span>
+                            Select a security question{" "}
+                            <span className="text-red-500 ml-1">*</span>
                           </Label>
                           <Select
                             value={securityQuestion.questionId}
-                            onValueChange={(value) => handleSecurityQuestionChange(index, 'questionId', value)}
+                            onValueChange={(value) =>
+                              handleSecurityQuestionChange(
+                                index,
+                                "questionId",
+                                value
+                              )
+                            }
                           >
                             <SelectTrigger className="focus:ring-emerald-500">
                               <SelectValue placeholder="Select a security question" />
                             </SelectTrigger>
                             <SelectContent>
-                              {getAvailableQuestions(index).map(q => (
-                                <SelectItem key={q.id} value={q.id.toString()}>{q.question}</SelectItem>
+                              {getAvailableQuestions(index).map((q) => (
+                                <SelectItem key={q.id} value={q.id.toString()}>
+                                  {q.question}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -792,12 +1019,19 @@ const DentistSignUp: React.FC = () => {
 
                         <div className="space-y-2">
                           <Label>
-                            Your Answer <span className="text-red-500 ml-1">*</span>
+                            Your Answer{" "}
+                            <span className="text-red-500 ml-1">*</span>
                           </Label>
                           <Input
                             type="text"
                             value={securityQuestion.answer}
-                            onChange={(e) => handleSecurityQuestionChange(index, 'answer', e.target.value)}
+                            onChange={(e) =>
+                              handleSecurityQuestionChange(
+                                index,
+                                "answer",
+                                e.target.value
+                              )
+                            }
                             placeholder="Enter your answer"
                             disabled={!securityQuestion.questionId}
                             className="focus-visible:ring-emerald-200"
@@ -823,7 +1057,7 @@ const DentistSignUp: React.FC = () => {
                       className="w-full sm:flex-1 bg-emerald-600 hover:bg-emerald-700"
                       size="lg"
                     >
-                      {isLoading ? 'Processing...' : 'Complete Registration'}
+                      {isLoading ? "Processing..." : "Complete Registration"}
                     </Button>
                   </div>
                 </div>
