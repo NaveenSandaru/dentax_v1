@@ -585,7 +585,7 @@ const ConsentFormOverlay: React.FC<ConsentFormOverlayProps> = ({
       // Use the current user's ID as dentist_id (works for both dentist and admin)
       const response = await apiClient.post(`/consent-forms`, {
         patient_id: selectedPatient.patient_id,
-        dentist_id: 'knrsdent001',
+        dentist_id: user.id,
         procedure_details: procedureDetails,
         explanation_given: explanationGiven,
         status: 'pending'

@@ -105,7 +105,7 @@ router.post('/',  authenticateToken,  async (req, res) => {
     const consentForm = await prisma.consent_form.create({
       data: {
         patient_id,
-        dentist_id: 'knrsdent001',
+        dentist_id,
         procedure_details,
         explanation_given,
         status: status || 'pending', // Default status is pending

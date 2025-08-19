@@ -324,7 +324,7 @@ const AdminProfilePage = () => {
                 {dentistData?.name || 'Admin Profile'}
               </h1>
               <p className="text-sm sm:text-base text-gray-700 font-medium mb-1">
-                <span className="text-gray-800">{dentistData?.dentist_id || 'knrsdent001'}</span>
+                <span className="text-gray-800">{dentistData?.dentist_id || 'dentaxdent001'}</span>
               </p>
               <p className="text-sm sm:text-base text-gray-500">
                 {dentistData?.email || 'No email set'}

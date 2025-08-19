@@ -66,7 +66,7 @@ export const LabOrderForm: React.FC<LabOrderFormProps> = ({
 }) => {
   const { control, handleSubmit, watch } = useForm<FormData>({
     defaultValues: {
-      dentist_id: 'knrsdent001' // Set default dentist ID
+      dentist_id: dentists[0]?.dentist_id // Set default dentist ID
     }
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -244,12 +244,12 @@ export const LabOrderForm: React.FC<LabOrderFormProps> = ({
                 </div>
               </div>
 
-              {/* Hidden dentist field with hardcoded value */}
-              <input type="hidden" name="dentist_id" value="knrsdent001" />
+              {/* Hidden dentist field with hardcoded value TODO:sandx*/}
+              <input name="dentist_id" value="Enter dentist id" />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
                 <div className="w-full px-3 py-2 bg-gray-100 rounded-lg text-gray-700">
-                  {dentists.find(d => d.dentist_id === 'knrsdent001')?.name || 'Default Dentist'}
+                  {dentists.find(d => d.dentist_id === 'dentaxdent001')?.name || 'Default Dentist'}
                 </div>
               </div>
 
