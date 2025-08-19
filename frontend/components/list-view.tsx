@@ -555,140 +555,123 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
             )}
           </div>
 
-          {/* Mobile View */}
-          <div className="lg:hidden space-y-3 sm:space-y-4">
-            {filteredAppointments.map((appointment) => (
-              <Card key={appointment.appointment_id} className="w-full">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="space-y-3">
-                    {/* Patient Info */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                          <span className="font-medium text-gray-900 text-sm truncate">
-                            {appointment.patient?.name}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                          <Mail className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{appointment.patient?.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Phone className="w-3 h-3 flex-shrink-0" />
-                          {appointment.patient?.phone_number}
-                        </div>
+          {/* Mobile View with temp patinets */}
+          <div className="block lg:hidden">
+            {filteredAppointments.length > 0 ? (
+              filteredAppointments.map((appointment) => (
+                <Card key={appointment.appointment_id} className="mb-4">
+                  <CardContent>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">
+                          {appointment.patient?.name || appointment.temp_patient?.name || 'Deleted patient'}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          {appointment.patient?.email || appointment.temp_patient?.email || 'No email'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {appointment.patient?.phone_number || appointment.temp_patient?.phone_number || 'No phone'}
+                        </p>
                       </div>
-                      <Badge className={`${getStatusColor(appointment.status)} text-xs flex-shrink-0`}>
-                        {appointment.status}
-                      </Badge>
-                    </div>
-
-                    {/* Dentist Info */}
-                    <div className="border-t pt-3">
-                      <div className="text-xs text-gray-600 mb-1">
-                        <strong>Dentist:</strong> {appointment.dentist?.name}
-                      </div>
-                      <div className="text-xs text-gray-500 truncate">{appointment.dentist?.email}</div>
-                    </div>
-
-                    {/* Appointment Details */}
-                    <div className="border-t pt-3 space-y-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span>{formatDate(appointment.date)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <Clock className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span>
-                          {formatTime(appointment.time_from)} - {formatTime(appointment.time_to)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <DollarSign className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span>LKR {appointment.fee}</span>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${getStatusColor(appointment.status)} text-xs`}>
+                          {appointment.status}
+                        </Badge>
                         <Badge className={`${getPaymentStatusColor(appointment.payment_status)} text-xs`}>
                           {appointment.payment_status}
                         </Badge>
                       </div>
-                      {appointment.note && (
-                        <div className="flex items-start gap-2 text-xs">
-                          <FileText className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-600 break-words">{appointment.note}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Payment Toggle */}
-                    <div className="border-t pt-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <CreditCard className="w-4 h-4 text-gray-500" />
-                          <span className="text-xs font-medium">Payment Status</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={appointment.payment_status === "paid"}
-                            onCheckedChange={() =>
-                              handlePaymentToggle(appointment.appointment_id, appointment.payment_status)
-                            }
-                            disabled={appointment.payment_status === "paid"}
-                            className="data-[state=checked]:bg-green-500 scale-75"
-                          />
-                          <span className="text-xs text-gray-500">
-                            {appointment.payment_status === "paid" ? "Paid" : "Mark as Paid"}
-                          </span>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1"
+                          onClick={() => handlePaymentToggle(appointment.appointment_id, appointment.payment_status)}
+                          disabled={appointment.payment_status === "paid" || appointment.status === "cancelled"}
+                        >
+                          {appointment.payment_status === "paid" ? "Paid" : "Mark as Paid"}
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Action Button */}
-                    <div className="border-t pt-3 flex flex-col gap-2">
-                      {appointment.status === "checkedin" ? (
-                        <div className="flex justify-center">
-                          <CheckCircle className="text-green-600 w-5 h-5" />
-                        </div>
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-600">{appointment.note}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(appointment.date)} - {formatTime(appointment.time_from)} to{" "}
+                        {formatTime(appointment.time_to)}
+                      </p>
+                    </div>
+                    
+                    <div className="mt-3 flex items-center space-x-2">
+                      {appointment.temp_patient && appointment.status === "noshow" ? (
+                        <span className="text-red-500 text-xs font-medium">No Show</span>
+                      ) : appointment.status === "cancelled" ? (
+                        <span className="text-red-500 text-xs font-medium">Cancelled</span>
+                      ) : appointment.temp_patient ? (
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                          onClick={() => {
+                            const basePath = user.role === "receptionist" ? "/receptionist" : "/admin";
+                            router.push(`${basePath}/patients?tempPatientId=${appointment.temp_patient?.temp_patient_id}`);
+                          }}
+                        >
+                          Register
+                        </Button>
+                      ) : appointment.status === "checkedin" ? (
+                        <CheckCircle className="text-green-600 w-4 h-4" />
+                      ) : appointment.status === "rescheduled" ? (
+                        <span className="text-blue-500 text-xs font-medium">Rescheduled</span>
+                      ) : appointment.status === "noshow" ? (
+                        <span className="text-red-500 text-xs font-medium">No Show</span>
+                      ) : appointment.status === "overdue" ? (
+                        <span className="text-orange-500 text-xs font-medium">Overdue</span>
                       ) : isToday(appointment.date) ? (
                         <Button
                           size="sm"
-                          className="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-800 border border-yellow-200 text-xs"
+                          className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-xs px-2 py-1"
                           onClick={() => handleCheckIn(appointment.appointment_id)}
                         >
                           Check In
                         </Button>
                       ) : (
-                        <div className="flex justify-center">
-                          <span className="text-gray-500 text-xs font-medium">Check-in available on appointment date</span>
-                        </div>
+                        <span className="text-gray-500 text-xs font-medium">Upcoming</span>
                       )}
+
+                   
+                    </div>
+                    <div className="mt-4 flex items-center space-x-8">
+                      {/* Cancel button */}
                       {appointment.status !== "checkedin" && appointment.status !== "cancelled" && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <XCircle
-                              className="w-5 h-5 text-gray-500 cursor-pointer mx-auto"
+                              className="w-4 h-4 text-gray-500 cursor-pointer"
                               onClick={() => handleCancel(appointment.appointment_id)}
                             />
                           </TooltipTrigger>
                           <TooltipContent>Cancel Appointment</TooltipContent>
                         </Tooltip>
                       )}
+                      {/* Mark No-Show button */}
+                      {appointment.status !== "checkedin" &&
+                        appointment.status !== "cancelled" &&
+                        appointment.status !== "noshow" && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Ban
+                                className="w-4 h-4 text-red-600 cursor-pointer"
+                                onClick={() => handleNoShow(appointment.appointment_id)}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>Mark No-Show</TooltipContent>
+                          </Tooltip>
+                        )}
 
-                      {appointment.status !== "checkedin" && appointment.status !== "cancelled" && appointment.status !== "noshow" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Ban
-                              className="w-5 h-5 text-red-600 cursor-pointer mx-auto"
-                              onClick={() => handleNoShow(appointment.appointment_id)}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>Mark No-Show</TooltipContent>
-                        </Tooltip>
-                      )}
+                      {/* Reschedule button */}
                       {appointment.status !== "checkedin" && appointment.status !== "cancelled" && (
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <RotateCcw
-                              className="w-5 h-5 text-blue-600 cursor-pointer mx-auto"
+                              className="w-4 h-4 text-blue-600 cursor-pointer"
                               onClick={() => handleReschedule(appointment)}
                             />
                           </TooltipTrigger>
@@ -696,11 +679,20 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
                         </Tooltip>
                       )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+
+
+
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No appointments found</p>
+            )}
           </div>
+
+
+          
 
           {/* Empty State */}
           {filteredAppointments.length === 0 && (

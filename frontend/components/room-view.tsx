@@ -288,7 +288,7 @@ export function RoomView({ weekDays, selectedDate, viewMode }: RoomViewProps) {
                             console.log('Add new assignment for:', room.room_id, day.date);
                           }}
                         >
-                          Available
+                         
                         </div>
                       )}
                     </div>
