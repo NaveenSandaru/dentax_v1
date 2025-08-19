@@ -452,7 +452,6 @@ const DentistSignUp: React.FC = () => {
       } catch (securityError) {
         console.error('Failed to save security questions:', securityError);
         toast.error('Account created but failed to save security questions. Please update them in your profile.');
-        // Still show success since account was created
         setRegistrationSuccess(true);
         setTimeout(() => {
           router.push('/');
