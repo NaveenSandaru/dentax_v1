@@ -55,22 +55,22 @@ export default function DentistListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[98vw] max-w-[900px] max-h-[92vh] overflow-y-auto rounded-2xl shadow-xl">
+      <DialogContent className="w-[95vw] sm:w-[98vw] max-w-[900px] max-h-[92vh] overflow-y-auto rounded-2xl shadow-xl">
         <DialogHeader className="border-b border-gray-200 pb-4">
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-emerald-600">
+          <DialogTitle className="text-lg sm:text-2xl font-bold text-emerald-600">
             Dentists for Service #{serviceID}
           </DialogTitle>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 text-xs sm:text-sm">
             List of dentists assigned to this service
           </p>
         </DialogHeader>
 
         {loading ? (
-          <div className="py-12 text-center text-gray-500 text-lg">
+          <div className="py-12 text-center text-gray-500 text-base sm:text-lg">
             Loading dentists...
           </div>
         ) : dentists.length === 0 ? (
-          <div className="py-12 text-center text-gray-500 text-lg">
+          <div className="py-12 text-center text-gray-500 text-base sm:text-lg">
             No dentists assigned to this service.
           </div>
         ) : (
@@ -81,18 +81,18 @@ export default function DentistListDialog({
                   key={dentist.dentist_id}
                   className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 hover:shadow-md transition"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
                     <img
                       src={`${backendURL}${dentist.profile_picture}`}
                       alt={dentist.name}
-                      className="w-20 h-20 rounded-full object-cover flex-shrink-0" // made bigger
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover flex-shrink-0 mx-auto sm:mx-0"
                     />
                     <div className="flex-1 flex flex-col justify-center">
-                      <h3 className="text-lg font-semibold text-gray-900 leading-snug">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 leading-snug">
                         {dentist.name}
                       </h3>
-                      <p className="text-sm text-gray-500 truncate">{dentist.email}</p>
-                      <p className="text-sm text-gray-700 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{dentist.email}</p>
+                      <p className="text-xs sm:text-sm text-gray-700 mt-1">
                         <span className="font-medium text-gray-900">Phone: </span>
                         {dentist.phone_number || "N/A"}
                       </p>
@@ -108,14 +108,12 @@ export default function DentistListDialog({
           <Button
             variant="outline"
             onClick={onClose}
-            className="px-6 py-2 text-sm"
+            className="px-4 sm:px-6 py-2 text-xs sm:text-sm"
           >
             Close
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  );
-
-
+  )
 }

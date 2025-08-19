@@ -229,7 +229,7 @@ const AdminSidebar = () => {
 
       {/* Mobile Sidebar - custom div structure */}
       <div
-        className={`md:hidden fixed left-0 top-0 z-[95] w-72 bg-white shadow-lg min-h-screen border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`md:hidden fixed left-0 top-0 z-[95] w-72 h-screen bg-white shadow-lg border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

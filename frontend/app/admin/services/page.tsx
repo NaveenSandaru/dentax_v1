@@ -140,7 +140,7 @@ export default function InvoiceServicePage() {
     return (
         <div className="flex flex-col h-full">
             <Tabs defaultValue="invoice-services" className="flex-1 flex flex-col">
-                <TabsList className="md:mt-5 mb-4">
+                <TabsList className="md:mt-5 mb-4 mx-auto my-auto h-16 md:h-8">
                     <TabsTrigger value="invoice-services">Invoice Services</TabsTrigger>
                     <TabsTrigger value="treatment-groups">Treatment Groups</TabsTrigger>
                 </TabsList>
@@ -164,67 +164,147 @@ export default function InvoiceServicePage() {
                                 </div>
 
                                 <div className="bg-white rounded-lg shadow overflow-x-auto flex-1">
-                                    <div className="bg-green-50 px-6 py-3 border-b border-green-200">
-                                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-                                            <div className="col-span-1">ID</div>
-                                            <div className="col-span-2">Service Name</div>
-                                            <div className="col-span-2">Treatment Group</div>
-                                            <div className="col-span-1">Type</div>
-                                            <div className="col-span-1">Amount</div>
-                                            <div className="col-span-1">Tax (%)</div>
-                                            <div className="col-span-2">Description</div>
-                                            <div className="col-span-2">Actions</div>
+                                    {/* Desktop Table View */}
+                                    <div className="hidden md:block">
+                                        <div className="bg-green-50 px-6 py-3 border-b border-green-200">
+                                            <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
+                                                <div className="col-span-1">ID</div>
+                                                <div className="col-span-2">Service Name</div>
+                                                <div className="col-span-2">Treatment Group</div>
+                                                <div className="col-span-1">Type</div>
+                                                <div className="col-span-1">Amount</div>
+                                                <div className="col-span-1">Tax (%)</div>
+                                                <div className="col-span-2">Description</div>
+                                                <div className="col-span-2">Actions</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="divide-y divide-gray-200">
+                                            {fetchingData ? (
+                                                <div className="px-6 py-12 text-center">
+                                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
+                                                    <p className="text-gray-500 mt-2">Loading invoice services...</p>
+                                                </div>
+                                            ) : invoiceServices.length === 0 ? (
+                                                <div className="px-6 py-6 text-center text-gray-500">
+                                                    No invoice services found.
+                                                </div>
+                                            ) : (
+                                                invoiceServices.map((service) => (
+                                                    <div
+                                                        key={`desktop-${service.service_id}`}
+                                                        className="px-6 py-4 hover:bg-gray-50"
+                                                    >
+                                                        <div className="grid grid-cols-12 gap-4 items-center text-sm">
+                                                            <div className="text-gray-900 col-span-1">{service.service_id}</div>
+                                                            <div className="text-gray-900 col-span-2">{service.service_name}</div>
+                                                            <div className="text-gray-700 col-span-2">
+                                                                {service.treatment?.treatment_group}
+                                                            </div>
+                                                            <div className="text-gray-700 col-span-1">{service.treatment_type}</div>
+                                                            <div className="text-gray-700 col-span-1">Rs. {service.amount.toFixed(2)}</div>
+                                                            <div className="text-gray-700 col-span-1">{service.tax_percentage}%</div>
+                                                            <div className="text-gray-700 col-span-2 truncate" title={service.description}>
+                                                                {service.description || 'N/A'}
+                                                            </div>
+                                                            <div className="col-span-2 flex space-x-2">
+                                                                <button
+                                                                    onClick={() => handleViewDoctors(service.service_id)}
+                                                                    className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                                                                    title="View Dentists"
+                                                                >
+                                                                    <Stethoscope className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleEditInvoiceService(service)}
+                                                                    className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => deleteInvoiceService(service.service_id)}
+                                                                    className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
+                                                                    disabled={deletingInvoiceService}
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="divide-y divide-gray-200">
+                                    {/* Mobile Card View */}
+                                    <div className="md:hidden space-y-3 p-3">
                                         {fetchingData ? (
-                                            <div className="px-6 py-12 text-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
-                                                <p className="text-gray-500 mt-2">Loading invoice services...</p>
+                                            <div className="flex flex-col items-center justify-center p-8 text-center">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+                                                <p className="text-gray-500 mt-3 text-sm">Loading services...</p>
                                             </div>
                                         ) : invoiceServices.length === 0 ? (
-                                            <div className="px-6 py-6 text-center text-gray-500">
-                                                No invoice services found.
+                                            <div className="text-center p-6 text-gray-500">
+                                                No services found
                                             </div>
                                         ) : (
                                             invoiceServices.map((service) => (
                                                 <div
-                                                    key={service.service_id}
-                                                    className="px-6 py-4 hover:bg-gray-50"
+                                                    key={`mobile-${service.service_id}`}
+                                                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md"
                                                 >
-                                                    <div className="grid grid-cols-12 gap-4 items-center text-sm">
-                                                        <div className="text-gray-900 col-span-1">{service.service_id}</div>
-                                                        <div className="text-gray-900 col-span-2">{service.service_name}</div>
-                                                        <div className="text-gray-700 col-span-2">
-                                                            {service.treatment?.treatment_group}
+                                                    <div className="p-4">
+                                                        <div className="flex justify-between items-start">
+                                                            <div>
+                                                                <h3 className="font-semibold text-gray-900 text-base">{service.service_name}</h3>
+                                                                <div className="flex items-center mt-1">
+                                                                    <span className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 rounded-full">
+                                                                        {service.treatment_type}
+                                                                    </span>
+                                                                    <span className="ml-2 text-sm text-gray-500">
+                                                                        {service.treatment?.treatment_group}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="font-semibold text-gray-900">Rs. {service.amount.toFixed(2)}</div>
+                                                                <div className="text-xs text-gray-500">Tax: {service.tax_percentage}%</div>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-gray-600 col-span-1">{service.treatment_type}</div>
-                                                        <div className="text-gray-600 col-span-1">Rs. {service.amount.toFixed(2)}</div>
-                                                        <div className="text-gray-600 col-span-1">{service.tax_percentage}%</div>
-                                                        <div className="text-gray-600 col-span-2 truncate" title={service.description}>
-                                                            {service.description || "N/A"}
-                                                        </div>
-                                                        <div className="flex gap-2 col-span-2">
-                                                            <button
-                                                                onClick={() => handleEditInvoiceService(service)}
-                                                                className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                                                            >
-                                                                <Edit className="h-4" />
-                                                            </button>
+
+                                                        {service.description && (
+                                                            <p className="mt-2 text-sm text-gray-600 line-clamp-2" title={service.description}>
+                                                                {service.description}
+                                                            </p>
+                                                        )}
+
+                                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                                                            <div className="flex space-x-1">
+                                                                <button
+                                                                    onClick={() => handleViewDoctors(service.service_id)}
+                                                                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    title="View Dentists"
+                                                                >
+                                                                    <Stethoscope className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleEditInvoiceService(service)}
+                                                                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
                                                             <button
                                                                 onClick={() => deleteInvoiceService(service.service_id)}
-                                                                className="text-red-500 hover:text-red-700 text-xs font-medium"
+                                                                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                disabled={deletingInvoiceService}
+                                                                title="Delete"
                                                             >
-                                                                <Trash2 className="h-4" />
+                                                                <Trash2 className="h-4 w-4" />
                                                             </button>
-                                                            <button
-                                                                onClick={() => handleViewDoctors(service.service_id)}
-                                                                className="text-purple-500 hover:text-purple-700 text-xs font-medium"
-                                                            >
-                                                                <Stethoscope className="h-4" />
-                                                            </button>
-
                                                         </div>
                                                     </div>
                                                 </div>

@@ -163,7 +163,15 @@ export default function EditInvoiceServiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="
+          w-[95vw] 
+          max-w-2xl 
+          max-h-[80vh] sm:max-h-[90vh]   // 👈 reduced height for mobile
+          overflow-y-auto 
+          rounded-xl
+        "
+      >
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Edit Invoice Service</DialogTitle>
         </DialogHeader>

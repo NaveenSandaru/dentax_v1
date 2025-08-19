@@ -11,7 +11,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
 import { toast } from "sonner"
 
 interface Treatment {
@@ -27,9 +33,9 @@ interface AddInvoiceServiceDialogProps {
   treatmentGroups: Treatment[]
 }
 
-interface Durations{
-  id: string;
-  value: number;
+interface Durations {
+  id: string
+  value: number
 }
 
 export default function AddInvoiceServiceDialog({
@@ -54,34 +60,24 @@ export default function AddInvoiceServiceDialog({
     duration: 0
   })
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
 
-  const [durations, setDurations] = useState<Durations[]>([
-    {
-      id:"1",
-      value: 15
-    },
-    {
-      id:"2",
-      value: 30
-    },
-    {
-      id:"3",
-      value: 45
-    },
-    {
-      id: "4",
-      value: 60
-    }
+  const [durations] = useState<Durations[]>([
+    { id: "1", value: 15 },
+    { id: "2", value: 30 },
+    { id: "3", value: 45 },
+    { id: "4", value: 60 }
   ])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setForm(prev => ({ ...prev, [name]: value }))
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async () => {
@@ -123,19 +119,34 @@ export default function AddInvoiceServiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="
+          w-[95vw] 
+          max-w-2xl 
+          max-h-[80vh] sm:max-h-[90vh]   // 👈 reduced height for mobile
+          overflow-y-auto 
+          rounded-xl
+        "
+      >
         <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Add Invoice Service</DialogTitle>
+          <DialogTitle className="text-base sm:text-xl font-semibold text-emerald-600">
+            Add Invoice Service
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 pt-4">
+        <div className="space-y-4 pt-4 text-sm sm:text-base">
+          {/* Service Name + Amount */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Service Name *</Label>
-              <Input name="service_name" value={form.service_name} onChange={handleChange} />
+              <Label className="text-sm">Service Name *</Label>
+              <Input
+                name="service_name"
+                value={form.service_name}
+                onChange={handleChange}
+              />
             </div>
             <div className="space-y-2">
-              <Label>Amount (Rs.) *</Label>
+              <Label className="text-sm">Amount (Rs.) *</Label>
               <Input
                 type="number"
                 name="amount"
@@ -145,8 +156,9 @@ export default function AddInvoiceServiceDialog({
             </div>
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label className="text-sm">Description</Label>
             <Textarea
               name="description"
               value={form.description}
@@ -156,20 +168,30 @@ export default function AddInvoiceServiceDialog({
             />
           </div>
 
+          {/* Ref Code + Tax Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Ref Code</Label>
-              <Input name="ref_code" value={form.ref_code} onChange={handleChange} />
+              <Label className="text-sm">Ref Code</Label>
+              <Input
+                name="ref_code"
+                value={form.ref_code}
+                onChange={handleChange}
+              />
             </div>
             <div className="space-y-2">
-              <Label>Tax Type</Label>
-              <Input name="tax_type" value={form.tax_type} onChange={handleChange} />
+              <Label className="text-sm">Tax Type</Label>
+              <Input
+                name="tax_type"
+                value={form.tax_type}
+                onChange={handleChange}
+              />
             </div>
           </div>
 
+          {/* Tax % + Treatment Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Tax Percentage</Label>
+              <Label className="text-sm">Tax Percentage</Label>
               <Input
                 type="number"
                 name="tax_percentage"
@@ -178,7 +200,7 @@ export default function AddInvoiceServiceDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Treatment Type</Label>
+              <Label className="text-sm">Treatment Type</Label>
               <Input
                 name="treatment_type"
                 value={form.treatment_type}
@@ -187,17 +209,20 @@ export default function AddInvoiceServiceDialog({
             </div>
           </div>
 
+          {/* Treatment Group */}
           <div className="space-y-2">
-            <Label>Treatment Group *</Label>
+            <Label className="text-sm">Treatment Group *</Label>
             <Select
               value={form.treatment_group_no}
-              onValueChange={(value) => handleSelectChange("treatment_group_no", value)}
+              onValueChange={(value) =>
+                handleSelectChange("treatment_group_no", value)
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Treatment Group" />
               </SelectTrigger>
               <SelectContent>
-                {treatmentGroups.map(group => (
+                {treatmentGroups.map((group) => (
                   <SelectItem key={group.no} value={String(group.no)}>
                     {group.treatment_group}
                   </SelectItem>
@@ -206,9 +231,10 @@ export default function AddInvoiceServiceDialog({
             </Select>
           </div>
 
+          {/* Consumable + Lab Charge + Duration */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Consumable Charge</Label>
+              <Label className="text-sm">Consumable Charge</Label>
               <Input
                 type="number"
                 name="consumable_charge"
@@ -217,7 +243,7 @@ export default function AddInvoiceServiceDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Lab Charge</Label>
+              <Label className="text-sm">Lab Charge</Label>
               <Input
                 type="number"
                 name="lab_charge"
@@ -225,17 +251,19 @@ export default function AddInvoiceServiceDialog({
                 onChange={handleChange}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Duration</Label>
+            <div className="space-y-2 sm:col-span-2">
+              <Label className="text-sm">Duration (mins)</Label>
               <Select
                 value={form.duration.toString()}
-                onValueChange={(value) => handleSelectChange("duration", value)}
+                onValueChange={(value) =>
+                  handleSelectChange("duration", value)
+                }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Treatment Group" />
+                  <SelectValue placeholder="Select Duration" />
                 </SelectTrigger>
                 <SelectContent>
-                  {durations.map(duration => (
+                  {durations.map((duration) => (
                     <SelectItem key={duration.id} value={String(duration.value)}>
                       {duration.value}
                     </SelectItem>
@@ -245,17 +273,19 @@ export default function AddInvoiceServiceDialog({
             </div>
           </div>
 
-          <div className="flex justify-end pt-4 gap-3">
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row justify-end pt-4 gap-3">
             <Button
               variant="outline"
               onClick={onClose}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
-              className="bg-emerald-500 hover:bg-emerald-600"
+              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600"
               disabled={loading}
             >
               {loading ? "Saving..." : "Add Service"}
