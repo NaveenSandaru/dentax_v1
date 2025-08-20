@@ -8,12 +8,18 @@ import {
     TabsContent
 } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Edit, Eye, Stethoscope, Trash2 } from "lucide-react";
+import { AlertTriangle, Edit, Eye, Stethoscope, Trash2 } from "lucide-react";
 import AddTreatmentDialog from "@/components/AddTreatmentDialog";
 import EditTreatmentDialog from "@/components/EditTreatmentDialog";
 import DentistListDialog from "@/components/DentistListDialog";
@@ -62,6 +68,8 @@ export default function InvoiceServicePage() {
     const [fetchingData, setFetchingData] = useState(false);
     const [editingInvoiceService, setEditingInvoiceService] = useState(false);
     const [deletingInvoiceService, setDeletingInvoiceService] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [serviceToDelete, setServiceToDelete] = useState<number | null>(null);
 
     const fetchInvoiceServices = async () => {
         setFetchingData(true);
@@ -101,22 +109,30 @@ export default function InvoiceServicePage() {
         setShowDentistList(true);
     };
 
-    const deleteInvoiceService = async (service_id: number) => {
+    const handleDeleteClick = (service_id: number) => {
+        setServiceToDelete(service_id);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDeleteInvoiceService = async () => {
+        if (!serviceToDelete) return;
+        
         setDeletingInvoiceService(true);
         try {
-            const res = await apiClient.delete(`invoice-services/${service_id}`);
+            const res = await apiClient.delete(`invoice-services/${serviceToDelete}`);
             if (res.status == 500) {
                 throw new Error("Error deleting invoice service");
             }
             toast.success("Invoice service deleted successfully");
-            // Refresh the list after deletion
             fetchInvoiceServices();
+            setDeleteDialogOpen(false);
         }
         catch (err: any) {
             toast.error(err.message);
         }
         finally {
             setDeletingInvoiceService(false);
+            setServiceToDelete(null);
         }
     };
 
@@ -211,7 +227,7 @@ export default function InvoiceServicePage() {
                                                             <div className="col-span-1 flex justify-center space-x-2 text-center">
                                                                 <button
                                                                     onClick={() => handleViewDoctors(service.service_id)}
-                                                                    className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50"
+                                                                    className="text-emerald-600 hover:text-emerald-800 p-1 rounded-full hover:bg-blue-50"
                                                                     title="View Dentists"
                                                                 >
                                                                     <Stethoscope className="h-4 w-4" />
@@ -224,7 +240,7 @@ export default function InvoiceServicePage() {
                                                                     <Edit className="h-4 w-4" />
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => deleteInvoiceService(service.service_id)}
+                                                                    onClick={() => handleDeleteClick(service.service_id)}
                                                                     className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
                                                                     disabled={deletingInvoiceService}
                                                                     title="Delete"
@@ -285,22 +301,22 @@ export default function InvoiceServicePage() {
                                                             <div className="flex space-x-1">
                                                                 <button
                                                                     onClick={() => handleViewDoctors(service.service_id)}
-                                                                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    className="p-1.5 text-emerald-500 hover:text-emerald-800 hover:bg-blue-50 rounded-lg transition-colors"
                                                                     title="View Dentists"
                                                                 >
                                                                     <Stethoscope className="h-4 w-4" />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleEditInvoiceService(service)}
-                                                                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    className="p-1.5 text-blue-500 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
                                                                     title="Edit"
                                                                 >
                                                                     <Edit className="h-4 w-4" />
                                                                 </button>
                                                             </div>
                                                             <button
-                                                                onClick={() => deleteInvoiceService(service.service_id)}
-                                                                className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                onClick={() => handleDeleteClick(service.service_id)}
+                                                                className="p-1.5 text-red-500 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
                                                                 disabled={deletingInvoiceService}
                                                                 title="Delete"
                                                             >
@@ -437,6 +453,42 @@ export default function InvoiceServicePage() {
                     </TabsContent>
                 </div>
             </Tabs>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Delete Invoice Service</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 p-2 rounded-full bg-red-100 text-red-600">
+                            <AlertTriangle className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">
+                                Are you sure you want to delete this invoice service?
+                                This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end space-x-3 mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialogOpen(false)}
+                            disabled={deletingInvoiceService}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmDeleteInvoiceService}
+                            disabled={deletingInvoiceService}
+                        >
+                            {deletingInvoiceService ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 
