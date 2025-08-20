@@ -1282,16 +1282,16 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                             {consentForms.length} forms
                           </Badge>
                         </h3>
-                        <Button
+                       {/* <Button
                           onClick={() => setConsentFormView("create")}
                           className="bg-emerald-500 hover:bg-emerald-600"
                         >
                           <Plus className="h-4 w-4 mr-2" />
                          
   
-  {/* Tablet/Desktop: full text */}
+ 
   <span className="hidden sm:block">New Consent Form</span>
-                        </Button>
+                        </Button>*/}
                       </div>
 
                       <div className="space-y-4">
@@ -1301,13 +1301,13 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                             <p className="text-gray-500 text-sm mb-3">
                               No consent forms available for this patient
                             </p>
-                            <Button
+                            {/*<Button
                               onClick={() => setConsentFormView("create")}
                               className="bg-emerald-500 hover:bg-emerald-600"
                             >
                               <Plus className="h-4 w-4 mr-2" />
                               Create First Consent Form
-                            </Button>
+                            </Button>*/}
                           </div>
                         ) : (
                           [...consentForms]

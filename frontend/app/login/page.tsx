@@ -118,9 +118,9 @@ export default function LoginPage() {
       <form onSubmit={handleLogin} className="w-full max-w-md">
       <Card className="w-full shadow-lg">
         <CardHeader className="text-center pb-6">
-         {/* <div className='text-left'>
+         { <div className='text-left'>
             <Button type='button' className='bg-transparent h-10 w-10 text-emerald-500 hover:bg-gray-100 cursor-pointer'onClick={backtoLanding}>{"<"}</Button>
-          </div>*/}
+          </div>}
           <div className="w-full flex justify-center mb-2">
             <Image
               src={Logo}

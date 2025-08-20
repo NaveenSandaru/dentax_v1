@@ -58,7 +58,6 @@ cron.schedule('*/15 * * * *', async () => {
     const now = new Date();
     const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
 
-    // Format to HH:mm string for time_from comparison
     const pad = (num) => num.toString().padStart(2, '0');
     const hours = pad(fifteenMinutesAgo.getHours());
     const minutes = pad(fifteenMinutesAgo.getMinutes());
@@ -77,7 +76,7 @@ cron.schedule('*/15 * * * *', async () => {
           lte: todayEnd,
         },
         time_from: {
-          lt: fifteenMinutesAgoStr,  // use string here
+          lt: fifteenMinutesAgoStr,
         },
         status: {
           notIn: ['checkedin', 'overdue'],
@@ -93,7 +92,6 @@ cron.schedule('*/15 * * * *', async () => {
       return;
     }
 
-    // Update statuses
     const updatePromises = overdueAppointments.map((appt) =>
       prisma.appointments.update({
         where: { appointment_id: appt.appointment_id },

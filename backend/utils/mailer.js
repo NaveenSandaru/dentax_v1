@@ -238,49 +238,143 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
     to: email,
     subject: 'Overdue Appointments Notice',
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 10px;">
-        <h2 style="color: #E53935;">Overdue Appointments</h2>
-        <p>Dear ${name},</p>
-        <p>The following appointments are more than <strong>15 minutes overdue</strong> and the patients have not checked in:</p>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+          }
+          .wrapper {
+            width: 100%;
+            padding: 16px;
+            box-sizing: border-box;
+          }
+          .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #E53935;
+            margin-bottom: 6px;
+          }
+          p {
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 6px 0;
+          }
+          .card {
+            width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #ffffff;
+            margin-top: 12px;
+            border-collapse: collapse;
+          }
+          .row {
+            border-bottom: 1px solid #f0f0f0;
+          }
+          .row:last-child {
+            border-bottom: none;
+          }
+          .label {
+            width: 38%;
+            padding: 8px 10px;
+            color: #555555;
+            font-weight: bold;
+            font-size: 12px;
+            vertical-align: top;
+          }
+          .value {
+            width: 62%;
+            padding: 8px 10px;
+            font-size: 12px;
+            vertical-align: top;
+          }
+          @media only screen and (max-width:600px) {
+            .label, .value {
+              display: block;
+              width: 100% !important;
+              padding: 6px 10px;
+            }
+            .label { padding-bottom: 2px; }
+            .value { padding-top: 0; }
+          }
+          .footer {
+            margin-top: 14px;
+            font-size: 11px;
+            color: #888888;
+            text-align: center;
+          }
+          hr {
+            border: none;
+            border-top: 1px solid #eeeeee;
+            margin: 20px 0;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="wrapper">
+          <div class="container">
+            <h2>Overdue Appointments</h2>
+            <p>Dear ${name},</p>
+            <p>The following appointments are more than <strong>15 minutes overdue</strong> and the patients have not checked in:</p>
 
-        <table style="width: 100%; margin-top: 20px; border-collapse: collapse; border: 1px solid #ddd;">
-          <thead>
-            <tr style="background-color: #f2f2f2;">
-              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Appointment ID</th>
-              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Patient</th>
-              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Dentist</th>
-              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Date</th>
-              <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Time</th>
-            </tr>
-          </thead>
-          <tbody>
             ${appointments.map(app => `
-              <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.id || 'N/A'}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.patient?.name || 'Unknown'}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.dentist?.name || 'Unknown'}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">
-                  ${new Date(app.date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })}
-                </td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">
-                  ${new Date(app.time_from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </td>
-              </tr>
+              <table class="card" cellpadding="0" cellspacing="0" role="presentation">
+                <tr class="row">
+                  <td class="label">Appointment ID</td>
+                  <td class="value">${app.appointment_id || 'N/A'}</td>
+                </tr>
+                <tr class="row">
+                  <td class="label">Patient</td>
+                  <td class="value">${app.patient?.name || 'Unknown'}</td>
+                </tr>
+                <tr class="row">
+                  <td class="label">Dentist</td>
+                  <td class="value">${app.dentist?.name || 'Unknown'}</td>
+                </tr>
+                <tr class="row">
+                  <td class="label">Date</td>
+                  <td class="value">
+                    ${new Date(app.date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">Time</td>
+                  <td class="value">${app.time_from || 'N/A'}</td>
+                </tr>
+              </table>
             `).join('')}
-          </tbody>
-        </table>
 
-        <p style="margin-top: 20px;">Please take the necessary follow-up actions as needed.</p>
-
-        <p>Best regards,<br><strong>Dentax Dental System Team</strong></p>
-        <hr style="margin-top: 40px;">
-        <p style="font-size: 12px; color: #888;">Dentax Dental System | Dentax Dental System</p>
-      </div>
+            <p>Please take the necessary follow-up actions as needed.</p>
+            <p><strong>Best regards,<br/>Dentax Dental System Team</strong></p>
+            <hr />
+            <div class="footer">
+              Dentax Dental System | Dentax Dental System
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
     `,
   };
 
@@ -540,6 +634,5 @@ const sendMedicalImageAndReportAddedNotice = async (email, date, patientName, ur
     throw new Error(`Failed to send medical image and report notice: ${error.message}`);
   }
 };
-
 
 export { sendVerificationCode, sendAppointmentConfirmation, sendtempAppointment, sendAppointmentCancelation, sendAppointmentRescheduleNotice, sendAppointmentOverdueNotice, sendAccountCreationInvite, sendAccountCreationNotice, sendAccountCreationNoticeWithPassword, sendReminder, sendMedicalImageAddedNotice, sendMedicalReportAddedNotice, sendMedicalImageAndReportAddedNotice };
