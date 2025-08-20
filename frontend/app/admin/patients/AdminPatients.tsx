@@ -1,6 +1,6 @@
 "use client";
 import React, { useContext, useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, X, Phone, Mail, MapPin, User, Calendar, Droplets, Search, Eye, Loader } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Phone, Mail, MapPin, User, Calendar, Droplets, Search, Eye, Loader, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
 import Image from 'next/image';
 import PatientDetailsOverlay from '@/components/PatientDetailsOverlay';
+import { th } from 'date-fns/locale';
 
 type Patient = {
   patient_id: string;
@@ -163,6 +164,12 @@ const PatientManagement = () => {
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const genders = ['Male', 'Female'];
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [patientToDelete, setPatientToDelete] = useState<{id: string, name: string} | null>(null);
+  const [tempPatientDeleteDialogOpen, setTempPatientDeleteDialogOpen] = useState(false);
+  const [tempPatientToDelete, setTempPatientToDelete] = useState<{id: string, name: string} | null>(null);
 
   const resetForm = () => {
     setFormData({
@@ -326,42 +333,67 @@ const PatientManagement = () => {
     handleCloseOverlay();
   };
 
-  const handleDeletePatient = async (patientId: string) => {
+  const handleDeleteClick = (patient: { patient_id: string; name: string }) => {
+    setPatientToDelete({ id: patient.patient_id, name: patient.name });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!patientToDelete) return;
+    
     try {
       const response = await apiClient.delete(
-        `/patients/${patientId}`
+        `/patients/${patientToDelete.id}`
       );
-      if (response.status == 500) {
-        throw new Error("Internal Server Error");
+      if (response.status === 200) {
+        toast.success("Patient deleted successfully");
+        fetchPatients();
       }
-      setPatients(prev => prev.filter(patient => patient.patient_id !== patientId));
-    }
-    catch (err: any) {
-      toast.error(err.message);
-    }
-    finally {
-
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      toast.error("Failed to delete patient");
+    } finally {
+      setDeleteDialogOpen(false);
+      setPatientToDelete(null);
     }
   };
 
-  const handleDeleteTempPatient = async (patientId: string) => {
+  const handleDeletePatient = async (patientId: string) => {
+    const patient = patients.find(p => p.patient_id === patientId);
+    if (patient) {
+      handleDeleteClick(patient);
+    }
+  };
+
+  const handleDeleteTempPatientClick = (patientId: string, patientName: string) => {
+    setTempPatientToDelete({ id: patientId, name: patientName });
+    setTempPatientDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteTempPatient = async () => {
+    if (!tempPatientToDelete) return;
+    
     setDeletingTempPatient(true);
-    setDeletingTempPatientID(patientId);
+    setDeletingTempPatientID(tempPatientToDelete.id);
     try {
       const response = await apiClient.delete(
-        `/temp-patients/${patientId}`
+        `/temp-patients/${tempPatientToDelete.id}`
       );
       if (response.status == 500) {
         throw new Error("Internal Server Error");
       }
-      setTempPatients(prev => prev.filter(patient => patient.temp_patient_id !== patientId));
+      else if (response.status == 200) {
+        toast.success("Temp Patient deleted successfully");
+      }
+      setTempPatients(prev => prev.filter(patient => patient.temp_patient_id !== tempPatientToDelete.id));
     }
     catch (err: any) {
       toast.error(err.message);
     }
     finally {
+      setTempPatientDeleteDialogOpen(false);
+      setTempPatientToDelete(null);
       setDeletingTempPatient(false);
-      setDeletingTempPatientID("");
     }
   };
 
@@ -698,10 +730,10 @@ const PatientManagement = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50  p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-50  py-12 px-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8 md:hidden">
+        <div className="mb-4 md:mb-8 md:hidden">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Patient Directory</h1>
             <p className="text-gray-600 mt-1">Manage patient details</p>
@@ -713,7 +745,7 @@ const PatientManagement = () => {
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('full')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'full'
+              className={`px-4 py-2 rounded-md text-sm w-full font-medium transition-colors ${viewMode === 'full'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
@@ -722,7 +754,7 @@ const PatientManagement = () => {
             </button>
             <button
               onClick={() => setViewMode('temp')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'temp'
+              className={`px-4 py-2 rounded-md text-sm w-full font-medium transition-colors ${viewMode === 'temp'
                 ? 'bg-white text-gray-900 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
@@ -842,7 +874,6 @@ const PatientManagement = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          toast.success("Patient deleted successfully");
                           handleDeletePatient(patient.patient_id)
                         }}
                         className="p-1 h-8 w-8 text-red-500 hover:text-red-600"
@@ -877,7 +908,7 @@ const PatientManagement = () => {
                       </Button>
                       <Button
                         variant="ghost"
-                        onClick={() => handleDeleteTempPatient(tempPatient.temp_patient_id)}
+                        onClick={() => handleDeleteTempPatientClick(tempPatient.temp_patient_id, tempPatient.name)}
                         className="p-1 h-8 w-8 text-red-500 hover:text-red-600"
                         disabled={deletingTempPatient && deletingTempPatientID == tempPatient.temp_patient_id}
                       >
@@ -1030,6 +1061,14 @@ const PatientManagement = () => {
                   >
                     Register
                   </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleDeleteTempPatientClick(tempPatient.temp_patient_id, tempPatient.name)}
+                    className="p-1 h-8 w-8 text-red-500 hover:text-red-600"
+                    disabled={deletingTempPatient && deletingTempPatientID == tempPatient.temp_patient_id}
+                  >
+                    {deletingTempPatient && deletingTempPatientID == tempPatient.temp_patient_id ? <Loader /> : <Trash2 />}
+                  </Button>
                 </div>
 
                 <div className="space-y-2">
@@ -1054,7 +1093,7 @@ const PatientManagement = () => {
         {/* Overlay Form */}
         {showOverlay && (
           <Dialog open={showOverlay} onOpenChange={setShowOverlay}>
-            <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   {editingPatient ? 'Edit Patient' : 'Add New Patient'}
@@ -1482,6 +1521,81 @@ const PatientManagement = () => {
           backendURL={backendURL || ''}
         />
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              <div className="flex flex-col items-center gap-4 py-2">
+                <div className="rounded-full bg-red-100 p-3">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <span>Delete Patient</span>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 pb-6 px-6">
+            <p className="text-sm text-gray-500 mt-2 text-center">
+              Are you sure you want to delete <span className="font-medium">{patientToDelete?.name}</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 mt-4 w-full">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleConfirmDelete}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Temporary Patient Confirmation Dialog */}
+      <Dialog open={tempPatientDeleteDialogOpen} onOpenChange={setTempPatientDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Temporary Patient</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center space-x-4">
+            <div className="flex-shrink-0 p-2 rounded-full bg-red-100 text-red-600">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete the temporary patient <span className="font-medium">{tempPatientToDelete?.name}</span>?
+                This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setTempPatientDeleteDialogOpen(false)}
+              disabled={deletingTempPatient}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDeleteTempPatient}
+              disabled={deletingTempPatient}
+            >
+              {deletingTempPatient ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
