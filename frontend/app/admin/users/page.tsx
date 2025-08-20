@@ -2,6 +2,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Trash2, Search, Plus, User, Phone, Mail, UserCheck, BarChart3, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
 import ViewUserDialog from "@/components/ViewUserDialog";
 import InviteUserDialog from "@/components/InviteUserDialog";
@@ -52,6 +53,8 @@ export default function UserTable() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [deletingUser, setDeletingUser] = useState(false);
   const [users, setUsers] = useState<User[]>();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{id: string, role: string, name: string} | null>(null);
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -110,19 +113,26 @@ export default function UserTable() {
     }
   };
 
-  const handleDelete = async (user_id: string, role: string) => {
+  const handleDeleteClick = (user: User) => {
+    setUserToDelete({ id: user.id, role: user.role, name: user.name });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    
     setDeletingUser(true);
     try {
       let deleteURL = "";
-      switch (role) {
+      switch (userToDelete.role) {
         case "Dentist":
-          deleteURL = `/dentists/${user_id}`;
+          deleteURL = `/dentists/${userToDelete.id}`;
           break;
         case "Receptionist":
-          deleteURL = `/receptionists/${user_id}`;
+          deleteURL = `/receptionists/${userToDelete.id}`;
           break;
         case "Radiologist":
-          deleteURL = `/radiologists/${user_id}`;
+          deleteURL = `/radiologists/${userToDelete.id}`;
           break;
         default:
           throw new Error("Invalid role");
@@ -132,13 +142,15 @@ export default function UserTable() {
       if (res.status !== 200) throw new Error("Failed to delete user");
   
       // Update state to remove deleted user
-      setUsers(prev => prev?.filter(u => u.id !== user_id));
-      toast.success(`${role} deleted successfully`);
+      setUsers(prev => prev?.filter(u => u.id !== userToDelete.id));
+      toast.success(`${userToDelete.role} deleted successfully`);
     } catch (err: any) {
       console.log(err);
       toast.error(err.message);
     } finally {
       setDeletingUser(false);
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
     }
   };
 
@@ -370,13 +382,15 @@ export default function UserTable() {
                         >
                           <Eye className="h-5 w-5 text-blue-600" />
                         </button>
-                        <button 
-                          className="p-2 hover:bg-red-50 rounded-lg transition-colors" 
-                          onClick={()=>{handleDelete(inuser.id, inuser.role)}}
-                          title="Delete User"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => handleDeleteClick(inuser)}
+                          disabled={deletingUser}
                         >
-                          <Trash2 className="h-5 w-5 text-red-500" />
-                        </button>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                         {inuser.role === "Dentist" && (
                           <button
                             onClick={() => handleViewAnalytics(inuser)}
@@ -481,7 +495,7 @@ export default function UserTable() {
                   )}
                   <button 
                     className="flex items-center justify-center p-3 hover:bg-red-50 rounded-lg transition-colors border border-red-200"
-                    onClick={()=>{handleDelete(user.id, user.role)}}
+                    onClick={()=>{handleDeleteClick(user)}}
                     title="Delete User"
                   >
                     <Trash2 className="h-5 w-5 text-red-500" />
@@ -528,6 +542,45 @@ export default function UserTable() {
         />
 
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              <div className="flex flex-col items-center gap-4 py-2">
+                <div className="rounded-full bg-red-100 p-3">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <span>Delete {userToDelete?.role}</span>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 pb-6 px-6">
+            <p className="text-sm text-gray-500 mt-2 text-center">
+              Are you sure you want to delete <span className="font-medium">{userToDelete?.name}</span>? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 mt-4 w-full">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deletingUser}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleConfirmDelete}
+                disabled={deletingUser}
+              >
+                {deletingUser ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

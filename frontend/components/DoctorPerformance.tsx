@@ -715,7 +715,7 @@ export default function DoctorPerformanceDashboard({ user, onClose }: Props) {
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl xl:max-w-[1400px] max-h-[95vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl xl:max-w-[1400px] max-h-[85vh] overflow-y-auto p-0">
         <DialogHeader className="border-b border-gray-100 p-6 lg:p-8">
           <DialogTitle className="text-xl lg:text-2xl font-semibold text-gray-900">
             {isDentist ? 'Doctor Performance Dashboard' : 'Staff Profile'}
