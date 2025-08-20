@@ -507,7 +507,6 @@ router.post('/', upload.any(), async (req, res) => {
 router.put('/:study_id', upload.any(), async (req, res) => {
   try {
     const studyId = parseInt(req.params.study_id);
-    console.debug("PUT method called");
     console.debug(req.body);
 
     // Check PACS connectivity if files are being uploaded

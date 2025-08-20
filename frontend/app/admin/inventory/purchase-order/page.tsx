@@ -247,7 +247,7 @@ const PurchaseOrdersPage = () => {
           </div>
 
           <Button
-            className="bg-emerald-600 hover:bg-emerald-700 text-white self-start sm:self-auto"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white self-start sm:self-auto w-full md:w-auto"
             onClick={() => setIsAddOpen(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
