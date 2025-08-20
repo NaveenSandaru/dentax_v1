@@ -530,11 +530,11 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
         />
 
         {/* Overlay Content with improved design and proper scrolling */}
-        <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 border overflow-hidden">
+        <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-7xl max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 border overflow-hidden">
           {/* Enhanced Header */}
-          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-3 flex items-center justify-between rounded-t-lg flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12 border-2 border-white/20">
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 sm:px-4 py-3 flex items-start sm:items-center justify-between rounded-t-lg flex-shrink-0">
+            <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+              <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border-2 border-white/20 flex-shrink-0">
                 {selectedPatient.profile_picture ? (
                   <AvatarImage
                     src={`${backendURL}${selectedPatient.profile_picture}`}
@@ -542,7 +542,7 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                     className="object-cover"
                   />
                 ) : (
-                  <AvatarFallback className="bg-emerald-600 text-white font-semibold text-base">
+                  <AvatarFallback className="bg-emerald-600 text-white font-semibold text-sm sm:text-base">
                     {selectedPatient.name
                       .split(" ")
                       .map((n) => n[0])
@@ -550,9 +550,27 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                   </AvatarFallback>
                 )}
               </Avatar>
-              <div>
-                <h2 className="text-xl font-bold">{selectedPatient.name}</h2>
-                <p className="text-emerald-100 flex items-center gap-3 mt-1 text-xs">
+              
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg sm:text-xl font-bold truncate">{selectedPatient.name}</h2>
+                
+                {/* Mobile: Stack info vertically */}
+                <div className="mt-1 space-y-1 sm:hidden">
+                  <p className="text-emerald-100 text-xs">
+                    <span>ID: {selectedPatient.patient_id}</span>
+                  </p>
+                  <p className="text-emerald-100 text-xs flex items-center gap-1">
+                    <Phone className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{selectedPatient.phone_number}</span>
+                  </p>
+                  <p className="text-emerald-100 text-xs flex items-center gap-1">
+                    <Mail className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{selectedPatient.email}</span>
+                  </p>
+                </div>
+                
+                {/* Desktop: Show info in one line */}
+                <p className="text-emerald-100 hidden sm:flex items-center gap-3 mt-1 text-xs">
                   <span>ID: {selectedPatient.patient_id}</span>
                   <span className="flex items-center gap-1">
                     <Phone className="w-3 h-3" />
@@ -565,13 +583,14 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                 </p>
               </div>
             </div>
+            
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="text-white hover:bg-white/20 hover:text-white transition-colors p-2 rounded-full"
+              className="text-white hover:bg-white/20 hover:text-white transition-colors p-1.5 sm:p-2 rounded-full ml-2 flex-shrink-0"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
           {/* Critical Conditions Alert */}

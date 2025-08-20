@@ -465,7 +465,7 @@ const MedicalHistoryForm: React.FC<MedicalHistoryFormProps> = ({ patientId, onSa
       </div>
 
       {/* Save Button */}
-      <div className="mt-6 flex justify-end">
+      <div className="my-auto flex justify-center py-4">
         <button
           onClick={handleSave}
           disabled={loading}
