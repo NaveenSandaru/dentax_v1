@@ -11,6 +11,7 @@ import { toast } from "sonner"
 import axios from 'axios'
 import { AuthContext } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
+import { X } from 'lucide-react'
 
 interface Patient {
   patient_id: string
@@ -55,6 +56,7 @@ interface TimeSlot {
 interface FormData {
   patientId: string;
   dentistId: string;
+  tempPatientId?: string; // Optional for temp patients
   serviceId: string;
   timeSlot: string;
   note: string;
@@ -158,6 +160,8 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
   })
   const [patientValidated, setPatientValidated] = useState(true)
   const [patientErrorMessage, setPatientErrorMessage] = useState('')
+  const [tempPatientValidated, setTempPatientValidated] = useState(true)
+  const [tempPatientErrorMessage, setTempPatientErrorMessage] = useState('')
 
   const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -847,7 +851,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[425px] max-h-[80vh] md:max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add New Appointment</DialogTitle>
         </DialogHeader>
@@ -864,8 +868,8 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
             )}
 
             {/* Appointment Type Toggle */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right">
+            <div className="grid grid-cols-4 items-center gap-16">
+              <Label className="text-center">
                 Appointment Type
               </Label>
               <div className="col-span-3">
@@ -873,7 +877,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                   <button
                     type="button"
                     onClick={() => setAppointmentType('regular')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex-1 ${
+                    className={`px-0 md:px-4 md:py-2 py-0 rounded-md text-sm font-medium transition-colors flex-1 ${
                       appointmentType === 'regular' 
                         ? 'bg-white text-gray-900 shadow-sm' 
                         : 'text-gray-600 hover:text-gray-900'
@@ -884,7 +888,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                   <button
                     type="button"
                     onClick={() => setAppointmentType('temp')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex-1 ${
+                    className={`px-0 py-0 md:px-4 md:py-2 rounded-md text-sm font-medium transition-colors flex-1 ${
                       appointmentType === 'temp' 
                         ? 'bg-white text-gray-900 shadow-sm' 
                         : 'text-gray-600 hover:text-gray-900'
@@ -903,68 +907,83 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                 <Label htmlFor="patient" className="text-right">
                   Patient <span className="text-red-500">*</span>
                 </Label>
-                <div className="relative col-span-3">
-                  <input
-                    type="text"
-                    value={patientSearchTerm}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setPatientSearchTerm(value);
-                      
-                      // Reset patientId if the input field is cleared or modified
-                      if (!value || (formData.patientId && !value.includes(formData.patientId))) {
-                        handleChange('patientId', '');
-                        setPatientValidated(false);
-                        if (value.length > 0) {
-                          setPatientErrorMessage('Please select a patient from the dropdown list');
-                        } else {
-                          setPatientErrorMessage('');
-                        }
-                      }
-                      
-                      searchPatients(value);
-                      setShowPatientDropdown(true);
-                    }}
-                    onFocus={() => {
-                      setShowPatientDropdown(true);
-                      if (!formData.patientId && patientSearchTerm.length > 0) {
-                        setPatientValidated(false);
-                        setPatientErrorMessage('Please select a patient from the dropdown list');
-                      }
-                    }}
-                    onBlur={() => setTimeout(() => {
-                      setShowPatientDropdown(false);
-                      // Check if a valid patient was selected
-                      if (!formData.patientId && patientSearchTerm.length > 0) {
-                        setPatientValidated(false);
-                        setPatientErrorMessage('Please select a patient from the dropdown list');
-                      }
-                    }, 200)}
-                    placeholder="Search by patient name or ID..."
-                    className={`w-full px-3 py-2 border ${!patientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
-                  />
-                  {showPatientDropdown && patientSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                      {patientSearchResults.map((patient) => (
-                        <div
-                          key={patient.patient_id}
-                          className="cursor-pointer hover:bg-gray-100 px-4 py-2 text-sm text-gray-700"
-                          onMouseDown={(e) => {
-                            e.preventDefault(); // Prevent onBlur from firing before onClick
-                            handleChange('patientId', patient.patient_id);
-                            setPatientSearchTerm(`${patient.name} (${patient.patient_id})`);
-                            setShowPatientDropdown(false);
-                            setPatientValidated(true);
+                <div className="col-span-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={patientSearchTerm}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setPatientSearchTerm(value);
+                        
+                        // Reset patientId if the input field is cleared or modified
+                        if (!value || (formData.patientId && !value.includes(formData.patientId))) {
+                          handleChange('patientId', '');
+                          setPatientValidated(false);
+                          if (value.length > 0) {
+                            setPatientErrorMessage('Please select a patient from the dropdown list');
+                          } else {
                             setPatientErrorMessage('');
-                          }}
-                        >
-                          <div className="font-medium">{patient.name}</div>
-                          <div className="text-xs text-gray-500">ID: {patient.patient_id}</div>
-                          {patient.email && <div className="text-xs text-gray-500">{patient.email}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                          }
+                        }
+                        
+                        searchPatients(value);
+                        setShowPatientDropdown(true);
+                      }}
+                      onFocus={() => {
+                        setShowPatientDropdown(true);
+                        if (!formData.patientId && patientSearchTerm.length > 0) {
+                          setPatientValidated(false);
+                          setPatientErrorMessage('Please select a patient from the dropdown list');
+                        }
+                      }}
+                      onBlur={() => setTimeout(() => {
+                        setShowPatientDropdown(false);
+                        // Check if a valid patient was selected
+                        if (!formData.patientId && patientSearchTerm.length > 0) {
+                          setPatientValidated(false);
+                          setPatientErrorMessage('Please select a patient from the dropdown list');
+                        }
+                      }, 200)}
+                      placeholder="Search by patient name or ID..."
+                      className={`w-full px-3 py-2 border ${!patientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                    />
+                    {patientSearchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPatientSearchTerm('');
+                          setShowPatientDropdown(false);
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                    {showPatientDropdown && patientSearchResults.length > 0 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                        {patientSearchResults.map((patient) => (
+                          <div
+                            key={patient.patient_id}
+                            className="cursor-pointer hover:bg-gray-100 px-4 py-2 text-sm text-gray-700"
+                            onMouseDown={(e) => {
+                              e.preventDefault(); // Prevent onBlur from firing before onClick
+                              handleChange('patientId', patient.patient_id);
+                              setPatientSearchTerm(`${patient.name} (${patient.patient_id})`);
+                              setShowPatientDropdown(false);
+                              setPatientValidated(true);
+                              setPatientErrorMessage('');
+                            }}
+                          >
+                            <div className="font-medium">{patient.name}</div>
+                            <div className="text-xs text-gray-500">ID: {patient.patient_id}</div>
+                            {patient.email && <div className="text-xs text-gray-500">{patient.email}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Error message moved outside the relative container */}
                   {!patientValidated && patientErrorMessage && (
                     <div className="text-red-500 text-xs mt-1">{patientErrorMessage}</div>
                   )}
@@ -977,48 +996,60 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                 {selectedTempPatient ? (
                   // Show selected temp patient info
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">Selected Patient</Label>
-                    <div className="col-span-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="font-medium">{selectedTempPatient.name}</div>
-                      <div className="text-sm text-gray-600">ID: {selectedTempPatient.temp_patient_id}</div>
-                      <div className="text-sm text-gray-600">Phone: {selectedTempPatient.phone_number}</div>
-                      {selectedTempPatient.email && (
-                        <div className="text-sm text-gray-600">Email: {selectedTempPatient.email}</div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTempPatient(null);
-                          setTempPatientSearchTerm('');
-                        }}
-                        className="text-red-600 hover:text-red-800 text-sm mt-2"
-                      >
-                        Clear selection
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Search input for existing temp patients */}
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label className="text-right">
-                        Search Temp Patient
-                      </Label>
-                      <div className="relative col-span-3">
+                    <Label className="text-right">
+                      Search Temp Patient
+                    </Label>
+                    <div className="col-span-3">
+                      <div className="relative">
                         <input
                           type="text"
                           value={tempPatientSearchTerm}
                           onChange={(e) => {
                             const value = e.target.value;
                             setTempPatientSearchTerm(value);
+
+                            if(!value || formData.tempPatientId && !value.includes(formData.tempPatientId)) {
+                              handleChange('tempPatientId', '');
+                              setTempPatientValidated(false);
+                              if (value.length > 0) {
+                                setTempPatientErrorMessage('Please select a temporary patient from the dropdown list');
+                              } else {
+                                setTempPatientErrorMessage('');
+                              }
+                            }
+
                             searchTempPatients(value);
                             setShowTempPatientDropdown(true);
                           }}
-                          onFocus={() => setShowTempPatientDropdown(true)}
-                          onBlur={() => setTimeout(() => setShowTempPatientDropdown(false), 200)}
+                          onFocus={() => {
+                            setShowTempPatientDropdown(true);
+                            if (!formData.tempPatientId && tempPatientSearchTerm.length > 0) {
+                              setTempPatientValidated(false);
+                              setTempPatientErrorMessage('Please select a temporary patient from the dropdown list');
+                            }
+                          }}
+                          onBlur={() => setTimeout(() => {
+                            setShowTempPatientDropdown(false);
+                            if (!formData.tempPatientId && tempPatientSearchTerm.length > 0) {
+                              setTempPatientValidated(false);
+                              setTempPatientErrorMessage('Please select a temporary patient from the dropdown list');
+                            }
+                          }, 200)}
                           placeholder="Search by name, phone, or ID..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className={`w-full px-3 py-2 border ${!tempPatientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                         />
+                        {tempPatientSearchTerm && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTempPatientSearchTerm('');
+                              setShowTempPatientDropdown(false);
+                            }}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
                         {showTempPatientDropdown && tempPatientSearchResults.length > 0 && (
                           <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                             {tempPatientSearchResults.map((tempPatient) => (
@@ -1027,6 +1058,9 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                                 className="cursor-pointer hover:bg-gray-100 px-4 py-2 text-sm text-gray-700"
                                 onMouseDown={(e) => {
                                   e.preventDefault();
+                                  handleChange('tempPatientId', tempPatient.temp_patient_id);
+                                  setTempPatientValidated(true);
+                                  setTempPatientErrorMessage('');
                                   setSelectedTempPatient(tempPatient);
                                   setTempPatientSearchTerm(`${tempPatient.name} (${tempPatient.temp_patient_id})`);
                                   setShowTempPatientDropdown(false);
@@ -1039,6 +1073,100 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                               </div>
                             ))}
                           </div>
+                        )}
+                      </div>
+                      {/* Error message moved outside the relative container */}
+                      {tempPatientErrorMessage && (
+                        <div className="mt-2 text-xs text-red-600">{tempPatientErrorMessage}</div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Search input for existing temp patients */}
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label className="text-right">
+                        Search Temp Patient
+                      </Label>
+                      <div className="col-span-3">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={tempPatientSearchTerm}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setTempPatientSearchTerm(value);
+
+                              if(!value || formData.tempPatientId && !value.includes(formData.tempPatientId)) {
+                                handleChange('tempPatientId', '');
+                                setTempPatientValidated(false);
+                                if (value.length > 0) {
+                                  setTempPatientErrorMessage('Please select a temporary patient from the dropdown list');
+                                } else {
+                                  setTempPatientErrorMessage('');
+                                }
+                              }
+
+                              searchTempPatients(value);
+                              setShowTempPatientDropdown(true);
+                            }}
+                            onFocus={() => {
+                              setShowTempPatientDropdown(true);
+                              if (!formData.tempPatientId && tempPatientSearchTerm.length > 0) {
+                                setTempPatientValidated(false);
+                                setTempPatientErrorMessage('Please select a temporary patient from the dropdown list');
+                              }
+                            }}
+                            onBlur={() => setTimeout(() => {
+                              setShowTempPatientDropdown(false);
+                              if (!formData.tempPatientId && tempPatientSearchTerm.length > 0) {
+                                setTempPatientValidated(false);
+                                setTempPatientErrorMessage('Please select a temporary patient from the dropdown list');
+                              }
+                            }, 200)}
+                            placeholder="Search by name, phone, or ID..."
+                            className={`w-full px-3 py-2 border ${!tempPatientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                          />
+                          {tempPatientSearchTerm && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempPatientSearchTerm('');
+                                setShowTempPatientDropdown(false);
+                              }}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                          {showTempPatientDropdown && tempPatientSearchResults.length > 0 && (
+                            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                              {tempPatientSearchResults.map((tempPatient) => (
+                                <div
+                                  key={tempPatient.temp_patient_id}
+                                  className="cursor-pointer hover:bg-gray-100 px-4 py-2 text-sm text-gray-700"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleChange('tempPatientId', tempPatient.temp_patient_id);
+                                    setTempPatientValidated(true);
+                                    setTempPatientErrorMessage('');
+                                    setSelectedTempPatient(tempPatient);
+                                    setTempPatientSearchTerm(`${tempPatient.name} (${tempPatient.temp_patient_id})`);
+                                    setShowTempPatientDropdown(false);
+                                  }}
+                                >
+                                  <div className="font-medium">{tempPatient.name}</div>
+                                  <div className="text-xs text-gray-500">ID: {tempPatient.temp_patient_id}</div>
+                                  <div className="text-xs text-gray-500">Phone: {tempPatient.phone_number}</div>
+                                  {tempPatient.email && <div className="text-xs text-gray-500">{tempPatient.email}</div>}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {/* Error message moved outside the relative container */}
+                        {tempPatientErrorMessage && (
+                          <div className="mt-2 text-xs text-red-600">{tempPatientErrorMessage}</div>
                         )}
                       </div>
                     </div>

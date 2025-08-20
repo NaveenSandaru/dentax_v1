@@ -247,10 +247,10 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
 
 
           {/* View Selection Dropdown - Always visible, aligned to the right */}
-          <div className="ml-auto">
+          <div className="w-40 md:ml-auto">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="text-sm">
+              <DropdownMenuTrigger asChild className="justify-between">
+                <Button variant="outline" size="sm" className="text-sm w-full">
                   <span className="hidden sm:inline">
                     {calendarView === "week" 
                       ? "Calendar view" 
@@ -262,21 +262,18 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
                   </span>
                   <span className="sm:hidden">
                     {calendarView === "week" 
-                      ? "Calendar" 
+                      ? "Calendar view" 
                       : calendarView === "schedule" 
-                        ? "Schedule" 
+                        ? "Schedule view" 
                         : calendarView === "rooms"
-                          ? "Room"
-                          : "List"}
+                          ? "Room view"
+                          : "List view"}
                   </span>
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="mx-1 md:mx-0" align="end">
+              <DropdownMenuContent className="w-40 md:ml-auto" align="end">
                 <DropdownMenuItem onClick={() => setCalendarView("week")}>Calendar view</DropdownMenuItem>
-                {/*userRole === 'admin' && (
-                  <DropdownMenuItem onClick={() => setCalendarView("schedule")}>Schedule view</DropdownMenuItem>
-                )*/}
                 <DropdownMenuItem onClick={() => setCalendarView("list")}>List view</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setCalendarView("rooms")}>Room view</DropdownMenuItem>
               </DropdownMenuContent>
