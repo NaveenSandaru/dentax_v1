@@ -69,13 +69,6 @@ router.get('/search', authenticateToken, async (req, res) => {
           { email: { contains: q, mode: 'insensitive' } }
         ]
       },
-      select: {
-        dentist_id: true,
-        name: true,
-        email: true,
-        phone_number: true,
-        profile_picture: true
-      },
       include: {
         dentist_service_assign: {
           include: {
