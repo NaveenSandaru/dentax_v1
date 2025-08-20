@@ -256,7 +256,7 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
           <tbody>
             ${appointments.map(app => `
               <tr>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.id || 'N/A'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.appointment_id || 'N/A'}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.patient?.name || 'Unknown'}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #eee;">${app.dentist?.name || 'Unknown'}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #eee;">
@@ -268,7 +268,7 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
     })}
                 </td>
                 <td style="padding: 8px; border-bottom: 1px solid #eee;">
-                  ${new Date(app.time_from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  ${app.time_from ? app.time_from : 'N/A'}
                 </td>
               </tr>
             `).join('')}
@@ -540,6 +540,5 @@ const sendMedicalImageAndReportAddedNotice = async (email, date, patientName, ur
     throw new Error(`Failed to send medical image and report notice: ${error.message}`);
   }
 };
-
 
 export { sendVerificationCode, sendAppointmentConfirmation, sendtempAppointment, sendAppointmentCancelation, sendAppointmentRescheduleNotice, sendAppointmentOverdueNotice, sendAccountCreationInvite, sendAccountCreationNotice, sendAccountCreationNoticeWithPassword, sendReminder, sendMedicalImageAddedNotice, sendMedicalReportAddedNotice, sendMedicalImageAndReportAddedNotice };
