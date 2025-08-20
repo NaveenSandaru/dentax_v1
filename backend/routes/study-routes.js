@@ -580,7 +580,7 @@ router.put('/:study_id', upload.any(), async (req, res) => {
 
     // Send notifications
     const hasImage = !!updatedStudy.pacs_instance_id; 
-    const studyDetails = await getStudyFromOrthanc(UpdatedStudy?.pacs_study_id);
+    const studyDetails = await getStudyFromOrthanc(updatedStudy?.pacs_study_id);
     const url = `${dicomurlx}/viewer/dicomweb?StudyInstanceUIDs=${studyDetails.MainDicomTags?.StudyInstanceUID}`;
     if (updatedStudy.patient?.email) {
       try {
