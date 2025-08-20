@@ -507,7 +507,6 @@ router.post('/', upload.any(), async (req, res) => {
 router.put('/:study_id', upload.any(), async (req, res) => {
   try {
     const studyId = parseInt(req.params.study_id);
-    console.debug("PUT method called");
     console.debug(req.body);
 
     // Check PACS connectivity if files are being uploaded
@@ -581,7 +580,7 @@ router.put('/:study_id', upload.any(), async (req, res) => {
 
     // Send notifications
     const hasImage = !!updatedStudy.pacs_instance_id; 
-    const studyDetails = await getStudyFromOrthanc(updatedStudy?.pacs_study_id);
+    const studyDetails = await getStudyFromOrthanc(UpdatedStudy?.pacs_study_id);
     const url = `${dicomurlx}/viewer/dicomweb?StudyInstanceUIDs=${studyDetails.MainDicomTags?.StudyInstanceUID}`;
     if (updatedStudy.patient?.email) {
       try {
