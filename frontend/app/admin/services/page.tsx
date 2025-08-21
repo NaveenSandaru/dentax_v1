@@ -70,6 +70,9 @@ export default function InvoiceServicePage() {
     const [deletingInvoiceService, setDeletingInvoiceService] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [serviceToDelete, setServiceToDelete] = useState<number | null>(null);
+    const [treatmentToDelete, setTreatmentToDelete] = useState<number | null>(null);
+    const [deleteTreatmentDialogOpen, setDeleteTreatmentDialogOpen] = useState(false);
+    const [deletingTreatment, setDeletingTreatment] = useState(false);
 
     const fetchInvoiceServices = async () => {
         setFetchingData(true);
@@ -107,6 +110,33 @@ export default function InvoiceServicePage() {
     const handleViewDoctors = (serviceID: number) => {
         setSelectedServiceID(serviceID);
         setShowDentistList(true);
+    };
+
+    const handleDeleteTreatmentClick = (treatment_id: number) => {
+        setTreatmentToDelete(treatment_id);
+        setDeleteTreatmentDialogOpen(true);
+    };
+
+    const confirmDeleteTreatmentGroup = async () => {
+        if (!treatmentToDelete) return;
+
+        setDeletingTreatment(true);
+        try {
+            const res = await apiClient.delete(`treatments/${treatmentToDelete}`);
+            if (res.status == 500) {
+                throw new Error("Error deleting treatment");
+            }
+            toast.success("Treatment group deleted successfully");
+            fetchTreatmentGroups();
+            setDeleteTreatmentDialogOpen(false);
+        }
+        catch (err: any) {
+            toast.error(err.message);
+        }
+        finally {
+            setDeletingTreatment(false);
+            setTreatmentToDelete(null);
+        }
     };
 
     const handleDeleteClick = (service_id: number) => {
@@ -409,20 +439,14 @@ export default function InvoiceServicePage() {
                                                             <button
                                                                 onClick={() => { setSelectedTreatment(treatment); setShowEditTreatmentDialog(true); }}
                                                                 className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                                                                title="Edit treatment group"
                                                             >
                                                                 <Edit className="h-4" />
                                                             </button>
                                                             <button
-                                                                onClick={async () => {
-                                                                    try {
-                                                                        await apiClient.delete(`treatments/${treatment.no}`);
-                                                                        toast.success("Deleted treatment");
-                                                                        fetchTreatmentGroups();
-                                                                    } catch {
-                                                                        toast.error("Failed to delete treatment");
-                                                                    }
-                                                                }}
+                                                                onClick={() => { handleDeleteTreatmentClick(treatment.no); }}
                                                                 className="text-red-500 hover:text-red-700 text-xs font-medium"
+                                                                title="Delete treatment group"
                                                             >
                                                                 <Trash2 className="h-4" />
                                                             </button>
@@ -482,6 +506,42 @@ export default function InvoiceServicePage() {
                         <Button
                             variant="destructive"
                             onClick={confirmDeleteInvoiceService}
+                            disabled={deletingInvoiceService}
+                        >
+                            {deletingInvoiceService ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Treatment Group Confirmation Dialog */}
+            <Dialog open={deleteTreatmentDialogOpen} onOpenChange={setDeleteTreatmentDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Delete Treatment Group</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0 p-2 rounded-full bg-red-100 text-red-600">
+                            <AlertTriangle className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-gray-600">
+                                Are you sure you want to delete this treatment group?
+                                This action cannot be undone.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex justify-end space-x-3 mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteTreatmentDialogOpen(false)}
+                            disabled={deletingInvoiceService}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={confirmDeleteTreatmentGroup}
                             disabled={deletingInvoiceService}
                         >
                             {deletingInvoiceService ? 'Deleting...' : 'Delete'}
