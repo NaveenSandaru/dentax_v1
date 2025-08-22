@@ -52,7 +52,7 @@ export default function PayrollPage() {
   const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL;
   const { isLoggedIn, isLoadingAuth, user, apiClient } = useContext(AuthContext);
   const router = useRouter();
-  
+
   // State variables
   const [loading, setLoading] = useState(true);
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
@@ -61,7 +61,7 @@ export default function PayrollPage() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [viewPayrollDialogOpen, setViewPayrollDialogOpen] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null);
-  
+
   // New payroll form data
   const [newPayroll, setNewPayroll] = useState({
     eid: 0,
@@ -74,27 +74,27 @@ export default function PayrollPage() {
     etf: true,
     status: 'Not Processed'
   });
-  
+
   // Employee data for payroll creation
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  
+
   // EPF/ETF rates (could be made configurable)
   const EPF_RATE = 0.08; // 8%
   const ETF_RATE = 0.03; // 3%
-  
+
   // Load data on component mount
   useEffect(() => {
     const fetchData = async () => {
       if (!isLoggedIn || !backendURL) {
         return;
       }
-      
+
       setLoading(true);
       try {
         // Fetch payrolls with detailed information
         const payrollResponse = await apiClient.get(`/hr/payroll/payroll-details`);
-        
+
         setPayrolls(payrollResponse.data || []);
         setFilteredPayrolls(payrollResponse.data || []);
       } catch (error) {
@@ -104,17 +104,17 @@ export default function PayrollPage() {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, [backendURL, isLoggedIn]);
-  
+
   // Filter payrolls based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredPayrolls(payrolls);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase();
     const filtered = payrolls.filter((payroll) => {
       return (
@@ -125,22 +125,22 @@ export default function PayrollPage() {
         String(payroll.eid).includes(query)
       );
     });
-    
+
     setFilteredPayrolls(filtered);
   }, [searchQuery, payrolls]);
 
-  useEffect(()=>{
-    if(isLoadingAuth) return;
-    if(!isLoggedIn){
-      toast.error("Login Error", {description:"Please Login"});
+  useEffect(() => {
+    if (isLoadingAuth) return;
+    if (!isLoggedIn) {
+      toast.error("Login Error", { description: "Please Login" });
       router.push("/login");
     }
-    else if(user.role != "admin"){
-      toast.error("Access Denied", {description:"You do not have admin priviledges"});
+    else if (user.role != "admin") {
+      toast.error("Access Denied", { description: "You do not have admin priviledges" });
       router.push("/login");
     }
-  },[isLoadingAuth]);
-  
+  }, [isLoadingAuth]);
+
   // Process salary function
   const processSalary = async (payroll: Payroll) => {
     try {
@@ -150,7 +150,7 @@ export default function PayrollPage() {
         etf: payroll.etf,
         status: 'Processed'
       });
-      
+
       // Update local state
       const updatedPayrolls = payrolls.map(p => {
         if (p.payroll_id === payroll.payroll_id) {
@@ -158,29 +158,29 @@ export default function PayrollPage() {
         }
         return p;
       });
-      
+
       setPayrolls(updatedPayrolls);
-      setFilteredPayrolls(updatedPayrolls.filter(p => 
+      setFilteredPayrolls(updatedPayrolls.filter(p =>
         filteredPayrolls.some(fp => fp.payroll_id === p.payroll_id)
       ));
-      
+
       toast.success(`Salary processed for ${payroll.employee.name}`);
     } catch (error) {
       console.error('Error processing salary:', error);
       toast.error('Failed to process salary');
     }
   };
-  
+
   // Fetch employee details when ID is entered
   const fetchEmployeeDetails = async (employeeId: number) => {
     try {
       if (!employeeId) return;
-      
+
       const response = await apiClient.get(`/hr/employees/${employeeId}`);
-      
+
       if (response.data) {
         setSelectedEmployee(response.data);
-        
+
         // Update the newPayroll with employee's base salary
         const baseSalary = response.data.salary || 0;
         setNewPayroll(prev => ({
@@ -190,7 +190,7 @@ export default function PayrollPage() {
           gross_salary: baseSalary,
           net_salary: calculateNetSalary(baseSalary, 0, 0, prev.epf, prev.etf)
         }));
-        
+
         toast.success(`Employee ${response.data.name} found`);
       } else {
         setSelectedEmployee(null);
@@ -202,29 +202,29 @@ export default function PayrollPage() {
       setSelectedEmployee(null);
     }
   };
-  
+
   // Calculate net salary after EPF/ETF deductions
   const calculateNetSalary = (baseSalary: number, otAmount: number, bonusAmount: number, applyEpf: boolean, applyEtf: boolean) => {
     const grossSalary = baseSalary + otAmount + bonusAmount;
     let deductions = 0;
-    
+
     if (applyEpf) {
       deductions += grossSalary * EPF_RATE;
     }
-    
+
     if (applyEtf) {
       deductions += grossSalary * ETF_RATE;
     }
-    
+
     return grossSalary - deductions;
   };
-  
+
   // Calculate gross salary and update net salary when values change
   const updateSalaryCalculations = (otAmount: number, bonusAmount: number, applyEpf: boolean, applyEtf: boolean) => {
     const baseSalary = newPayroll.base_salary;
     const grossSalary = baseSalary + otAmount + bonusAmount;
     const netSalary = calculateNetSalary(baseSalary, otAmount, bonusAmount, applyEpf, applyEtf);
-    
+
     setNewPayroll(prev => ({
       ...prev,
       ot_amount: otAmount,
@@ -235,14 +235,14 @@ export default function PayrollPage() {
       etf: applyEtf
     }));
   };
-  
+
   // Prepare payroll data for confirmation
   const preparePayrollConfirmation = () => {
     if (!selectedEmployee) {
       toast.error('Please select an employee first');
       return;
     }
-    
+
     // Recalculate values to ensure accuracy
     updateSalaryCalculations(
       newPayroll.ot_amount,
@@ -250,10 +250,10 @@ export default function PayrollPage() {
       newPayroll.epf,
       newPayroll.etf
     );
-    
+
     setConfirmationOpen(true);
   };
-  
+
   // Add new payroll function - final submission after confirmation
   const addNewPayroll = async () => {
     try {
@@ -261,7 +261,7 @@ export default function PayrollPage() {
         toast.error('Please provide employee information');
         return;
       }
-      
+
       // Create the payroll with calculated values
       const payrollData = {
         eid: newPayroll.eid,
@@ -270,15 +270,15 @@ export default function PayrollPage() {
         etf: newPayroll.etf,
         status: 'Not Processed'
       };
-      
+
       await apiClient.post(`/hr/payroll`, payrollData);
-      
+
       // Refresh data
       const payrollResponse = await apiClient.get(`/hr/payroll/payroll-details`);
-    
+
       setPayrolls(payrollResponse.data || []);
       setFilteredPayrolls(payrollResponse.data || []);
-      
+
       // Reset form and close dialogs
       setNewPayroll({
         eid: 0,
@@ -294,20 +294,20 @@ export default function PayrollPage() {
       setSelectedEmployee(null);
       setConfirmationOpen(false);
       setAddDialogOpen(false);
-      
+
       toast.success('Payroll record added successfully');
     } catch (error) {
       console.error('Error adding payroll record:', error);
       toast.error('Failed to add payroll record');
     }
   };
-  
+
   // View payroll details
   const viewPayroll = (payroll: Payroll) => {
     setSelectedPayroll(payroll);
     setViewPayrollDialogOpen(true);
   };
-  
+
   // Get bank account info as formatted string
   const getBankInfo = (payroll: Payroll) => {
     if (payroll.employee.bank_info && payroll.employee.bank_info.length > 0) {
@@ -316,7 +316,7 @@ export default function PayrollPage() {
     }
     return '-';
   };
-  
+
   // Get bank name
   const getBankName = (payroll: Payroll) => {
     if (payroll.employee.bank_info && payroll.employee.bank_info.length > 0) {
@@ -333,14 +333,14 @@ export default function PayrollPage() {
   const processedPayrolls = payrolls.filter(p => p.status === 'Processed').length;
   const averageSalary = totalEmployees > 0 ? totalMonthlySalary / totalEmployees : 0;
   const highestSalary = payrolls.length > 0 ? Math.max(...payrolls.map(p => p.net_salary)) : 0;
-  
+
   return (
     <div className="w-full">
       <div className="space-y-6 pb-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Employees Salary Processing</h2>
-          
+
           <div className="flex gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -352,12 +352,12 @@ export default function PayrollPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button  className='bg-emerald-500 hover:bg-emerald-600 text-white' onClick={() => setAddDialogOpen(true)}>
+            <Button className='bg-emerald-500 hover:bg-emerald-600 text-white' onClick={() => setAddDialogOpen(true)}>
               Add Payroll
             </Button>
           </div>
         </div>
-        
+
         {/* Statistics Cards */}
         <Card className="hover:shadow-md transition-shadow p-6">
           <CardHeader className="px-0 pt-0">
@@ -373,7 +373,7 @@ export default function PayrollPage() {
                 </div>
                 <User className="h-8 w-8 text-blue-500" />
               </div>
-              
+
               {/* Total Monthly Salary Card */}
               <div className="flex justify-between items-center p-4 border rounded-md">
                 <div>
@@ -382,7 +382,7 @@ export default function PayrollPage() {
                 </div>
                 <DollarSign className="h-8 w-8 text-green-500" />
               </div>
-              
+
               {/* Pending Payrolls Card */}
               <div className="flex justify-between items-center p-4 border rounded-md">
                 <div>
@@ -391,7 +391,7 @@ export default function PayrollPage() {
                 </div>
                 <AlertCircle className="h-8 w-8 text-yellow-500" />
               </div>
-              
+
               {/* Processed Payrolls Card */}
               <div className="flex justify-between items-center p-4 border rounded-md">
                 <div>
@@ -400,7 +400,7 @@ export default function PayrollPage() {
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
-              
+
               {/* Average Salary Card */}
               <div className="flex justify-between items-center p-4 border rounded-md">
                 <div>
@@ -409,7 +409,7 @@ export default function PayrollPage() {
                 </div>
                 <BarChart className="h-8 w-8 text-blue-500" />
               </div>
-              
+
               {/* Highest Salary Card */}
               <div className="flex justify-between items-center p-4 border rounded-md">
                 <div>
@@ -421,7 +421,7 @@ export default function PayrollPage() {
             </div>
           </CardContent>
         </Card>
-        
+
         {/* Payroll Table */}
         <Card className="hover:shadow-md transition-shadow">
           <CardContent className="p-0">
@@ -430,75 +430,127 @@ export default function PayrollPage() {
             ) : filteredPayrolls.length === 0 ? (
               <div className="text-center py-10">No payroll records found</div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="pl-8 w-[150px]">Name</TableHead>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Salary</TableHead>
-                      <TableHead>Bank</TableHead>
-                      <TableHead className="text-center">EPF</TableHead>
-                      <TableHead className="text-center">ETF</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredPayrolls.map((payroll) => (
-                      <TableRow key={payroll.payroll_id}>
-                        <TableCell className="font-medium pl-6">{payroll.employee.name}</TableCell>
-                        <TableCell>{payroll.eid}</TableCell>
-                        <TableCell>{payroll.employee.email}</TableCell>
-                        <TableCell>LKR {payroll.net_salary.toFixed(2)}</TableCell>
-                        <TableCell>{getBankName(payroll)}</TableCell>
-                        <TableCell className="text-center">
-                          {payroll.epf ? 'Yes' : 'No'}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {payroll.etf ? 'Yes' : 'No'}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {payroll.status === 'Processed' ? (
-                            <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
-                              Processed
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">
-                              Not Processed
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="pl-8 w-[150px]">Name</TableHead>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Salary</TableHead>
+                        <TableHead>Bank</TableHead>
+                        <TableHead className="text-center">EPF</TableHead>
+                        <TableHead className="text-center">ETF</TableHead>
+                        <TableHead className="text-center">Status</TableHead>
+                        <TableHead className="text-center">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredPayrolls.map((payroll) => (
+                        <TableRow key={payroll.payroll_id}>
+                          <TableCell className="font-medium pl-6">{payroll.employee.name}</TableCell>
+                          <TableCell>{payroll.eid}</TableCell>
+                          <TableCell>{payroll.employee.email}</TableCell>
+                          <TableCell>LKR {payroll.net_salary.toFixed(2)}</TableCell>
+                          <TableCell>{getBankName(payroll)}</TableCell>
+                          <TableCell className="text-center">{payroll.epf ? 'Yes' : 'No'}</TableCell>
+                          <TableCell className="text-center">{payroll.etf ? 'Yes' : 'No'}</TableCell>
+                          <TableCell className="text-center">
+                            {payroll.status === 'Processed' ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                                Processed
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">
+                                Not Processed
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {payroll.status !== 'Processed' ? (
+                              <Button
+                                onClick={() => processSalary(payroll)}
+                                className="mr-2 bg-blue-500 hover:bg-blue-600"
+                                size="sm"
+                              >
+                                Process Salary
+                              </Button>
+                            ) : (
+                              <Button onClick={() => viewPayroll(payroll)} variant="outline" size="sm">
+                                View Payroll
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden flex flex-col gap-4 p-2">
+                  {filteredPayrolls.map((payroll) => (
+                    <div key={payroll.payroll_id} className="bg-white shadow-md rounded-xl p-4 border border-gray-200">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="text-gray-900 font-semibold">{payroll.employee.name}</div>
+                        <div className="flex gap-2">
                           {payroll.status !== 'Processed' ? (
                             <Button
                               onClick={() => processSalary(payroll)}
-                              className="mr-2 bg-blue-500 hover:bg-blue-600"
+                              className="bg-blue-500 hover:bg-blue-600 text-xs"
                               size="sm"
                             >
-                              Process Salary
+                              Process
                             </Button>
                           ) : (
-                            <Button
-                              onClick={() => viewPayroll(payroll)}
-                              variant="outline"
-                              size="sm"
-                            >
-                              View Payroll
+                            <Button onClick={() => viewPayroll(payroll)} variant="outline" size="sm" className="text-xs">
+                              View
                             </Button>
                           )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                        </div>
+                      </div>
+
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">ID:</span> {payroll.eid}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">Email:</span> {payroll.employee.email}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">Salary:</span> LKR {payroll.net_salary.toFixed(2)}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">Bank:</span> {getBankName(payroll)}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">EPF:</span> {payroll.epf ? 'Yes' : 'No'}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">ETF:</span> {payroll.etf ? 'Yes' : 'No'}
+                      </div>
+                      <div className="text-gray-600 text-sm mb-1">
+                        <span className="font-medium">Status:</span>{' '}
+                        {payroll.status === 'Processed' ? (
+                          <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                            Processed
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-yellow-50 text-yellow-600 border-yellow-200">
+                            Not Processed
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Add Payroll Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent>
@@ -516,7 +568,7 @@ export default function PayrollPage() {
                   id="eid"
                   type="number"
                   value={newPayroll.eid || ''}
-                  onChange={(e) => setNewPayroll({...newPayroll, eid: parseInt(e.target.value)})}
+                  onChange={(e) => setNewPayroll({ ...newPayroll, eid: parseInt(e.target.value) })}
                   className="flex-1"
                 />
                 <Button onClick={() => fetchEmployeeDetails(newPayroll.eid)} type="button" size="sm">
@@ -524,7 +576,7 @@ export default function PayrollPage() {
                 </Button>
               </div>
             </div>
-            
+
             {selectedEmployee && (
               <>
                 <div className="grid grid-cols-4 items-center gap-4">
@@ -535,7 +587,7 @@ export default function PayrollPage() {
                     <p className="text-muted-foreground">Base Salary: LKR {selectedEmployee.salary?.toLocaleString()}</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="ot_amount" className="text-right">OT Amount</Label>
                   <Input
@@ -552,7 +604,7 @@ export default function PayrollPage() {
                     className="col-span-3"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="bonus_amount" className="text-right">Bonus Amount</Label>
                   <Input
@@ -569,7 +621,7 @@ export default function PayrollPage() {
                     className="col-span-3"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label className="text-right">EPF</Label>
                   <div className="flex items-center space-x-2">
@@ -588,7 +640,7 @@ export default function PayrollPage() {
                     </label>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label className="text-right">ETF</Label>
                   <div className="flex items-center space-x-2">
@@ -615,7 +667,7 @@ export default function PayrollPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Payroll Confirmation Dialog */}
       <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
         <DialogContent>
@@ -675,85 +727,93 @@ export default function PayrollPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* View Payroll Dialog */}
       <Dialog open={viewPayrollDialogOpen} onOpenChange={setViewPayrollDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-full max-w-md sm:max-w-lg p-4">
           <DialogHeader>
             <DialogTitle>Payroll Details</DialogTitle>
           </DialogHeader>
+
           {selectedPayroll && (
             <div className="space-y-4">
-              <div className="flex items-center space-x-4 rounded-md border p-4">
-                <User className="h-5 w-5 text-blue-600" />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">{selectedPayroll.employee.name}</p>
-                  <p className="text-sm text-muted-foreground">{selectedPayroll.employee.email}</p>
+
+              {/* Employee Info Card */}
+              <div className="bg-white shadow rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <User className="h-6 w-6 text-blue-600" />
+                  <p className="text-sm font-semibold">{selectedPayroll.employee.name}</p>
                 </div>
-                <div>
-                  <Badge variant="outline">{selectedPayroll.employee.employment_status}</Badge>
-                </div>
+                <div className="text-xs text-gray-500 mb-2">{selectedPayroll.employee.email}</div>
+                <Badge variant="outline" className="text-xs">{selectedPayroll.employee.employment_status}</Badge>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Employee ID</p>
+
+              {/* Basic Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-white shadow rounded-lg p-3">
+                  <p className="text-xs text-gray-500">Employee ID</p>
                   <p className="text-sm font-medium">{selectedPayroll.eid}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Job Title</p>
+                <div className="bg-white shadow rounded-lg p-3">
+                  <p className="text-xs text-gray-500">Job Title</p>
                   <p className="text-sm font-medium">{selectedPayroll.employee.job_title || '-'}</p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-4 rounded-md border p-4">
+
+              {/* Salary */}
+              <div className="bg-green-50 border-l-4 border-green-500 rounded-lg p-3 flex items-center gap-3">
                 <DollarSign className="h-5 w-5 text-green-600" />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">Net Salary</p>
-                  <p className="text-sm text-muted-foreground">LKR {selectedPayroll.net_salary.toFixed(2)}</p>
+                <div>
+                  <p className="text-xs text-gray-500">Net Salary</p>
+                  <p className="text-sm font-medium">LKR {selectedPayroll.net_salary.toFixed(2)}</p>
                 </div>
               </div>
-              
-              {selectedPayroll.employee.bank_info && selectedPayroll.employee.bank_info.length > 0 && (
-                <div className="flex items-center space-x-4 rounded-md border p-4">
-                  <CreditCard className="h-5 w-5 text-purple-600" />
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">{selectedPayroll.employee.bank_info[0].bank_name}</p>
-                    <p className="text-sm text-muted-foreground">Account: {selectedPayroll.employee.bank_info[0].account_no}</p>
-                    <p className="text-xs text-muted-foreground">{selectedPayroll.employee.bank_info[0].account_holder}</p>
+
+              {/* Bank Info */}
+              {selectedPayroll.employee.bank_info?.length > 0 && (
+                <div className="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3 flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5 text-purple-600" />
+                    <p className="text-sm font-medium">{selectedPayroll.employee.bank_info[0].bank_name}</p>
                   </div>
+                  <p className="text-xs text-gray-500">Account: {selectedPayroll.employee.bank_info[0].account_no}</p>
+                  <p className="text-xs text-gray-500">{selectedPayroll.employee.bank_info[0].account_holder}</p>
                 </div>
               )}
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">EPF</p>
+
+              {/* EPF / ETF */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white shadow rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-500">EPF</p>
                   <p className="text-sm font-medium">{selectedPayroll.epf ? 'Yes' : 'No'}</p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">ETF</p>
+                <div className="bg-white shadow rounded-lg p-3 text-center">
+                  <p className="text-xs text-gray-500">ETF</p>
                   <p className="text-sm font-medium">{selectedPayroll.etf ? 'Yes' : 'No'}</p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-4 rounded-md border p-4">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">Payment Status</p>
-                  <p className="text-sm text-muted-foreground">{selectedPayroll.status}</p>
+
+              {/* Payment Status */}
+              <div className="bg-yellow-50 border-l-4 border-amber-500 rounded-lg p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-amber-500" />
+                  <p className="text-sm font-medium">Payment Status</p>
                 </div>
-                <div>
-                  {selectedPayroll.status === 'Processed' ? (
-                    <Badge className="bg-green-100 text-green-800">Processed</Badge>
-                  ) : (
-                    <Badge className="bg-yellow-100 text-yellow-800">Not Processed</Badge>
-                  )}
-                </div>
+                <Badge
+                  className={
+                    selectedPayroll.status === 'Processed'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }
+                >
+                  {selectedPayroll.status}
+                </Badge>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
