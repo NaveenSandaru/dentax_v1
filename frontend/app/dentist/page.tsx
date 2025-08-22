@@ -38,7 +38,7 @@ type Appointment = {
 const DentalDashboard = () => {
 
   const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL;
-  const {user, isLoggedIn, isLoadingAuth, apiClient} = useContext(AuthContext);
+  const { user, isLoggedIn, isLoadingAuth, apiClient } = useContext(AuthContext);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isMobile, setIsMobile] = useState(false);
@@ -72,24 +72,24 @@ const DentalDashboard = () => {
       const response = await apiClient.get(
         `/appointments/fordentist/${user.id}`
       );
-      
+
       if (response.status === 200) {
         // Format the target date to YYYY-MM-DD for comparison
         const targetDate = new Date(date);
         targetDate.setHours(0, 0, 0, 0);
         const targetDateStr = targetDate.toISOString().split('T')[0];
-        
+
         console.log('Fetching appointments for date:', targetDateStr);
-        
+
         // Filter appointments by the selected date on the frontend
         const filteredAppointments = response.data.filter((appointment: Appointment) => {
           if (!appointment.date || !appointment.patient) return false;
-          
+
           // Parse appointment date and normalize to start of day for comparison
           const appointmentDate = new Date(appointment.date);
           appointmentDate.setHours(0, 0, 0, 0);
           const appointmentDateStr = appointmentDate.toISOString().split('T')[0];
-          
+
           const isMatch = appointmentDateStr === targetDateStr;
           if (isMatch) {
             console.log('Matching appointment:', {
@@ -99,10 +99,10 @@ const DentalDashboard = () => {
               patient: appointment.patient?.name
             });
           }
-          
+
           return isMatch;
         });
-        
+
         console.log(`Found ${filteredAppointments.length} appointments for ${targetDateStr}`);
         return filteredAppointments;
       }
@@ -135,22 +135,22 @@ const DentalDashboard = () => {
       const response = await apiClient.get(
         `/appointments/fordentist/${user.id}`
       );
-      
+
       if (response.status === 200) {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
-        
+
         // Filter for future appointments (excluding today) with valid patients
         const upcoming = response.data.filter((appointment: Appointment) => {
           if (!appointment.date || !appointment.patient) return false;
-          
+
           // Parse appointment date and normalize to start of day
           const appointmentDate = new Date(appointment.date);
           appointmentDate.setHours(0, 0, 0, 0);
-          
+
           // Only include future dates (not today)
           const isFuture = appointmentDate > now;
-          
+
           if (isFuture) {
             console.log('Future appointment:', {
               id: appointment.appointment_id,
@@ -159,27 +159,27 @@ const DentalDashboard = () => {
               patient: appointment.patient?.name
             });
           }
-          
+
           return isFuture;
         });
-        
+
         // Sort by date and time in ascending order (earliest first)
         upcoming.sort((a: Appointment, b: Appointment) => {
           // Create full datetime strings for accurate comparison
           const dateTimeA = new Date(`${a.date}T${a.time_from}`).getTime();
           const dateTimeB = new Date(`${b.date}T${b.time_from}`).getTime();
-          
+
           // For same date, sort by time
           if (a.date === b.date) {
             return dateTimeA - dateTimeB;
           }
-          
+
           // Sort by date
           const dateA = new Date(a.date).getTime();
           const dateB = new Date(b.date).getTime();
           return dateA - dateB;
         });
-        
+
         console.log(`Found ${upcoming.length} future appointments`);
         setUpcomingAppointments(upcoming);
       } else {
@@ -193,28 +193,28 @@ const DentalDashboard = () => {
     }
   };
 
-  const updateStatusChange = async() => {
+  const updateStatusChange = async () => {
     setChangingStatus(true);
-    try{
+    try {
       const response = await apiClient.put(
         `/appointments/${appointment_id}`,
         {
           status: status
-        },{
-          withCredentials: true,
-          headers:{
-            "Content-type":"application/json"
-          }
+        }, {
+        withCredentials: true,
+        headers: {
+          "Content-type": "application/json"
         }
+      }
       );
-      if(response.status != 202){
+      if (response.status != 202) {
         throw new Error("Error updating status");
       }
     }
-    catch(err: any){
+    catch (err: any) {
       toast.error(err.message);
     }
-    finally{
+    finally {
       setChangingStatus(false);
       setAppointment_id(0);
       setStatus('');
@@ -268,7 +268,7 @@ const DentalDashboard = () => {
     }
   };
 
-   const getStatusIcon = (status: any) => {
+  const getStatusIcon = (status: any) => {
     switch (status.toLowerCase()) {
       case 'completed':
       case 'complete':
@@ -285,7 +285,7 @@ const DentalDashboard = () => {
     try {
       setStatus(newStatus);
       setAppointment_id(appointmentId);
-      
+
       // Update local state optimistically
       setTodaysAppointments(prevAppointments =>
         prevAppointments.map(appointment =>
@@ -339,7 +339,7 @@ const DentalDashboard = () => {
   const handleDateClick = async (day: number) => {
     const selected = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     setSelectedDate(selected);
-    
+
     // Check if it's today
     const today = new Date();
     if (
@@ -386,7 +386,7 @@ const DentalDashboard = () => {
             }
           }
         );
-        
+
         // Update local state
         setTodaysAppointments(prevAppointments =>
           prevAppointments.map(appointment =>
@@ -395,7 +395,7 @@ const DentalDashboard = () => {
               : appointment
           )
         );
-        
+
         toast.success('Appointment cancelled successfully');
       } catch (error) {
         console.error('Error cancelling appointment:', error);
@@ -423,32 +423,31 @@ const DentalDashboard = () => {
 
   const days = getDaysInMonth(currentDate);
 
-  useEffect(()=>{
-    if(!user) return;
+  useEffect(() => {
+    if (!user) return;
     fetchTodaysAppointments();
     fetchUpcomingAppointments();
-  },[user]);
+  }, [user]);
 
-  useEffect(()=>{
-    if(isLoadingAuth) return;
-    if(!isLoggedIn){
-      toast.error("Login Error", {description:"Please Login"});
+  useEffect(() => {
+    if (isLoadingAuth) return;
+    if (!isLoggedIn) {
+      toast.error("Login Error", { description: "Please Login" });
       router.push("/login");
     }
-    else if(user.role != "dentist"){
-      toast.error("Access Denied", {description:"You do not have admin priviledges"});
+    else if (user.role != "dentist") {
+      toast.error("Access Denied", { description: "You do not have admin priviledges" });
       router.push("/login");
     }
-  },[isLoadingAuth]);
+  }, [isLoadingAuth]);
 
   useEffect(() => {
     if (!status || !appointment_id) return;
     updateStatusChange();
   }, [status, appointment_id]);
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
@@ -457,13 +456,13 @@ const DentalDashboard = () => {
             <Calendar className="w-8 h-8 mr-3" />
             <div>
               <p className="text-purple-100 text-sm">
-                {isShowingSelectedDate 
+                {isShowingSelectedDate
                   ? `Appointments on ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
                   : "Today's Appointments"}
               </p>
               <p className="text-2xl md:text-3xl font-bold">
-                {isShowingSelectedDate 
-                  ? selectedDateAppointments.filter(apt => apt.status.toLowerCase() !== 'cancelled').length 
+                {isShowingSelectedDate
+                  ? selectedDateAppointments.filter(apt => apt.status.toLowerCase() !== 'cancelled').length
                   : todaysAppointmentsCount}
               </p>
             </div>
@@ -475,12 +474,12 @@ const DentalDashboard = () => {
             <CheckCircle className="w-8 h-8 mr-3" />
             <div>
               <p className="text-green-100 text-sm">
-                {isShowingSelectedDate 
+                {isShowingSelectedDate
                   ? `Check-ins on ${selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
                   : "Today's Check-ins"}
               </p>
               <p className="text-2xl md:text-3xl font-bold">{totalCheckIns}</p>
-              
+
             </div>
           </div>
         </div>
@@ -488,112 +487,147 @@ const DentalDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's Schedule */}
-         <div className="lg:col-span-2">
-      <div className="bg-white rounded-lg shadow-sm border h-full flex flex-col">
-        <div className="p-4 md:p-6 flex-shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-            <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-2 sm:mb-0">
-              {isShowingSelectedDate 
-                ? `Schedule for ${selectedDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}` 
-                : "Today's Schedule"}
-            </h2>
-            <div className="text-sm text-gray-500">
-              {(isShowingSelectedDate ? selectedDate : new Date()).toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow-sm border h-full flex flex-col">
+            {/* Header */}
+            <div className="p-3 sm:p-4 md:p-5 flex-shrink-0 border-b">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-3">
+                <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 leading-tight">
+                  {isShowingSelectedDate
+                    ? `Schedule for ${selectedDate.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}`
+                    : "Today's Schedule"}
+                </h2>
+                <div className="text-xs sm:text-sm text-gray-500">
+                  {(isShowingSelectedDate ? selectedDate : new Date()).toLocaleDateString(
+                    "en-US",
+                    {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-5 pb-3 sm:pb-4 md:pb-5">
+              <div className="space-y-2">
+                {/* Empty State */}
+                {isShowingSelectedDate &&
+                  selectedDateAppointments.length === 0 &&
+                  !loadingTodaysAppointments && (
+                    <div className="text-center py-5 text-gray-500 text-sm">
+                      No appointments scheduled for this date
+                    </div>
+                  )}
+
+                {/* Appointment List */}
+                {(isShowingSelectedDate
+                  ? selectedDateAppointments
+                  : todaysAppointments
+                ).map((appointment) => (
+                  <div
+                    key={appointment.appointment_id}
+                    className="flex items-center p-2.5 sm:p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    {/* Avatar */}
+                    <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden bg-blue-100 flex-shrink-0 mr-3">
+                      {appointment.patient?.profile_picture ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${appointment.patient.profile_picture}`}
+                          alt={appointment.patient?.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <div className="absolute inset-0 flex items-center justify-center bg-blue-100 text-blue-700 font-semibold text-xs">
+                        {appointment.patient?.name
+                          ? appointment.patient.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .substring(0, 2)
+                          : "?"}
+                      </div>
+                    </div>
+
+                    {/* Appointment Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        {/* Name + Buttons */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className="font-medium text-gray-900 truncate max-w-[120px] sm:max-w-[180px] text-sm sm:text-base">
+                            {appointment.patient?.name || "deleted patient"}
+                          </h3>
+                          {!["completed", "cancelled"].includes(appointment.status) && (
+                            <div className="flex gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(appointment.appointment_id, "completed");
+                                }}
+                                className="p-1 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                                title="Mark as Completed"
+                              >
+                                <Check className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelClick(appointment);
+                                }}
+                                className="p-1 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                                title="Cancel appointment"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Time + Status */}
+                        <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-0">
+                          <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">
+                            {appointment.time_from}
+                          </span>
+                          {appointment.status && (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${getStatusColor(
+                                appointment.status
+                              )}`}
+                            >
+                              {getStatusIcon(appointment.status)}
+                              <span className="ml-1 capitalize">{appointment.status}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {appointment.note && (
+                        <p className="text-xs text-gray-600 truncate mt-1">
+                          {appointment.note}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4 md:pb-6">
-          <div className="space-y-3">
-            {isShowingSelectedDate && selectedDateAppointments.length === 0 && !loadingTodaysAppointments && (
-              <div className="text-center py-8 text-gray-500">
-                No appointments scheduled for this date
-              </div>
-            )}
-            {(isShowingSelectedDate ? selectedDateAppointments : todaysAppointments).map((appointment) => (
-              <div key={appointment.appointment_id} className="flex items-center p-3 md:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden bg-blue-100 flex-shrink-0 mr-3 md:mr-4">
-                  {appointment.patient?.profile_picture ? (
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${appointment.patient.profile_picture}`}
-                      alt={appointment.patient?.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const fallback = target.nextElementSibling as HTMLElement;
-                        if (fallback) {
-                          fallback.style.display = 'flex';
-                        }
-                      }}
-                    />
-                  ) : null}
-                  <div className="absolute inset-0 flex items-center justify-center bg-blue-100 text-blue-700 font-medium text-sm">
-                    {appointment.patient?.name 
-                      ? appointment.patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                      : '?'}
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center space-x-3">
-                      <h3 className="font-medium text-gray-900 truncate">{appointment.patient?.name || "deleted patient"}</h3>
-                      {!['completed', 'cancelled'].includes(appointment.status) && (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStatusChange(appointment.appointment_id, 'completed');
-                            }}
-                            className="p-1.5 rounded-full bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
-                            title="Mark as Completed"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCancelClick(appointment);
-                            }}
-                            className="p-1.5 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
-                            title="Cancel appointment"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium text-gray-700">
-                        {appointment.time_from}
-                      </span>
-                      {appointment.status && (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                          {getStatusIcon(appointment.status)}
-                          <span className="ml-1">{appointment.status}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 truncate mt-1">{appointment.note}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  
 
         {/* Calendar and Upcoming */}
         <div className="space-y-6">
@@ -635,15 +669,14 @@ const DentalDashboard = () => {
                     {day && (
                       <button
                         className={`w-8 h-8 mx-auto flex items-center justify-center text-sm rounded-full transition-all duration-200
-                            ${
-                              day === new Date().getDate() &&
-                              currentDate.getMonth() === new Date().getMonth() &&
-                              currentDate.getFullYear() === new Date().getFullYear()
-                                ? 'bg-emerald-500 text-white font-semibold ring-2 ring-emerald-300 scale-105 hover:bg-emerald-600' 
-                                : isDateSelected(day as number)
-                                ? 'bg-blue-500 text-white font-semibold ring-2 ring-blue-200 scale-105 hover:bg-blue-600'
-                                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                            }
+                            ${day === new Date().getDate() &&
+                            currentDate.getMonth() === new Date().getMonth() &&
+                            currentDate.getFullYear() === new Date().getFullYear()
+                            ? 'bg-emerald-500 text-white font-semibold ring-2 ring-emerald-300 scale-105 hover:bg-emerald-600'
+                            : isDateSelected(day as number)
+                              ? 'bg-blue-500 text-white font-semibold ring-2 ring-blue-200 scale-105 hover:bg-blue-600'
+                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                          }
                           `}
                         onClick={() => handleDateClick(day as number)}
                       >
@@ -654,7 +687,7 @@ const DentalDashboard = () => {
                 ))}
               </div>
 
-              
+
             </div>
           </div>
 
@@ -663,7 +696,7 @@ const DentalDashboard = () => {
             <div className="p-4 md:p-6 flex-shrink-0">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Future Appointments</h2>
-                
+
               </div>
             </div>
 
@@ -688,7 +721,7 @@ const DentalDashboard = () => {
                         />
                       ) : null}
                       <div className="absolute inset-0 flex items-center justify-center bg-blue-100 text-blue-700 font-medium text-xs">
-                        {appointment.patient?.name 
+                        {appointment.patient?.name
                           ? appointment.patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
                           : '?'}
                       </div>
@@ -713,7 +746,7 @@ const DentalDashboard = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Cancel Appointment Dialog */}
       <CancelAppointmentDialog
         open={cancelDialogOpen}

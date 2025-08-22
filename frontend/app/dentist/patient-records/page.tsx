@@ -1223,109 +1223,150 @@ export default function DentistDashboard({ params }: DashboardProps) {
     fetchPatients();
   }, [user]);
 
-  useEffect(()=>{
-    if(isLoadingAuth) return;
-    if(!isLoggedIn){
-      toast.error("Login Error", {description:"Please Login"});
+  useEffect(() => {
+    if (isLoadingAuth) return;
+    if (!isLoggedIn) {
+      toast.error("Login Error", { description: "Please Login" });
       router.push("/login");
     }
-    else if(user.role != "dentist"){
-      toast.error("Access Denied", {description:"You do not have admin priviledges"});
+    else if (user.role != "dentist") {
+      toast.error("Access Denied", { description: "You do not have admin priviledges" });
       router.push("/login");
     }
-  },[isLoadingAuth]);
+  }, [isLoadingAuth]);
 
   const PatientDetailsContent = () => (
-    <div className="space-y-6 p-6">
-      <Tabs defaultValue="details" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="medical-history">Medical History</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="soap-notes">SOAP Notes</TabsTrigger>
-          <TabsTrigger value="consent-forms">Consent Forms</TabsTrigger>
-        </TabsList>
+  
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+      <Tabs
+        defaultValue="details"
+        className="w-full"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        {/* Tabs Header */}
+        <div className="overflow-x-auto scroll-smooth">
+          <TabsList className="flex w-max gap-2">
+            <TabsTrigger value="details" className="flex-1 min-w-[120px]">Details</TabsTrigger>
+            <TabsTrigger value="medical-history" className="flex-1 min-w-[150px]">Medical History</TabsTrigger>
+            <TabsTrigger value="reports" className="flex-1 min-w-[120px]">Reports</TabsTrigger>
+            <TabsTrigger value="soap-notes" className="flex-1 min-w-[120px]">SOAP Notes</TabsTrigger>
+            <TabsTrigger value="consent-forms" className="flex-1 min-w-[150px]">Consent Forms</TabsTrigger>
+          </TabsList>
+        </div>
 
+        {/* Details Tab */}
         <TabsContent value="details">
           <Card>
             <CardHeader>
-              <CardTitle>Patient Information</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Patient Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Critical conditions alert */}
-              {selectedPatient && getPatientCriticalConditions(selectedPatient.patient_id).length > 0 && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium text-red-800 text-lg">Critical Medical Conditions</h3>
-                      <p className="text-red-700 mt-1 mb-3">This patient has medical conditions that require special attention:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {getPatientCriticalConditions(selectedPatient.patient_id).map((condition, idx) => (
-                          <Badge key={idx} variant="outline" className="bg-white text-red-700 border-red-300 py-1.5 px-3">
-                            {condition}
-                          </Badge>
-                        ))}
+              {/* Critical Conditions */}
+              {selectedPatient &&
+                getPatientCriticalConditions(selectedPatient.patient_id).length > 0 && (
+                  <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-medium text-red-800 text-sm sm:text-base">
+                          Critical Medical Conditions
+                        </h3>
+                        <p className="text-red-700 text-xs sm:text-sm mt-1 mb-2">
+                          This patient has medical conditions that require special attention:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {getPatientCriticalConditions(selectedPatient.patient_id).map(
+                            (condition, idx) => (
+                              <Badge
+                                key={idx}
+                                variant="outline"
+                                className="bg-white text-red-700 border-red-300 py-1 px-2 sm:py-1.5 sm:px-3 text-xs sm:text-sm"
+                              >
+                                {condition}
+                              </Badge>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Patient Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Date of Birth</label>
-                  <p className="text-gray-900">{selectedPatient?.date_of_birth || 'Not provided'}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-700">
+                    Date of Birth
+                  </label>
+                  <p className="text-gray-900 text-sm sm:text-base">
+                    {selectedPatient?.date_of_birth || "Not provided"}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Gender</label>
-                  <p className="text-gray-900">{selectedPatient?.gender || 'Not provided'}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-700">
+                    Gender
+                  </label>
+                  <p className="text-gray-900 text-sm sm:text-base">
+                    {selectedPatient?.gender || "Not provided"}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Blood Group</label>
-                  <p className="text-gray-900">{selectedPatient?.blood_group || 'Not provided'}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-700">
+                    Blood Group
+                  </label>
+                  <p className="text-gray-900 text-sm sm:text-base">
+                    {selectedPatient?.blood_group || "Not provided"}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">NIC</label>
-                  <p className="text-gray-900">{selectedPatient?.NIC || 'Not provided'}</p>
+                  <label className="text-xs sm:text-sm font-medium text-gray-700">
+                    NIC
+                  </label>
+                  <p className="text-gray-900 text-sm sm:text-base">
+                    {selectedPatient?.NIC || "Not provided"}
+                  </p>
                 </div>
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-gray-700">Address</label>
-                  <p className="text-gray-900">{selectedPatient?.address || 'Not provided'}</p>
+                <div className="sm:col-span-2">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700">
+                    Address
+                  </label>
+                  <p className="text-gray-900 text-sm sm:text-base break-words">
+                    {selectedPatient?.address || "Not provided"}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Medical History Tab */}
         <TabsContent value="medical-history" className="mt-0 h-full">
           <div className="h-full">
             {loadingMedicalHistory ? (
-              <div className="flex justify-center items-center h-48">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <div className="flex justify-center items-center h-36 sm:h-48">
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-gray-900"></div>
               </div>
             ) : (
               <MedicalHistoryForm
                 patientId={selectedPatient?.patient_id}
                 onSave={() => {
-                  // Refetch medical history after saving to update critical conditions
-                  if (selectedPatient) {
-                    fetchPatientMedicalHistory(selectedPatient.patient_id);
-                  }
+                  if (selectedPatient) fetchPatientMedicalHistory(selectedPatient.patient_id);
                 }}
               />
             )}
           </div>
         </TabsContent>
 
+        {/* Reports Tab */}
         <TabsContent value="reports">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Medical Reports
             </h3>
             <Button
-              className='bg-emerald-500 hover:bg-emerald-600 mb-2'
+              className="bg-emerald-500 hover:bg-emerald-600"
               size="sm"
               onClick={() => setIsUploadReportDialogOpen(true)}
             >
@@ -1333,68 +1374,78 @@ export default function DentistDashboard({ params }: DashboardProps) {
               Upload Report
             </Button>
           </div>
-          <div className="grid gap-4">
-            {selectedPatient && medicalReport.map((report) => (
-              <Card key={report.report_id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <FileText className="h-6 w-6 text-blue-600" />
+
+          <div className="grid gap-3 sm:gap-4">
+            {selectedPatient &&
+              medicalReport.map((report) => (
+                <Card
+                  key={report.report_id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                            {report.record_name}
+                          </h4>
+                          <p className="text-xs text-gray-500 truncate max-w-[180px] sm:max-w-full">
+                            {new URL(`${backendURL}${report.record_url}`).pathname
+                              .split("/")
+                              .pop()}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">{report.record_name}</h4>
-                        <p className="text-xs text-gray-500">
-                          {new URL(`${backendURL}${report.record_url}`).pathname.split('/').pop()}
-                        </p>
+                      <div className="flex gap-2 sm:gap-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-red-500 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteReport(report.report_id);
+                          }}
+                          disabled={deletingReportId === report.report_id}
+                        >
+                          {deletingReportId === report.report_id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent"></div>
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          className="hover:bg-emerald-100"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFileDownload(report.record_url);
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-500 hover:bg-red-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteReport(report.report_id);
-                        }}
-                        disabled={deletingReportId === report.report_id}
-                      >
-                        {deletingReportId === report.report_id ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent"></div>
-                        ) : (
-                          <X className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button
-                        className='hover:bg-emerald-100'
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFileDownload(report.record_url);
-                        }}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
             {selectedPatient && medicalReport.length === 0 && (
               <Card>
-                <CardContent className="p-8 text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No medical reports available</p>
+                <CardContent className="p-6 text-center">
+                  <FileText className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-3 text-sm sm:text-base">
+                    No medical reports available
+                  </p>
                   <Button
-                    className='bg-emerald-500 hover:bg-emerald-600'
-                    variant="outline"
+                    className="bg-emerald-500 hover:bg-emerald-600"
                     size="sm"
                     onClick={() => setIsUploadReportDialogOpen(true)}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-1" />
                     Upload First Report
                   </Button>
                 </CardContent>
@@ -1403,11 +1454,12 @@ export default function DentistDashboard({ params }: DashboardProps) {
           </div>
         </TabsContent>
 
+        {/* SOAP Notes Tab */}
         <TabsContent value="soap-notes">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">SOAP Notes</h3>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+            <h3 className="text-base sm:text-lg font-semibold">SOAP Notes</h3>
             <Button
-              className='bg-emerald-500 hover:bg-emerald-600 mb-2'
+              className="bg-emerald-500 hover:bg-emerald-600"
               size="sm"
               onClick={() => setIsAddNoteDialogOpen(true)}
             >
@@ -1415,66 +1467,72 @@ export default function DentistDashboard({ params }: DashboardProps) {
               Add Note
             </Button>
           </div>
-          <div className="space-y-4">
-            {selectedPatient && soapNote.map((note) => (
-              <Card key={note.note_id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-sm text-gray-500">
-                      {note.date}
-                    </span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-blue-500 hover:bg-blue-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditNote(note);
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                        </svg>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-red-500 hover:bg-red-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteNote(note.note_id);
-                        }}
-                        disabled={deletingNoteId === note.note_id}
-                      >
-                        {deletingNoteId === note.note_id ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent"></div>
-                        ) : (
-                          <X className="h-4 w-4" />
-                        )}
-                      </Button>
+
+          <div className="space-y-3 sm:space-y-4">
+            {selectedPatient &&
+              soapNote.map((note) => (
+                <Card key={note.note_id}>
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs sm:text-sm text-gray-500">
+                        {note.date}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-blue-500 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditNote(note);
+                          }}
+                        >
+                          ✎
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-red-500 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteNote(note.note_id);
+                          }}
+                          disabled={deletingNoteId === note.note_id}
+                        >
+                          {deletingNoteId === note.note_id ? (
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-500 border-t-transparent"></div>
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-gray-900 whitespace-pre-wrap">{note.note}</p>
-                </CardContent>
-              </Card>
-            ))}
+                    <p className="text-gray-900 text-sm sm:text-base whitespace-pre-wrap">
+                      {note.note}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
             {selectedPatient && soapNote.length === 0 && (
               <Card>
-                <CardContent className="p-8 text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No SOAP notes available for this patient</p>
+                <CardContent className="p-6 text-center">
+                  <FileText className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm sm:text-base">
+                    No SOAP notes available for this patient
+                  </p>
                 </CardContent>
               </Card>
             )}
           </div>
         </TabsContent>
 
-        <TabsContent value="consent-forms" className="mt-6">
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">Consent Forms</h2>
+        {/* Consent Forms Tab */}
+        <TabsContent value="consent-forms" className="mt-4 sm:mt-6">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                Consent Forms
+              </h2>
               <Button
                 onClick={openCreateForm}
                 className="bg-emerald-500 hover:bg-emerald-600"
@@ -1493,6 +1551,7 @@ export default function DentistDashboard({ params }: DashboardProps) {
         </TabsContent>
       </Tabs>
     </div>
+
   )
 
   const OverlayPatientDetailsContent = () => (
