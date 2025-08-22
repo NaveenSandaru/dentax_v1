@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Equipment', href: '/admin/inventory/equipment' },
   { name: 'Suppliers', href: '/admin/inventory/suppliers' },
   { name: 'Reports', href: '/admin/inventory/reports' },
+  { name: 'Catalogs', href: '/admin/inventory/catalogs' },
 ];
 
 export default function InventoryLayout({

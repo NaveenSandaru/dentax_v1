@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3, LogOut, Settings, User2, Menu, X, Ticket, Users, DollarSign, Archive  } from "lucide-react";
+import { BarChart3, LogOut, Settings, User2, Menu, X, Ticket, Users, DollarSign, Archive, Shield  } from "lucide-react";
 import { AuthContext } from "@/context/auth-context";
 import { toast } from "sonner";
 import Logo from "@/app/logo.png";
@@ -95,7 +95,11 @@ const items = [
     url: "/admin/inventory",
     icon: Archive
   },
-  
+  {
+    title: "Security Questions",
+    url: "/admin/security-questions",
+    icon: Shield
+  }  
 ];
 
 const AdminSidebar = () => {
