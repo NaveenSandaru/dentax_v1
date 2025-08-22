@@ -95,6 +95,20 @@ export default function CalendarGridView({
   const [viewModeState, setViewModeState] = useState<"day" | "week">(viewMode)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
   const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null)
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
   // Debug logging
   console.log('CalendarGridView received:', { 
@@ -546,8 +560,12 @@ export default function CalendarGridView({
                                               setAppointmentToCancel(appointment)
                                               setCancelDialogOpen(true)
                                             }}
-                                            className={`absolute top-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 ${
+                                            className={`absolute top-1 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-opacity z-10 ${
                                               viewModeState === "day" ? "-right-2" : "-left-2"
+                                            } ${
+                                              isMobile 
+                                                ? (selectedAppointmentId === appointment.appointment_id ? "opacity-100" : "opacity-0")
+                                                : "opacity-0 group-hover:opacity-100"
                                             }`}
                                             title="Cancel Appointment"
                                           >
@@ -557,7 +575,19 @@ export default function CalendarGridView({
                                           {/* Appointment Content */}
                                           <div 
                                             className="cursor-pointer p-2 h-full"
-                                            onClick={() => onAppointmentClick?.(appointment)}
+                                            onClick={() => {
+                                              if (isMobile) {
+                                                // On mobile, toggle selection to show/hide cancel button
+                                                setSelectedAppointmentId(
+                                                  selectedAppointmentId === appointment.appointment_id 
+                                                    ? null 
+                                                    : appointment.appointment_id
+                                                )
+                                              } else {
+                                                // On desktop, trigger appointment click
+                                                onAppointmentClick?.(appointment)
+                                              }
+                                            }}
                                           >
                                             <div className="font-semibold truncate leading-tight text-xs">
                                               {appointment.patient?.name || appointment.temp_patient?.name || "Patient"}
