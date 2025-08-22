@@ -17,6 +17,8 @@ import { AuthContext } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import DentistScheduleView from "@/components/dentist-schedule-view"
+import CalendarGridView from "@/components/CalendarGridView"
+
 
 // Helper function to get current date as string
 const getCurrentDateString = () => {
@@ -24,14 +26,14 @@ const getCurrentDateString = () => {
 }
 
 interface AppointmentBookingProps {
-  onViewChange?: (view: "week" | "schedule" | "list" | "rooms") => void;
+  onViewChange?: (view: "week" | "schedule" | "list" | "rooms" | "calendar") => void;
   userRole?: 'admin' | 'receptionist';
 }
 
 export default function AppointmentBooking({ onViewChange, userRole = 'admin' }: AppointmentBookingProps) {
   const [selectedDate, setSelectedDate] = useState(getCurrentDateString())
   const [viewMode, setViewMode] = useState<"day" | "week">("week")
-  const [calendarView, setCalendarView] = useState<"week" | "schedule" | "list" | "rooms">("list")
+  const [calendarView, setCalendarView] = useState<"week" | "schedule" | "list" | "rooms" | "calendar">("list")
 
   // Call onViewChange when calendarView changes
   useEffect(() => {
@@ -53,6 +55,8 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
 
   const [loadingDentists, setLoadingDentists] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
   const { isLoadingAuth, isLoggedIn, user, apiClient } = useContext(AuthContext);
 
@@ -71,29 +75,43 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
       setDentists(response.data);
     }
     catch (err: any) {
-      window.alert(err.message);
+      toast.error("Error fetching dentists: " + (err.response?.data?.message || err.message));
     }
     finally {
       setLoadingDentists(false);
     }
   };
 
+  const fetchAppointments = async () => {
+    setLoadingAppointments(true);
+    try {
+      const response = await apiClient.get('/appointments');
+      if (response.status === 200) {
+        setAppointments(response.data);
+      }
+    } catch (err: any) {
+      console.error('Error fetching appointments:', err);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
   useEffect(() => {
     if (isLoadingAuth) return;
     if (!isLoggedIn) {
-      window.alert("Please Log in");
+      toast.error("You must be logged in to access this page.");
       router.push("/login");
     }
     else if (user.role != "receptionist" && user.role != "admin") {
-      window.alert("Access Denied");
+      toast.error("You do not have permission to access this page.");
       router.push("/login");
     }
   }, [isLoadingAuth]);
 
   useEffect(() => {
     fetchDentists();
+    fetchAppointments();
   }, []);
-
 
   const filteredDentists = dentists.filter(
     (dentist) =>
@@ -183,8 +201,10 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
   };
 
   const handleAppointmentCreated = () => {
-    router.refresh();
+    setIsDialogOpen(false);
     setRefreshKey(prev => prev + 1);
+    // Refresh appointments to show new appointment immediately
+    fetchAppointments();
   };
 
   const handleWeekNavigation = (direction: "prev" | "next") => {
@@ -209,6 +229,21 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
       timeSlot
     });
     setIsDialogOpen(true);
+  };
+
+  const handleAppointmentCancel = async (appointmentId: number) => {
+    try {
+      const response = await apiClient.delete(`/appointments/${appointmentId}`);
+      if (response.status === 200) {
+        // Refresh appointments to show the cancellation
+        fetchAppointments();
+        // Show success message
+        toast.success("Appointment cancelled successfully.");
+      }
+    } catch (err: any) {
+      console.error('Error cancelling appointment:', err);
+      toast.error("Error cancelling appointment: " + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleDialogClose = () => {
@@ -258,7 +293,9 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
                         ? "Schedule view" 
                         : calendarView === "rooms"
                           ? "Room view"
-                          : "List view"}
+                          : calendarView === "calendar"
+                            ? "Grid view"
+                            : "List view"}
                   </span>
                   <span className="sm:hidden">
                     {calendarView === "week" 
@@ -267,13 +304,16 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
                         ? "Schedule view" 
                         : calendarView === "rooms"
                           ? "Room view"
-                          : "List view"}
+                          : calendarView === "calendar"
+                            ? "Grid view"
+                            : "List view"}
                   </span>
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-40 md:ml-auto" align="end">
                 <DropdownMenuItem onClick={() => setCalendarView("week")}>Calendar view</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setCalendarView("calendar")}>Grid view</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setCalendarView("list")}>List view</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setCalendarView("rooms")}>Room view</DropdownMenuItem>
               </DropdownMenuContent>
@@ -383,7 +423,7 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
         )}
 
         {/* Day View Header */}
-        {viewMode === "day" && calendarView !== "list" && calendarView !== "rooms" && (
+        {viewMode === "day" && calendarView !== "list" && calendarView !== "rooms" && calendarView !== "calendar" && (
           <div className="text-center mb-4 sm:mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
               {new Date(selectedDate).toLocaleDateString("en-US", {
@@ -398,7 +438,19 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
         )}
 
         {/* Content based on calendar view */}
-        {calendarView === "rooms" ? (
+        {calendarView === "calendar" ? (
+          <CalendarGridView
+            appointments={appointments}
+            dentists={dentists}
+            onAppointmentCancel={handleAppointmentCancel}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            onAppointmentClick={(appointment) => {
+              // Handle appointment click - could open a dialog or navigate
+              console.log('Appointment clicked:', appointment);
+            }}
+          />
+        ) : calendarView === "rooms" ? (
           <div className="mt-4">
             {/* Date and View Controls for Room View */}
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
