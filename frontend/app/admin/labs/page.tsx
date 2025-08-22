@@ -16,6 +16,8 @@ import AddShadeDialog from '@/components/AddShadeDialog';
 import EditShadeDialog from '@/components/EditShadeDialog';
 import AddMaterialDialog from '@/components/AddMaterialDialog';
 import EditMaterialDialog from '@/components/EditMaterialDialog';
+import AddStageDialog from '@/components/AddStageDialog';
+import EditStageDialog from '@/components/EditStageDialog';
 // ======================== TYPES ========================
 
 type Lab = {
@@ -110,7 +112,7 @@ const DentalLabModule = () => {
 
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'orders' | 'labs' | 'work-types' | 'shades' | 'materials'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'requests' | 'orders' | 'labs' | 'work-types' | 'shades' | 'materials' | 'stages'>('dashboard');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>();
   const [showNewOrder, setShowNewOrder] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -2312,6 +2314,153 @@ const DentalLabModule = () => {
     );
   };
 
+  const Stages = () => {
+    const [stages, setStages] = useState<Stage[]>([]);
+    const [selectedStage, setSelectedStage] = useState<Stage | undefined>();
+
+    const [fetchingStages, setFetchingStages] = useState(false);
+    const [showAddStageDialog, setShowAddStageDialog] = useState(false);
+    const [showEditStageDialog, setShowEditStageDialog] = useState(false);
+    const [isDeletingStage, setIsDeletingStage] = useState(false);
+    const [deletingStageID, setDeletingStageID] = useState(0);
+
+    const fetchStages = async () => {
+      setFetchingStages(true);
+      try {
+        const res = await apiClient.get(`stages`);
+        if (res.status === 500) throw new Error("Error fetching stages");
+        setStages(res.data);
+      } catch (err: any) {
+        setToast({ show: true, type: "error", message: err.message });
+      } finally {
+        setFetchingStages(false);
+      }
+    };
+
+    const handleDeleteStageClick = async (stageID: number) => {
+      setDeletingStageID(stageID);
+      setIsDeletingStage(true);
+      try {
+        const res = await apiClient.delete(`stages/${stageID}`);
+        if (res.status === 500) throw new Error("Error deleting stage");
+        fetchStages();
+      } catch (err: any) {
+        setToast({ show: true, type: "error", message: err.message });
+      } finally {
+        setIsDeletingStage(false);
+        setDeletingStageID(0);
+      }
+    };
+
+    useEffect(() => {
+      fetchStages();
+    }, []);
+
+    return (
+      <div className="bg-gray-50 p-4 md:p-6 lg:p-8 h-full">
+        <div className="max-w-7xl mx-auto h-full flex flex-col">
+          {/* Header */}
+          <div className="md:mb-2 mx-auto md:mx-0">
+            <h1 className="text-2xl font-bold text-gray-900">Stages</h1>
+            <p className="text-gray-600">Manage available stages</p>
+          </div>
+
+          {/* Add Button */}
+          <div className="w-full mb-4 md:w-auto md:flex md:justify-end">
+            <button
+              onClick={() => setShowAddStageDialog(true)}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white w-full md:w-auto px-4 py-2 rounded-md text-sm font-medium"
+            >
+              + Add Stage
+            </button>
+          </div>
+
+          {/* Stages Table */}
+          <div className="bg-white rounded-lg shadow overflow-x-auto flex-1">
+            {/* Table Header */}
+            <div className="bg-green-50 px-6 py-3 border-b border-green-200">
+              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
+                <div className="col-span-1">ID</div>
+                <div className="col-span-9">Stage Name</div>
+                <div className="col-span-2">Actions</div>
+              </div>
+            </div>
+
+            {/* Table Rows */}
+            <div className="divide-y divide-gray-200">
+              {fetchingStages ? (
+                <div className="px-6 py-12 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
+                  <p className="text-gray-500 mt-2">Loading Stages...</p>
+                </div>
+              ) : stages.length === 0 ? (
+                <div className="px-6 py-6 text-center text-gray-500">
+                  No Stages found.
+                </div>
+              ) : (
+                stages.map((stage) => (
+                  <div
+                    key={stage.stage_id}
+                    className="px-6 py-4 hover:bg-gray-50"
+                  >
+                    <div className="grid grid-cols-12 gap-4 items-center text-sm">
+                      <div className="text-gray-900 col-span-1">{stage.stage_id}</div>
+                      <div className="text-gray-900 col-span-9">{stage.name}</div>
+                      <div className="flex gap-2 col-span-2">
+                        {/* Edit */}
+                        <button
+                          onClick={() => {
+                            setSelectedStage(stage);
+                            setShowEditStageDialog(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                          title="Edit Stage"
+                        >
+                          <Edit className="h-4" />
+                        </button>
+
+                        {/* Delete */}
+                        <button
+                          disabled={isDeletingStage && stage.stage_id === deletingStageID}
+                          onClick={() => handleDeleteStageClick(stage.stage_id)}
+                          className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          title="Delete Stage"
+                        >
+                          {isDeletingStage && stage.stage_id === deletingStageID ? (
+                            <Loader2 className="h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Add Dialog */}
+          <AddStageDialog
+            open={showAddStageDialog}
+            onClose={() => setShowAddStageDialog(false)}
+            onSubmit={fetchStages}
+            apiClient={apiClient}
+          />
+
+          {/* Edit Dialog */}
+          <EditStageDialog
+            open={showEditStageDialog}
+            onClose={() => setShowEditStageDialog(false)}
+            onSubmit={fetchStages}
+            apiClient={apiClient}
+            stage={selectedStage}
+          />
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto">
@@ -2334,7 +2483,8 @@ const DentalLabModule = () => {
               { key: 'labs', label: 'Partner Labs' },
               { key: 'work-types', label: 'Work Types' },
               { key: 'shades', label: 'Shades' },
-              { key: 'materials', label: 'Materials' }
+              { key: 'materials', label: 'Materials' },
+              { key: 'stages', label: 'Stages' }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -2357,6 +2507,7 @@ const DentalLabModule = () => {
         {activeTab === 'work-types' && <WorkTypes />}
         {activeTab === 'shades' && <Shades />}
         {activeTab === 'materials' && <Materials />}
+        {activeTab === 'stages' && <Stages />}
 
         {selectedOrder && (
           <OrderDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />

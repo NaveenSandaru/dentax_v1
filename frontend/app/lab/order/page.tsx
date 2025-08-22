@@ -563,74 +563,115 @@ const OrdersList = React.memo(({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        {loadingOrders ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader className="h-6 w-6 animate-spin text-gray-500" />
-            <span className="ml-2 text-gray-500">Loading orders...</span>
-          </div>
-        ) : filteredOrders.length > 0 ? (
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dentist</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lab</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
-                <tr key={order.order_id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.order_id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{order.dentist?.name || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{order.dentist?.dentist_id || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{order.patient?.name || 'N/A'}</div>
-                      <div className="text-sm text-gray-500">{order.patient?.patient_id || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.work_type?.work_type || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.lab?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.due_date?.split("T")[0]}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${getPriorityColor(order.priority)}`}>
-                      {order.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      <BookCheck className="h-4 w-4" />
-                    </button>
-                  </td>
+      <div>
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
+          {loadingOrders ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader className="h-6 w-6 animate-spin text-gray-500" />
+              <span className="ml-2 text-gray-500">Loading orders...</span>
+            </div>
+          ) : filteredOrders.length > 0 ? (
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dentist</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lab</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <div className="text-center py-10 text-gray-500">
-            <p>No orders available</p>
-          </div>
-        )}
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredOrders.map((order) => (
+                  <tr key={order.order_id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.order_id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{order.dentist?.name || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{order.dentist?.dentist_id || 'N/A'}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{order.patient?.name || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{order.patient?.patient_id || 'N/A'}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.work_type?.work_type || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.lab?.name || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.due_date?.split("T")[0]}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`text-sm font-medium ${getPriorityColor(order.priority)}`}>{order.priority}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button onClick={() => setSelectedOrder(order)} className="text-blue-600 hover:text-blue-900">
+                        <BookCheck className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-10 text-gray-500">
+              <p>No orders available</p>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden flex flex-col gap-4">
+          {loadingOrders ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader className="h-6 w-6 animate-spin text-gray-500" />
+              <span className="ml-2 text-gray-500">Loading orders...</span>
+            </div>
+          ) : filteredOrders.length > 0 ? (
+            filteredOrders.map((order) => (
+              <div key={order.order_id} className="bg-white border rounded-lg p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="text-sm font-medium text-gray-900">Order ID: {order.order_id}</div>
+                  <button onClick={() => setSelectedOrder(order)} className="text-blue-600 hover:text-blue-900">
+                    <BookCheck className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Dentist: {order.dentist?.name || 'N/A'} ({order.dentist?.dentist_id || 'N/A'})
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Patient: {order.patient?.name || 'N/A'} ({order.patient?.patient_id || 'N/A'})
+                </div>
+                <div className="text-xs text-gray-500 mb-1">Work Type: {order.work_type?.work_type || 'N/A'}</div>
+                <div className="text-xs text-gray-500 mb-1">Lab: {order.lab?.name || 'N/A'}</div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+                    {order.status}
+                  </span>
+                  <span className={`text-xs font-medium ${getPriorityColor(order.priority)}`}>
+                    Priority: {order.priority}
+                  </span>
+                  <span className="text-xs text-gray-500">Due: {order.due_date?.split("T")[0]}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-10 text-gray-500">
+              <p>No orders available</p>
+            </div>
+          )}
+        </div>
       </div>
+
 
     </div>
   );
