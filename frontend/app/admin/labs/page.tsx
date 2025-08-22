@@ -1510,13 +1510,11 @@ const DentalLabModule = () => {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [acceptingOrder, setAcceptingOrder] = useState<boolean>(false);
 
-    // Replace with real data later
-    const [orders, setOrders] = useState<Order[]>([]);
-
     useEffect(() => {
       const query = requestSearchQuery.toLowerCase();
+      console.log(orders);
       let filtered = orders.filter((or) => or.status === "request");
-
+      console.log(filtered);
       // Search filter
       if (query) {
         filtered = filtered.filter(
@@ -2331,7 +2329,7 @@ const DentalLabModule = () => {
           <nav className="flex space-x-8 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
             {[
               { key: 'dashboard', label: 'Dashboard' },
-              /*{ key: 'requests', label: 'Requests' },*/
+              { key: 'requests', label: 'Requests' },
               { key: 'orders', label: 'Orders' },
               { key: 'labs', label: 'Partner Labs' },
               { key: 'work-types', label: 'Work Types' },
