@@ -946,7 +946,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                         }
                       }, 200)}
                       placeholder="Search by patient name or ID..."
-                      className={`w-full px-3 py-2 border ${!patientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                      className={`placeholder:text-sm placeholder:text-gray-400 w-full px-3 py-2 border ${!patientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
                     />
                     {patientSearchTerm && (
                       <button
@@ -1374,7 +1374,7 @@ export function AppointmentDialog({ open, onOpenChange, onAppointmentCreated, se
                 id="note"
                 value={formData.note}
                 onChange={(e) => handleChange('note', e.target.value)}
-                className="col-span-3"
+                className="col-span-3 placeholder:text-sm placeholder:text-gray-400"
                 placeholder="Add any additional notes here..."
               />
             </div>
