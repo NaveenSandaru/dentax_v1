@@ -46,6 +46,13 @@ const sendVerificationCode = async (email, code) => {
 };
 
 const sendAppointmentConfirmation = async (email, date, start_time) => {
+
+  const formattedDate = new Date(date).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short', // or '2-digit'
+    year: 'numeric',
+  });
+
   const mailOptions = {
     from: `"Dentax Dental System" <${process.env.EMAIL_USER}>`,
     to: email,
@@ -58,7 +65,7 @@ const sendAppointmentConfirmation = async (email, date, start_time) => {
                 <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
                     <tr>
                         <td style="padding: 8px 0;"><strong>Date:</strong></td>
-                        <td style="padding: 8px 0;">${date}</td>
+                        <td style="padding: 8px 0;">${formattedDate}</td>
                     </tr>
                     <tr>
                         <td style="padding: 8px 0;"><strong>Time:</strong></td>
@@ -351,11 +358,11 @@ const sendAppointmentOverdueNotice = async (email, name, appointments) => {
                   <td class="label">Date</td>
                   <td class="value">
                     ${new Date(app.date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })}
                   </td>
                 </tr>
                 <tr>

@@ -361,7 +361,7 @@ const report = () => {
               })}
             </div>
           )}
-        </TabsContent>;
+        </TabsContent>
 
         <TabsContent value="usage" className="space-y-6">
           <Card>

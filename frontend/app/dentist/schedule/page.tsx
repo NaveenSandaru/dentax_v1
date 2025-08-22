@@ -1098,117 +1098,208 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
   }, [selectedDate]);
 
   const renderAppointmentTable = (appointmentList: Appointment[], showActions: boolean = true) => (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b">
-            <th className="text-left p-2">Patient</th>
-            <th className="text-left p-2 hidden sm:table-cell">Service</th>
-            <th className="text-left p-2 ">Date & Time</th>
-            <th className="text-left p-2 hidden md:table-cell">Fee</th>
-            <th className="text-left p-2">Status</th>
-            {showActions && <th className="text-left p-2">Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {appointmentList.length === 0 ? (
-            <tr>
-              <td colSpan={showActions ? 6 : 5} className="p-4 text-center text-gray-500">
-                {loadingAppointments ? "Loading appointments..." : "No appointments found"}
-              </td>
+    <>
+      {/* Desktop Table View */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left p-2">Patient</th>
+              <th className="text-left p-2">Service</th>
+              <th className="text-left p-2">Date & Time</th>
+              <th className="text-left p-2 hidden md:table-cell">Fee</th>
+              <th className="text-left p-2">Status</th>
+              {showActions && <th className="text-left p-2">Actions</th>}
             </tr>
-          ) : (
-            appointmentList.map((appointment) => (
-              <tr key={appointment.appointment_id} className="border-b">
-                <td className="p-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative h-8 w-8 rounded-full overflow-hidden bg-blue-100 flex-shrink-0">
-                      {appointment.patient?.profile_picture ? (
-                        <img
-                          src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${appointment.patient.profile_picture}`}
-                          alt={appointment.patient?.name || appointment.temp_patient?.name || 'Patient'}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const fallback = target.nextElementSibling as HTMLElement;
-                            if (fallback) {
-                              fallback.style.display = 'flex';
-                            }
-                          }}
-                        />
-                      ) : null}
-                      <div className="absolute inset-0 flex items-center justify-center bg-blue-100 text-blue-700 font-medium text-sm">
-                        {appointment.patient?.name || appointment.temp_patient?.name 
-                          ? (appointment.patient?.name || appointment.temp_patient?.name || '')
-                              .split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                          : '?'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="font-medium">
-                        {appointment.patient?.name || appointment.temp_patient?.name || 'Unknown Patient'}
-                        {appointment.temp_patient && <span className="ml-2 text-xs text-gray-500">(Temporary)</span>}
-                      </div>
-                      <div className="text-sm text-gray-600 sm:hidden">
-                        {appointment.note && <div>{appointment.note}</div>}
-                        {appointment.invoice_services?.service_name && (
-                          <div>Service: {appointment.invoice_services.service_name}</div>
-                        )}
-                        <div>Fee: Rs {appointment.invoice_services?.amount || appointment.fee || '0'}</div>
-                      </div>
-                    </div>
-                  </div>
+          </thead>
+          <tbody>
+            {appointmentList.length === 0 ? (
+              <tr>
+                <td colSpan={showActions ? 6 : 5} className="p-4 text-center text-gray-500">
+                  {loadingAppointments ? "Loading appointments..." : "No appointments found"}
                 </td>
-                <td className="p-2 hidden sm:table-cell">
-                  <div>{appointment.note}</div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {appointment.invoice_services?.service_name || 'No service specified'}
-                  </div>
-                </td>
-                <td className="p-2">
-                  <div className="text-sm">
-                    {formatDate(appointment.date)}
-                    <br />
-                    {appointment.time_from} - {appointment.time_to}
-                  </div>
-                </td>
-                <td className="p-2 hidden md:table-cell">
-                  <div>Rs {appointment.invoice_services?.amount || appointment.fee || '0'}</div>
-                  <div className="text-xs text-gray-500">
-                    {appointment.invoice_services?.service_name ? `(${appointment.invoice_services.service_name})` : ''}
-                  </div>
-                </td>
-                <td className="p-2">
-                  <div className="space-y-1">
-                    <Badge className={getStatusColor(appointment.status)}>
-                      {appointment.status}
-                    </Badge>
-                    <div className="md:hidden">
-                      <Badge className={getPaymentStatusColor(appointment.payment_status)}>
-                        {appointment.payment_status}
-                      </Badge>
-                    </div>
-                  </div>
-                </td>
-                {showActions && (
-                  <td className="p-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAppointmentCancellation(appointment.appointment_id)}
-                      disabled={cancellingAppointment || appointment.status === "cancelled" || appointment.status === "completed"}
-                    >
-                      {appointment.status === "cancelled" ? "Cancelled" : "Cancel"}
-                    </Button>
-                  </td>
-                )}
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+            ) : (
+              appointmentList.map((appointment) => (
+                <tr key={appointment.appointment_id} className="border-b">
+                  <td className="p-2">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative h-8 w-8 rounded-full overflow-hidden bg-blue-100 flex-shrink-0">
+                        {appointment.patient?.profile_picture ? (
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${appointment.patient.profile_picture}`}
+                            alt={appointment.patient?.name || appointment.temp_patient?.name || 'Patient'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) {
+                                fallback.style.display = 'flex';
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <div className="absolute inset-0 flex items-center justify-center bg-blue-100 text-blue-700 font-medium text-sm">
+                          {appointment.patient?.name || appointment.temp_patient?.name 
+                            ? (appointment.patient?.name || appointment.temp_patient?.name || '')
+                                .split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+                            : '?'}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-medium">
+                          {appointment.patient?.name || appointment.temp_patient?.name || 'Unknown Patient'}
+                          {appointment.temp_patient && <span className="ml-2 text-xs text-gray-500">(Temporary)</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    <div>{appointment.note}</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {appointment.invoice_services?.service_name || 'No service specified'}
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    <div className="text-sm">
+                      {formatDate(appointment.date)}
+                      <br />
+                      {appointment.time_from} - {appointment.time_to}
+                    </div>
+                  </td>
+                  <td className="p-2 hidden md:table-cell">
+                    <div>Rs {appointment.invoice_services?.amount || appointment.fee || '0'}</div>
+                    <div className="text-xs text-gray-500">
+                      {appointment.invoice_services?.service_name ? `(${appointment.invoice_services.service_name})` : ''}
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    <div className="space-y-1">
+                      <Badge className={getStatusColor(appointment.status)}>
+                        {appointment.status}
+                      </Badge>
+                      <div className="md:hidden">
+                        <Badge className={getPaymentStatusColor(appointment.payment_status)}>
+                          {appointment.payment_status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </td>
+                  {showActions && (
+                    <td className="p-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAppointmentCancellation(appointment.appointment_id)}
+                        disabled={cancellingAppointment || appointment.status === "cancelled" || appointment.status === "completed"}
+                      >
+                        {appointment.status === "cancelled" ? "Cancelled" : "Cancel"}
+                      </Button>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="block sm:hidden space-y-3">
+        {appointmentList.length === 0 ? (
+          <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-lg">
+            {loadingAppointments ? "Loading appointments..." : "No appointments found"}
+          </div>
+        ) : (
+          appointmentList.map((appointment) => (
+            <div key={appointment.appointment_id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              {/* Patient Info Header */}
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="relative h-10 w-10 rounded-full overflow-hidden bg-blue-100 flex-shrink-0">
+                  {appointment.patient?.profile_picture ? (
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${appointment.patient.profile_picture}`}
+                      alt={appointment.patient?.name || appointment.temp_patient?.name || 'Patient'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 flex items-center justify-center bg-blue-100 text-blue-700 font-medium text-sm">
+                    {appointment.patient?.name || appointment.temp_patient?.name 
+                      ? (appointment.patient?.name || appointment.temp_patient?.name || '')
+                          .split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+                      : '?'}
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">
+                    {appointment.patient?.name || appointment.temp_patient?.name || 'Unknown Patient'}
+                    {appointment.temp_patient && <span className="ml-2 text-xs text-gray-500">(Temporary)</span>}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {formatDate(appointment.date)} • {appointment.time_from} - {appointment.time_to}
+                  </div>
+                </div>
+              </div>
+
+              {/* Appointment Details */}
+              <div className="space-y-2 mb-3">
+                {appointment.invoice_services?.service_name && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Service:</span>
+                    <span className="text-sm font-medium">{appointment.invoice_services.service_name}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Fee:</span>
+                  <span className="text-sm font-medium">Rs {appointment.invoice_services?.amount || appointment.fee || '0'}</span>
+                </div>
+
+                {appointment.note && (
+                  <div className="flex justify-between items-start">
+                    <span className="text-sm text-gray-600 flex-shrink-0">Note:</span>
+                    <span className="text-sm text-right ml-2">{appointment.note}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Status and Actions */}
+              <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                <div className="flex flex-wrap gap-2">
+                  <Badge className={getStatusColor(appointment.status)}>
+                    {appointment.status}
+                  </Badge>
+                  <Badge className={getPaymentStatusColor(appointment.payment_status)}>
+                    {appointment.payment_status}
+                  </Badge>
+                </div>
+                
+                {showActions && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAppointmentCancellation(appointment.appointment_id)}
+                    disabled={cancellingAppointment || appointment.status === "cancelled" || appointment.status === "completed"}
+                    className="ml-2"
+                  >
+                    {appointment.status === "cancelled" ? "Cancelled" : "Cancel"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </>
   );
 
   return (
