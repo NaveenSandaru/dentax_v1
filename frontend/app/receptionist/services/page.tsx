@@ -117,66 +117,110 @@ export default function InvoiceServicePage() {
                                     <p className="text-gray-600">Manage available invoice services</p>
                                 </div>
 
-                                {/* Table Container */}
-                                <div className="bg-white rounded-xl shadow-md overflow-hidden flex-1 border border-gray-200">
-                                    {/* Table Header */}
-                                    <div className="bg-emerald-50 px-6 py-3 border-b border-emerald-200">
-                                        <div className="grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)_120px] gap-4 text-sm font-semibold text-emerald-800">
-                                            <div>ID</div>
-                                            <div>Service Name</div>
-                                            <div>Treatment Group</div>
-                                            <div>Type</div>
-                                            <div>Amount</div>
-                                            <div>Tax (%)</div>
-                                            <div>Description</div>
-                                            <div>Actions</div>
+                                {/* Table / Card Container */}
+                                <div className="flex-1">
+                                    {fetchingData ? (
+                                        <div className="px-6 py-12 text-center">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
+                                            <p className="text-gray-500 mt-2">Loading invoice services...</p>
                                         </div>
-                                    </div>
-
-                                    {/* Table Body */}
-                                    <div className="divide-y divide-gray-200">
-                                        {fetchingData ? (
-                                            <div className="px-6 py-12 text-center">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
-                                                <p className="text-gray-500 mt-2">Loading invoice services...</p>
-                                            </div>
-                                        ) : invoiceServices.length === 0 ? (
-                                            <div className="px-6 py-6 text-center text-gray-500">
-                                                No invoice services found.
-                                            </div>
-                                        ) : (
-                                            invoiceServices.map((service, index) => (
-                                                <div
-                                                    key={service.service_id}
-                                                    className={`px-6 py-4 grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)_120px] gap-4 items-center text-sm ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                                                        }`}
-                                                >
-                                                    <div className="text-gray-900 font-medium">{service.service_id}</div>
-                                                    <div className="text-gray-900">{service.service_name}</div>
-                                                    <div className="text-gray-700">{service.treatment?.treatment_group}</div>
-                                                    <div className="text-gray-600">{service.treatment_type}</div>
-                                                    <div className="text-gray-600">Rs. {service.amount.toFixed(2)}</div>
-                                                    <div className="text-gray-600">{service.tax_percentage}%</div>
-                                                    <div className="text-gray-600 truncate" title={service.description}>
-                                                        {service.description || "N/A"}
-                                                    </div>
-                                                    {/* Actions */}
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => handleViewDoctors(service.service_id)}
-                                                            className="text-purple-500 hover:text-purple-700 text-xs font-medium"
-                                                        >
-                                                            <Stethoscope className="h-4" />
-                                                        </button>
-
+                                    ) : invoiceServices.length === 0 ? (
+                                        <div className="px-6 py-6 text-center text-gray-500">
+                                            No invoice services found.
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Desktop Table */}
+                                            <div className="hidden md:block bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                                                {/* Table Header */}
+                                                <div className="bg-emerald-50 px-6 py-3 border-b border-emerald-200">
+                                                    <div className="grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)_120px] gap-4 text-sm font-semibold text-emerald-800">
+                                                        <div>ID</div>
+                                                        <div>Service Name</div>
+                                                        <div>Treatment Group</div>
+                                                        <div>Type</div>
+                                                        <div>Amount</div>
+                                                        <div>Tax (%)</div>
+                                                        <div>Description</div>
+                                                        <div>Actions</div>
                                                     </div>
                                                 </div>
-                                            ))
-                                        )}
-                                    </div>
+
+                                                {/* Table Body */}
+                                                <div className="divide-y divide-gray-200">
+                                                    {invoiceServices.map((service, index) => (
+                                                        <div
+                                                            key={service.service_id}
+                                                            className={`px-6 py-4 grid grid-cols-[60px_1.5fr_1.5fr_100px_100px_80px_minmax(150px,1fr)_120px] gap-4 items-center text-sm ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                                                }`}
+                                                        >
+                                                            <div className="text-gray-900 font-medium">{service.service_id}</div>
+                                                            <div className="text-gray-900">{service.service_name}</div>
+                                                            <div className="text-gray-700">{service.treatment?.treatment_group}</div>
+                                                            <div className="text-gray-600">{service.treatment_type}</div>
+                                                            <div className="text-gray-600">Rs. {service.amount.toFixed(2)}</div>
+                                                            <div className="text-gray-600">{service.tax_percentage}%</div>
+                                                            <div className="text-gray-600 truncate" title={service.description}>
+                                                                {service.description || "N/A"}
+                                                            </div>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => handleViewDoctors(service.service_id)}
+                                                                    className="text-purple-500 hover:text-purple-700 text-xs font-medium"
+                                                                >
+                                                                    <Stethoscope className="h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Mobile Cards */}
+                                            <div className="md:hidden flex flex-col gap-4">
+                                                {invoiceServices.map((service) => (
+                                                    <div
+                                                        key={service.service_id}
+                                                        className="bg-white shadow-md rounded-xl p-4 border border-gray-200"
+                                                    >
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <div className="text-gray-900 font-semibold">{service.service_name}</div>
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => handleViewDoctors(service.service_id)}
+                                                                    className="text-purple-500 hover:text-purple-700 text-xs font-medium"
+                                                                >
+                                                                    <Stethoscope className="h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-gray-600 text-sm mb-1">
+                                                            <span className="font-medium">ID:</span> {service.service_id}
+                                                        </div>
+                                                        <div className="text-gray-600 text-sm mb-1">
+                                                            <span className="font-medium">Treatment Group:</span> {service.treatment?.treatment_group}
+                                                        </div>
+                                                        <div className="text-gray-600 text-sm mb-1">
+                                                            <span className="font-medium">Type:</span> {service.treatment_type}
+                                                        </div>
+                                                        <div className="text-gray-600 text-sm mb-1">
+                                                            <span className="font-medium">Amount:</span> Rs. {service.amount.toFixed(2)}
+                                                        </div>
+                                                        <div className="text-gray-600 text-sm mb-1">
+                                                            <span className="font-medium">Tax:</span> {service.tax_percentage}%
+                                                        </div>
+                                                        <div className="text-gray-600 text-sm truncate" title={service.description}>
+                                                            <span className="font-medium">Description:</span> {service.description || "N/A"}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
+
                         <DentistListDialog
                             open={showDentistList}
                             onClose={() => setShowDentistList(false)}
@@ -184,7 +228,6 @@ export default function InvoiceServicePage() {
                             apiClient={apiClient}
                         />
                     </TabsContent>
-
 
                     <TabsContent value="treatment-groups" className="h-full">
                         <div className="bg-gray-50 p-4 md:p-6 lg:p-8 h-full">
