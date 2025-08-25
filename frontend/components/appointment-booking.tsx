@@ -18,6 +18,13 @@ import { useRouter } from "next/navigation"
 import axios from "axios"
 import DentistScheduleView from "@/components/dentist-schedule-view"
 import CalendarGridView from "@/components/CalendarGridView"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 
 // Helper function to get current date as string
@@ -57,6 +64,7 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
   const [refreshKey, setRefreshKey] = useState(0);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('all');
 
   const { isLoadingAuth, isLoggedIn, user, apiClient } = useContext(AuthContext);
 
@@ -439,14 +447,39 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
 
         {/* Content based on calendar view */}
         {calendarView === "calendar" ? (
-          <CalendarGridView
-            appointments={appointments}
-            dentists={dentists}
-            onAppointmentCancel={handleAppointmentCancel}
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            onSlotSelect={handleSlotSelect}
-          />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 block md:hidden justify-center">
+              <span className="text-sm font-medium text-gray-700">Filter by Doctor:</span>
+              <Select
+                value={selectedDoctorId}
+                onValueChange={setSelectedDoctorId}
+              >
+                <SelectTrigger className="w-52 rounded-md border-gray-300 py-2 pl-3 pr-3 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
+                  <SelectValue placeholder="All Doctors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Doctors</SelectItem>
+                  {dentists.map((dentist) => (
+                    <SelectItem key={dentist.dentist_id} value={dentist.dentist_id}>
+                      {dentist.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <CalendarGridView
+              appointments={selectedDoctorId === 'all' 
+                ? appointments 
+                : appointments.filter(appt => String(appt.dentist_id) === String(selectedDoctorId))}
+              dentists={selectedDoctorId === 'all' 
+                ? dentists 
+                : dentists.filter(dentist => String(dentist.dentist_id) === String(selectedDoctorId))}
+              onAppointmentCancel={handleAppointmentCancel}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              onSlotSelect={handleSlotSelect}
+            />
+          </div>
         ) : calendarView === "rooms" ? (
           <div className="mt-4">
             {/* Date and View Controls for Room View */}
