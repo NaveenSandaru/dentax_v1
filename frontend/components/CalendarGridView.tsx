@@ -60,6 +60,7 @@ interface Dentist {
 }
 
 interface CalendarGridViewProps {
+  onSlotSelect?: (dentistId: string, dentistName: string, date: string, timeSlot: string) => void
   appointments: Appointment[]
   dentists: Dentist[]
   selectedDate: string
@@ -88,6 +89,7 @@ export default function CalendarGridView({
   onDateChange,
   onAppointmentClick,
   onAppointmentCancel,
+  onSlotSelect,
   viewMode = "week"
 }: CalendarGridViewProps) {
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -363,6 +365,8 @@ export default function CalendarGridView({
     setAppointmentToCancel(null)
   }
 
+  // helper to detect empty cell booking availability handled later
+
   return (
     <>
     <div className="bg-white rounded-lg border overflow-hidden">
@@ -527,8 +531,13 @@ export default function CalendarGridView({
                                 return (
                                   <div 
                                     key={subIndex} 
-                                    className="relative hover:bg-gray-50 transition-colors"
+                                    className="relative hover:bg-emerald-50 transition-colors cursor-pointer"
                                     style={{ height: '48px' }}
+                                    onClick={() => {
+                                      if (subSlotAppointments.length === 0) {
+                                        onSlotSelect?.(dentist.dentist_id, dentist.name, day.date, subSlot);
+                                      }
+                                    }}
                                   >
                                     {subSlotAppointments.map((appointment, aptIndex) => {
                                       // Calculate how many 15-minute slots this appointment spans

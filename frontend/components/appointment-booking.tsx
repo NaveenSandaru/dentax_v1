@@ -445,10 +445,7 @@ export default function AppointmentBooking({ onViewChange, userRole = 'admin' }:
             onAppointmentCancel={handleAppointmentCancel}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
-            onAppointmentClick={(appointment) => {
-              // Handle appointment click - could open a dialog or navigate
-              console.log('Appointment clicked:', appointment);
-            }}
+            onSlotSelect={handleSlotSelect}
           />
         ) : calendarView === "rooms" ? (
           <div className="mt-4">
