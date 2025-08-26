@@ -240,7 +240,7 @@ export function RoomView({ weekDays, selectedDate, viewMode }: RoomViewProps) {
         <div className="overflow-x-auto">
           {/* Week View Header */}
           <div className="grid grid-cols-8 bg-gray-50 border-b">
-            <div className="p-3 text-center font-medium text-sm border-r bg-blue-50">Room</div>
+            <div className="px-0 my-auto  md:p-3 text-center font-medium text-sm border-r bg-blue-50">Room</div>
             {displayDays.map((day) => (
               <div key={day.date} className="p-3 text-center font-medium text-sm border-r last:border-r-0 bg-blue-50">
                 <div>{formatDateShort(day.date)}</div>

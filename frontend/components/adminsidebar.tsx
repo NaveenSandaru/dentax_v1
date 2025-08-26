@@ -258,7 +258,7 @@ const AdminSidebar = () => {
         <div className="flex-1 p-3 overflow-y-auto [&>div]:h-full">
           <div className="space-y-2 h-full">
             {items.map((item) => {
-              const isActive = pathname === item.url;
+              const isActive = item.url === "/admin" ? pathname === "/admin" : pathname.startsWith(item.url);
               return (
                 <a
                   key={item.title}

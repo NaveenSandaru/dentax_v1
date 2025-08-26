@@ -254,7 +254,7 @@ export function StaffDirectory({ employees, onEmployeeAdded }: StaffDirectoryPro
                     <AvatarFallback>{staff.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-start md:items-center flex-col md:flex-row justify-between gap-2">
                       <h3 className="text-sm font-medium text-gray-900 truncate">{staff.name}</h3>
                       <ScheduleBadge status={staff.employment_status} />
                     </div>
@@ -320,7 +320,7 @@ export function StaffDirectory({ employees, onEmployeeAdded }: StaffDirectoryPro
             }
           }}
         >
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md w-[95vw]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-gray-900">Confirm Employee Deletion</DialogTitle>
             </DialogHeader>
