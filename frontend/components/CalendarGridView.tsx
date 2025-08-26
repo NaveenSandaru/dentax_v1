@@ -114,6 +114,8 @@ export default function CalendarGridView({
     
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  const visibleDentists = dentists
   
   // Debug logging
   console.log('CalendarGridView received:', { 
@@ -132,19 +134,25 @@ export default function CalendarGridView({
         const outerWidth = outerRef.current?.clientWidth ?? window.innerWidth
         const timeColumnWidth = 80
         const remaining = Math.max(outerWidth - timeColumnWidth, 320)
-        setDentistWidth(remaining)
+        
+        // Adjust for single dentist case
+        if (visibleDentists.length === 1) {
+          setDentistWidth(remaining / Math.max(visibleDentists.length, 1))
+        } else {
+          setDentistWidth(remaining)
+        }
       } else {
-        setDentistWidth(250)
+        // For day view, use fixed width but adjust for single dentist
+        setDentistWidth(visibleDentists.length === 1 ? 250 : 250)
       }
     }
 
     computeDentistWidth()
     window.addEventListener('resize', computeDentistWidth)
     return () => window.removeEventListener('resize', computeDentistWidth)
-  }, [viewModeState, dentists.length, isMobile])
+  }, [viewModeState, visibleDentists.length, isMobile]) // Added visibleDentists.length dependency
 
   // Show all dentists with horizontal scrolling
-  const visibleDentists = dentists
   const hasMoreDentists = dentists.length > 4
 
   // Generate time slots from 8:00 AM to 6:00 PM with 15-minute intervals
@@ -482,9 +490,11 @@ export default function CalendarGridView({
               - week: visibleDentists.length * dentistWidth (each dentist gets full remaining visible width) */}
           <div style={{ 
             width: viewModeState === "day" 
-              ? `${Math.max(visibleDentists.length * 250, 4 * 250)}px` 
+              ? `${Math.max(visibleDentists.length * 250, 250)}px` // Changed from 4*250 to just 250
               : `${visibleDentists.length * dentistWidth}px`,
-            minWidth: viewModeState === "day" ? '1000px' : 'auto'
+            minWidth: viewModeState === "day" 
+              ? visibleDentists.length === 1 ? '250px' : '1000px' // Adjust min-width for single doctor
+              : 'auto'
           }}>
             {/* Dentist Headers */}
             <div className="flex border-b">
