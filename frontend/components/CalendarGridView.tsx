@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -100,6 +100,9 @@ export default function CalendarGridView({
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
 
+  const outerRef = useRef<HTMLDivElement | null>(null)
+  const [dentistWidth, setDentistWidth] = useState<number>(250)
+
   // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
@@ -119,7 +122,27 @@ export default function CalendarGridView({
     appointments: appointments,
     dentists: dentists
   })
-  
+
+  // Compute dentistWidth for week mode: available width after the fixed Time column
+  useEffect(() => {
+    const computeDentistWidth = () => {
+      if (isMobile && viewModeState === "week") {
+        setDentistWidth(800)
+      } else if (viewModeState === "week") {
+        const outerWidth = outerRef.current?.clientWidth ?? window.innerWidth
+        const timeColumnWidth = 80
+        const remaining = Math.max(outerWidth - timeColumnWidth, 320)
+        setDentistWidth(remaining)
+      } else {
+        setDentistWidth(250)
+      }
+    }
+
+    computeDentistWidth()
+    window.addEventListener('resize', computeDentistWidth)
+    return () => window.removeEventListener('resize', computeDentistWidth)
+  }, [viewModeState, dentists.length, isMobile])
+
   // Show all dentists with horizontal scrolling
   const visibleDentists = dentists
   const hasMoreDentists = dentists.length > 4
@@ -144,10 +167,8 @@ export default function CalendarGridView({
     const date = new Date(baseDate)
     
     if (viewModeState === "day") {
-      // For day view, return only the selected day
       const dateStr = date.toISOString().split("T")[0]
       const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-      
       return [{
         date: dateStr,
         dayName: dayNames[date.getDay()],
@@ -155,10 +176,8 @@ export default function CalendarGridView({
         isToday: dateStr === new Date().toISOString().split("T")[0]
       }]
     } else {
-      // For week view, return 7 days
       const dayOfWeek = date.getDay()
       const startDate = new Date(date)
-      // Start from Monday (1) or Sunday (0)
       startDate.setDate(date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1))
 
       return Array.from({ length: 7 }, (_, i) => {
@@ -166,7 +185,6 @@ export default function CalendarGridView({
         currentDate.setDate(startDate.getDate() + i)
         const dateStr = currentDate.toISOString().split("T")[0]
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        
         return {
           date: dateStr,
           dayName: dayNames[currentDate.getDay()],
@@ -382,7 +400,7 @@ export default function CalendarGridView({
           {/* Date Picker */}
           <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2 text-sm mr-2">
+              <Button variant="outline" className="flex items-center gap-2 text-sm ml-1 mr-2">
                 <CalendarIcon className="h-4 w-4" />
                 <span className="font-medium">
                   {new Date(selectedDate).toLocaleDateString("en-US", {
@@ -434,23 +452,21 @@ export default function CalendarGridView({
       </div>
 
       {/* Calendar Grid */}
-      <div className="relative shadow-lg" style={{ maxWidth: 'calc(100vw - 2rem)' }}>
-        {/* Fixed Time Column */}
+      <div className="relative shadow-lg" style={{ maxWidth: 'calc(100vw - 2rem)' }} ref={outerRef}>
+        {/* Fixed Time Column (unchanged) */}
         <div className="absolute left-0 top-0 z-10 bg-white border-r shadow-sm">
-          {/* Time Header */}
           <div className="w-20 p-3 mt-[0.1rem] text-center font-medium text-gray-600 bg-gray-50 flex-shrink-0">
             <div className="text-sm">Time</div>
           </div>
-          {/* Empty space for day sub-headers */}
           <div className="w-20 text-center text-xs font-medium text-gray-500 bg-gray-50 border-b flex-shrink-0 h-17"></div>
-          {/* Time Slots */}
+
           {timeSlots.map((timeSlot, timeIndex) => (
             <div key={timeIndex} className="w-20 text-center font-medium text-gray-600 bg-gray-50 border-b flex-shrink-0">
               <div className="grid grid-rows-4">
                 {timeSlot.subSlots.map((subSlot, subIndex) => (
                   <div key={subIndex} className="flex items-center justify-center" style={{ height: '48px' }}>
                     <div className="text-xs font-medium">
-                      {subIndex === 0 ? timeSlot.time : subSlot.substring(3)}
+                      {subIndex === 0 ? timeSlot.time : subSlot.substring(5)}
                     </div>
                   </div>
                 ))}
@@ -460,14 +476,14 @@ export default function CalendarGridView({
         </div>
 
         {/* Scrollable Content */}
-        <div className={viewModeState === "day" ? "overflow-x-auto" : "overflow-x-auto"} style={{ 
-          marginLeft: '80px',
-          maxWidth: viewModeState === "day" ? 'calc(100vw - 120px)' : 'calc(100vw - 120px)'
-        }}>
+        <div className="overflow-x-auto" style={{ marginLeft: '80px', maxWidth: 'calc(100vw - 120px)' }}>
+          {/* IMPORTANT: width of this inner wrapper is dynamic now:
+              - day: multiple of 250 (as before)
+              - week: visibleDentists.length * dentistWidth (each dentist gets full remaining visible width) */}
           <div style={{ 
             width: viewModeState === "day" 
               ? `${Math.max(visibleDentists.length * 250, 4 * 250)}px` 
-              : `${visibleDentists.length * 800}px`,
+              : `${visibleDentists.length * dentistWidth}px`,
             minWidth: viewModeState === "day" ? '1000px' : 'auto'
           }}>
             {/* Dentist Headers */}
@@ -475,10 +491,12 @@ export default function CalendarGridView({
               {visibleDentists.map((dentist, index) => (
                 <div 
                   key={index} 
-                  className={`${viewModeState === "day" ? "w-[250px]" : "w-[800px]"} p-3 text-center border-l bg-blue-50 flex-shrink-0`}
+                  // Day: keep w-[250px]; Week: fixed pixel width via style (dentistWidth)
+                  className={`${viewModeState === "day" ? "w-[250px]" : ""} p-3 text-center border-l bg-blue-50 flex-shrink-0`}
+                  style={viewModeState === "week" ? { minWidth: `${dentistWidth}px`, flex: '0 0 auto' } : undefined}
                 >
-                  <div className="font-semibold text-blue-900 text-sm">{dentist.name}</div>
-                  <div className="text-xs text-blue-600 mt-1">Dr. {dentist.name}</div>
+                  <div className="font-semibold text-blue-900 text-sm">Dr. {dentist.name}</div>
+                  <div className="text-xs text-blue-600 mt-1">{(dentist as any).email}</div>
                 </div>
               ))}
             </div>
@@ -486,8 +504,12 @@ export default function CalendarGridView({
             {/* Day Sub-headers */}
             <div className="flex border-b bg-gray-50">
               {visibleDentists.map((dentist, dentistIndex) => (
-                <div key={dentistIndex} className={`${viewModeState === "day" ? "w-[250px]" : "w-[800px]"} border-l flex-shrink-0`}>
-                  <div className={`grid ${viewModeState === "day" ? "grid-cols-1" : "grid-cols-7"} text-xs h-12`}>
+                <div 
+                  key={dentistIndex} 
+                  className={`${viewModeState === "day" ? "w-[250px]" : ""} border-l flex-shrink-0`}
+                  style={viewModeState === "week" ? { minWidth: `${dentistWidth}px`, flex: '0 0 auto' } : undefined}
+                >
+                  <div className={`grid ${viewModeState === "day" ? "grid-cols-1" : "grid-cols-7"} text-xs h-12 w-full`}>
                     {weekDays.map((day, dayIndex) => (
                       <div 
                         key={dayIndex} 
@@ -507,10 +529,13 @@ export default function CalendarGridView({
             {/* Time Slots and Appointments */}
             {timeSlots.map((timeSlot, timeIndex) => (
               <div key={timeIndex} className="flex border-b">
-                {/* Dentist Columns */}
                 {visibleDentists.map((dentist, dentistIndex) => (
-                  <div key={dentistIndex} className={`${viewModeState === "day" ? "w-[250px]" : "w-[800px]"} border-l flex-shrink-0`}>
-                    <div className={`grid ${viewModeState === "day" ? "grid-cols-1" : "grid-cols-7"}`}>
+                  <div 
+                    key={dentistIndex} 
+                    className={`${viewModeState === "day" ? "w-[250px]" : ""} border-l flex-shrink-0`}
+                    style={viewModeState === "week" ? { minWidth: `${dentistWidth}px`, flex: '0 0 auto' } : undefined}
+                  >
+                    <div className={`grid ${viewModeState === "day" ? "grid-cols-1" : "grid-cols-7"} w-full`}>
                       {weekDays.map((day, dayIndex) => {
                         const dayAppointments = getAppointmentsForSlot(day.date, timeSlot.time, dentist.dentist_id)
                         
@@ -522,7 +547,6 @@ export default function CalendarGridView({
                             {/* 15-minute sub-slots */}
                             <div className="grid grid-rows-4">
                               {timeSlot.subSlots.map((subSlot, subIndex) => {
-                                // Find appointments that occupy this specific 15-minute slot
                                 const subSlotAppointments = dayAppointments.filter(appointment => {
                                   const appointmentSlots = getAppointmentTimeSlots(appointment)
                                   return appointmentSlots.includes(subSlot)
@@ -540,14 +564,12 @@ export default function CalendarGridView({
                                     }}
                                   >
                                     {subSlotAppointments.map((appointment, aptIndex) => {
-                                      // Calculate how many 15-minute slots this appointment spans
                                       const appointmentSlots = getAppointmentTimeSlots(appointment)
                                       const startSlotIndex = timeSlot.subSlots.findIndex(slot => appointmentSlots.includes(slot))
                                       const appointmentDuration = appointmentSlots.filter(slot => 
                                         timeSlot.subSlots.includes(slot)
                                       ).length
                                       
-                                      // Only render the appointment in its first sub-slot to avoid duplicates
                                       if (subIndex !== startSlotIndex) return null
                                       
                                       return (
@@ -586,14 +608,12 @@ export default function CalendarGridView({
                                             className="cursor-pointer p-2 h-full"
                                             onClick={() => {
                                               if (isMobile) {
-                                                // On mobile, toggle selection to show/hide cancel button
                                                 setSelectedAppointmentId(
                                                   selectedAppointmentId === appointment.appointment_id 
                                                     ? null 
                                                     : appointment.appointment_id
                                                 )
                                               } else {
-                                                // On desktop, trigger appointment click
                                                 onAppointmentClick?.(appointment)
                                               }
                                             }}

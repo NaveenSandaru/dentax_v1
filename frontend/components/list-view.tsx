@@ -257,6 +257,7 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
         (appointment) =>
           (appointment.patient?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
           (appointment.dentist?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (appointment.patient?.phone_number || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
           (appointment.note || "").toLowerCase().includes(searchQuery.toLowerCase()),
       )
     }
@@ -420,7 +421,7 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
                                 <div className="text-xs text-gray-500">
                                   {appointment.invoice_services?.amount ? `LKR ${appointment.invoice_services.amount}` : ''}
                                 </div>
-                               
+
                                 <div className="text-xs text-gray-500 mt-1">
                                   <strong>Dentist:</strong> {appointment.dentist?.name || 'Unknown'}
                                 </div>
@@ -599,7 +600,7 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
                         {formatTime(appointment.time_to)}
                       </p>
                     </div>
-                    
+
                     <div className="mt-3 flex items-center space-x-2">
                       {appointment.temp_patient && appointment.status === "noshow" ? (
                         <span className="text-red-500 text-xs font-medium">No Show</span>
@@ -636,7 +637,7 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
                         <span className="text-gray-500 text-xs font-medium">Upcoming</span>
                       )}
 
-                   
+
                     </div>
                     <div className="mt-4 flex items-center space-x-8">
                       {/* Cancel button */}
@@ -692,7 +693,7 @@ export function ListView({ selectedDate, refreshKey, searchQuery }: ListViewProp
           </div>
 
 
-          
+
 
           {/* Empty State */}
           {filteredAppointments.length === 0 && (
