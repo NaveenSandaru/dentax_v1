@@ -17,7 +17,8 @@ router.get('/', authenticateToken, async (req, res) => {
             patient_id: true,
             name: true,
             email: true,
-            profile_picture: true
+            profile_picture: true,
+            phone_number: true
           }
         },
         temp_patient: {
@@ -62,7 +63,8 @@ router.get('/fordentist/:dentist_id', authenticateToken, async (req, res) => {
             patient_id: true,
             name: true,
             email: true,
-            profile_picture: true
+            profile_picture: true,
+            phone_number: true
           }
         },
         temp_patient: {
@@ -107,7 +109,8 @@ router.get('/forpatient/:patient_id', authenticateToken, async (req, res) => {
             patient_id: true,
             name: true,
             email: true,
-            profile_picture: true
+            profile_picture: true,
+            phone_number: true
           }
         },
         dentist: {
@@ -155,6 +158,7 @@ router.get('/today/fordentist/:dentist_id', async (req, res) => {
             name: true,
             email: true,
             profile_picture: true,
+            phone_number: true
           }
         },
         dentist: {
@@ -236,7 +240,8 @@ router.get('/today/forpatient/:patient_id', authenticateToken, async (req, res) 
             patient_id: true,
             name: true,
             email: true,
-            profile_picture: true
+            profile_picture: true,
+            phone_number: true
           }
         },
         dentist: {
@@ -420,7 +425,8 @@ router.get('/fordentist/upcoming/:dentist_id', authenticateToken, async (req, re
             patient_id: true,
             name: true,
             email: true,
-            profile_picture: true
+            profile_picture: true,
+            phone_number: true
           }
         },
         dentist: {
@@ -462,7 +468,8 @@ router.get('/forpatient/upcoming/:patient_id', authenticateToken, async (req, re
             patient_id: true,
             name: true,
             email: true,
-            profile_picture: true
+            profile_picture: true,
+            phone_number: true
           }
         },
         dentist: {
