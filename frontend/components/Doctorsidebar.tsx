@@ -49,11 +49,11 @@ const DoctorSidebar = () => {
         url: `/dentist`,
         icon: LayoutGrid,
       },
-      {
+      /*{
         title: "All Appointments",
         url: `/dentist/all-appointments`,
         icon: CalendarCheck,
-      },
+      },*/
       {
         title: "Patient Records",
         url: `/dentist/patient-records`,
