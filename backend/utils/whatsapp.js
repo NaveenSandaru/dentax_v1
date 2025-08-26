@@ -40,7 +40,7 @@ const sendAppointmentConfirmationWhatsApp = async (phone, date, time) => {
                 messaging_product: 'whatsapp',
                 to: phone,
                 type: 'template',
-                /*template: {
+                template: {
                     name: 'appointment_confirmation',
                     language: {
                         code: 'en_US'
@@ -54,7 +54,7 @@ const sendAppointmentConfirmationWhatsApp = async (phone, date, time) => {
                             ]
                         }
                     ]
-                }*/
+                }
             }, {
             headers: {
                 Authorization: `Bearer ${ACCESS_TOKEN}`,
@@ -87,7 +87,7 @@ const sendtempAppointmentWhatsApp = async (phone, date, time) => {
                 messaging_product: 'whatsapp',
                 to: phone,
                 type: 'template',
-                /*template: {
+                template: {
                     name: 'Appointment_Notice',
                     language: {
                         code: 'en_US'
@@ -101,7 +101,7 @@ const sendtempAppointmentWhatsApp = async (phone, date, time) => {
                             ]
                         }
                     ]
-                }*/
+                }
             }, {
             headers: {
                 Authorization: `Bearer ${ACCESS_TOKEN}`,
