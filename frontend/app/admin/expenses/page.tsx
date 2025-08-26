@@ -567,7 +567,7 @@ export default function ExpenseManagement() {
 
         {/* Expense Form Dialog */}
         <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
-          <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-2xl md:max-h-[90vh] max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl">
                 {editingExpense ? 'Edit Expense' : 'Add New Expense'}

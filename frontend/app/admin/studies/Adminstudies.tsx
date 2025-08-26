@@ -5,6 +5,22 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/context/auth-context';
 import StorageCard from '@/components/StorageCard';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 // Types based on the database structure
 interface Doctor {
@@ -246,6 +262,8 @@ const MedicalStudyInterface: React.FC = () => {
   const [radiologists, setRadiologists] = useState<Radiologist[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isuploading, setisuploading] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [studyToDelete, setStudyToDelete] = useState<Study | null>(null);
 
   const openInWorkspace = (studyId: number) => {
     router.push(`/admin/studies/workspace?study_id=${studyId}`);
@@ -644,23 +662,24 @@ const MedicalStudyInterface: React.FC = () => {
     }
   };
 
-  const handleDeleteStudy = async (studyId: number) => {
-    if (!confirm('Are you sure you want to delete this study? This action cannot be undone.')) {
-      return;
-    }
+  const handleDeleteStudy = (studyId: number) => {
+    setStudyToDelete(studyId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteStudy = async () => {
+    if (!studyToDelete) return;
 
     try {
-      await apiClient.delete(`/studies/${studyId}`);
-
-      // Only update the UI if the backend deletion was successful
-      setStudies(prev => prev.filter(study => study.study_id !== studyId));
-
-      // Show success message
+      await apiClient.delete(`/studies/${studyToDelete}`);
+      setStudies(studies.filter(study => study.study_id !== studyToDelete));
       toast.success('Study deleted successfully');
     } catch (error) {
       console.error('Error deleting study:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      toast.error(`Error deleting study: ${errorMessage}`);
+      toast.error('Failed to delete study');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setStudyToDelete(null);
     }
   };
 
@@ -1293,7 +1312,7 @@ const MedicalStudyInterface: React.FC = () => {
               {displayedStudies.map((study) => (
                 <div key={study.study_id} className="p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="font-medium text-gray-900">{study.patient_id} - John Doe</div>
+                    <div className="font-medium text-gray-900">{study.patient_id} - {study.patient?.name}</div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEditStudy(study.study_id)}
@@ -1318,9 +1337,9 @@ const MedicalStudyInterface: React.FC = () => {
                   <div className="text-sm text-gray-600 space-y-1">
                     <div>Modality: {study.modality}</div>
                     <div>Description: {study.description}</div>
-                    <div>Date: {study.date} at {study.time}</div>
+                    <div>Date:  {study.date ? new Date(study.date).toLocaleDateString() : 'N/A'} at {study.time}</div>
                     <div>Accession: ACC-{study.assertion_number}</div>
-                    <div className="text-blue-600 underline cursor-pointer">Report_001.pdf</div>
+                    <div className="text-blue-600 underline cursor-pointer"></div>
                     {study.radiologist && (
                       <div className="text-green-600">Radiologist: {study.radiologist.name}</div>
                     )}
@@ -1357,10 +1376,41 @@ const MedicalStudyInterface: React.FC = () => {
           </div>
         </div>
 
+        {/* Delete Confirmation Dialog box */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+  <DialogContent className="md:max-w-md">
+    <DialogHeader>
+      <DialogTitle>Confirm Deletion</DialogTitle>
+      <DialogDescription>
+        Are you sure you want to delete this study? This action cannot be undone.
+      </DialogDescription>
+    </DialogHeader>
+
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setIsDeleteDialogOpen(false)
+          setStudyToDelete(null)
+        }}
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="destructive"
+        onClick={confirmDeleteStudy}
+      >
+        Delete
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+        
+
         {/* Add New Study Modal */}
         {isAddStudyOpen && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl md:max-h-[90vh] max-h-[80vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">{isEditMode ? 'Edit Study' : 'Add New Study'}</h2>
@@ -1481,32 +1531,42 @@ const MedicalStudyInterface: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Modality
                       </label>
-                      <select
-                        value={newStudy.modality}
-                        onChange={(e) => setNewStudy(prev => ({ ...prev, modality: e.target.value }))}
-                        className="w-full px-3 py-2 border border-emerald-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                      >
-                        <option value="">Select Modality</option>
-                        <option value="CT">CT</option>
-                        <option value="MRI">MRI</option>
-                        <option value="DX">DX</option>
-                        <option value="CR">CR</option>
-                      </select>
+                      <Select
+  value={newStudy.modality}
+  onValueChange={(value) =>
+    setNewStudy((prev) => ({ ...prev, modality: value }))
+  }
+>
+  <SelectTrigger className="w-full border-emerald-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+    <SelectValue placeholder="Select Modality" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="CT">CT</SelectItem>
+    <SelectItem value="MRI">MRI</SelectItem>
+    <SelectItem value="DX">DX</SelectItem>
+    <SelectItem value="CR">CR</SelectItem>
+  </SelectContent>
+</Select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Source AE
                       </label>
-                      <select
-                        value={newStudy.server_type}
-                        onChange={(e) => setNewStudy(prev => ({ ...prev, server_type: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                      >
-                        <option value="">Select Server Type</option>
-                        <option value="PACS">PACS</option>
-                        <option value="DICOM">DICOM</option>
-                        <option value="CLOUD">CLOUD</option>
-                      </select>
+                     <Select
+  value={newStudy.server_type}
+  onValueChange={(value) =>
+    setNewStudy((prev) => ({ ...prev, server_type: value }))
+  }
+>
+  <SelectTrigger className="w-full border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+    <SelectValue placeholder="Select Server Type" />
+  </SelectTrigger>
+  <SelectContent>
+    <SelectItem value="PACS">PACS</SelectItem>
+    <SelectItem value="DICOM">DICOM</SelectItem>
+    <SelectItem value="CLOUD">CLOUD</SelectItem>
+  </SelectContent>
+</Select>
                     </div>
                   </div>
 
@@ -1707,7 +1767,7 @@ const MedicalStudyInterface: React.FC = () => {
         {/* Assign Staff Modal */}
         {isAssignModalOpen && (
           <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl md:max-h-[90vh] max-h-[80vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Assign Staff to Study</h2>
@@ -1818,6 +1878,7 @@ const MedicalStudyInterface: React.FC = () => {
             </div>
           </div>
         )}
+        
       </div>
     </>
   );
