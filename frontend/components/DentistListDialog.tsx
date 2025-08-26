@@ -55,7 +55,7 @@ export default function DentistListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[98vw] max-w-[900px] max-h-[92vh] overflow-y-auto rounded-2xl shadow-xl">
+      <DialogContent className="w-[95vw] sm:w-[98vw] max-w-[900px] md:max-h-[92vh] max-h-[80vh] overflow-y-auto rounded-2xl shadow-xl">
         <DialogHeader className="border-b border-gray-200 pb-4">
           <DialogTitle className="text-lg sm:text-2xl font-bold text-emerald-600">
             Dentists for Service #{serviceID}

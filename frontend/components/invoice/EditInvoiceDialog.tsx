@@ -372,7 +372,7 @@ const EditInvoiceDialog: React.FC<EditInvoiceDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[85vw] !max-w-none max-h-[90vh] overflow-y-auto overflow-x-visible">
+      <DialogContent className="md:w-[85vw] md:!max-w-none md:max-h-[90vh] max-h-[80vh] overflow-y-auto overflow-x-visible">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-emerald-700">
             Edit Invoice #{selectedInvoice?.invoice_id}
