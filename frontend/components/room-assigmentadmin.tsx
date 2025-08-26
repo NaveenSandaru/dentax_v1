@@ -49,6 +49,8 @@ export function RoomAssignment({ refreshKey }: { refreshKey: number }) {
   const [loading, setLoading] = useState(false)
   const [dentists, setDentists] = useState<any[]>([])
   const [rooms, setRooms] = useState<any[]>([])
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [roomToDelete, setRoomToDelete] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -71,18 +73,24 @@ export function RoomAssignment({ refreshKey }: { refreshKey: number }) {
 
   // Delete room
   const handleDeleteRoom = async (roomId: string) => {
-    if (!confirm('Are you sure you want to delete this room? This action cannot be undone.')) {
-      return;
-    }
+    setRoomToDelete(roomId);
+    setIsDeleteDialogOpen(true);
+  };
 
+  const confirmDeleteRoom = async () => {
+    if (!roomToDelete) return;
+    
     try {
-      await apiClient.delete(`/rooms/${roomId}`);
+      await apiClient.delete(`/rooms/${roomToDelete}`);
       toast.success('Room deleted successfully');
       fetchRooms(); // Refresh the rooms list
       fetchAssignments(); // Refresh assignments as well
     } catch (error) {
       console.error('Failed to delete room:', error);
       toast.error('Failed to delete room. Please try again.');
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setRoomToDelete(null);
     }
   };
 
@@ -825,6 +833,33 @@ export function RoomAssignment({ refreshKey }: { refreshKey: number }) {
                   {loading ? "Updating..." : "Update Assignment"}
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p>Are you sure you want to delete this room? This action cannot be undone.</p>
+            </div>
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={confirmDeleteRoom}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

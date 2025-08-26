@@ -16,6 +16,7 @@ import { AuthContext } from '@/context/auth-context';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { DentistDailySchedule } from '@/components/dentist-daily-schedule';
 
 interface Appointment {
   appointment_id: number;
@@ -687,21 +688,22 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
     console.time('generateTimeSlots'); // Performance measurement
 
     // Generate all possible time slots based on dentist's schedule
+    // Always use 15-minute slots regardless of appointment duration
     const allSlots: string[] = [];
 
     const [startHour, startMin] = workInfo.work_time_from.split(":").map(Number);
     const [endHour, endMin] = workInfo.work_time_to.split(":").map(Number);
-    const duration = parseInt(workInfo.appointment_duration, 10);
+    const slotDuration = 15; // Always 15 minutes per slot
 
     let start = startHour * 60 + startMin;
     const end = endHour * 60 + endMin;
 
-    while (start + duration <= end) {
+    while (start < end) {
       const hour = Math.floor(start / 60);
       const min = start % 60;
       const formatted = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
       allSlots.push(formatted);
-      start += duration;
+      start += slotDuration;
     }
 
     if (allSlots.length === 0) {
@@ -759,10 +761,11 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
   };
 
   // Helper function to check if a time slot is available
-  const isTimeSlotAvailable = (slotTime: string): boolean => {
+  const isTimeSlotAvailable = (slotTime: string, durationMinutes?: number): boolean => {
     if (!dentistWorkInfo) return false;
 
-    const duration = parseInt(dentistWorkInfo.appointment_duration, 10);
+    // Use provided duration or fall back to dentist's default
+    const duration = durationMinutes || parseInt(dentistWorkInfo.appointment_duration, 10);
     const toMinutes = (t: string) => {
       const [h, m] = t.split(':').map((n: string) => parseInt(n));
       return h * 60 + (m || 0);
@@ -805,17 +808,19 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
 
     setCreatingAppointment(true);
     try {
-      const timeTo = addMinutesToTime(time_from, dentistWorkInfo?.appointment_duration || "0");
-
-      // Check if the time slot is available before making the API call
-      if (!isTimeSlotAvailable(time_from)) {
-        throw new Error("This time slot is no longer available");
-      }
-
-      // Get selected service details
+      // Get selected service details to use its duration
       const selectedService = availableServices.find(service => 
         service.service_id.toString() === service_id
       );
+      
+      // Use service duration if available, otherwise fallback to dentist's default
+      const serviceDuration = selectedService?.duration || parseInt(dentistWorkInfo?.appointment_duration || "30", 10);
+      const timeTo = addMinutesToTime(time_from, serviceDuration.toString());
+
+      // Check if the time slot is available before making the API call
+      if (!isTimeSlotAvailable(time_from, serviceDuration)) {
+        throw new Error("This time slot is no longer available");
+      }
 
       // 1. Create the appointment
       const response = await apiClient.post(
@@ -1354,112 +1359,20 @@ export default function DentistSchedulePage({ params }: DentistScheduleProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Daily Schedule */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-lg font-medium">Daily Schedule</CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-auto"
-                  />
-                </div>
-              </CardHeader>
-              <CardContent>
-                {loadingAppointments || loadingBlockedSlots ? (
-                  <div className="text-center py-8 text-gray-500">Loading schedule...</div>
-                ) : (
-                  <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto">
-                    {timeSlots.map((time) => {
-                      const appointment = filteredAppointments.find(apt =>
-                        apt.time_from <= time && apt.time_to > time
-                      );
-                      const isBlocked = isTimeSlotBlocked(time);
-                      const isAvailable = !appointment && !isBlocked;
-
-                      // Apply appropriate styling based on availability
-                      const borderClass = isAvailable
-                        ? "border-gray-200"
-                        : appointment
-                          ? "border-blue-200"
-                          : "border-red-200";
-
-                      return (
-                        <div
-                          key={time}
-                          className={`flex items-center space-x-3 p-2 rounded-lg border ${borderClass}`}
-                        >
-                          <div className="text-sm font-medium w-16 text-gray-600">
-                            {time}
-                          </div>
-                          <div className="flex-1">
-                            {appointment ? (
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
-                                <div className="flex flex-col space-y-1">
-                                  <div className="flex items-center space-x-2">
-                                    <User className="w-4 h-4 text-gray-400" />
-                                    <span className="font-medium">
-                                      {appointment.patient?.name || appointment.temp_patient?.name || 'Unknown Patient'}
-                                      {appointment.temp_patient && (
-                                        <span className="ml-1 text-xs text-gray-500">(Temporary)</span>
-                                      )}
-                                    </span>
-                                    {appointment.status === 'pending' && appointment.temp_patient ? (
-                                      <Button
-                                        size="sm"
-                                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 h-6"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          // Navigate to the temp patients section with the specific temp patient ID
-                                          router.push(`/admin/patients?tempPatientId=${appointment.temp_patient?.temp_patient_id}`);
-                                        }}
-                                      >
-                                        Register
-                                      </Button>
-                                    ) : (
-                                      <Badge className={getStatusColor(appointment.status)}>
-                                        {appointment.status}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  {appointment.invoice_services?.service_name && (
-                                    <div className="text-sm text-gray-600 ml-6">
-                                      {appointment.invoice_services.service_name}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex flex-col items-end space-y-1">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-sm font-medium">Rs {appointment.invoice_services?.amount || appointment.fee || '0'}</span>
-                                    <Badge className={getPaymentStatusColor(appointment.payment_status)}>
-                                      {appointment.payment_status}
-                                    </Badge>
-                                  </div>
-                                  {/*{appointment.note && (
-                                    <div className="text-xs text-gray-500 text-right">
-                                      {appointment.note}
-                                    </div>
-                                  )}*/}
-                                </div>
-                              </div>
-                            ) : isBlocked ? (
-                              <div className="flex items-center space-x-2">
-                                <X className="w-4 h-4 text-red-500" />
-                                <span className="text-red-600 font-medium">Blocked</span>
-                                
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">Available</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <DentistDailySchedule
+              selectedDate={selectedDate}
+              appointments={appointments}
+              blockedDates={blockedDates}
+              dentistWorkInfo={dentistWorkInfo}
+              timeSlots={timeSlots}
+              onSlotSelect={(date, timeSlot) => {
+                setDate(date);
+                setTimeFrom(timeSlot);
+                setIsNewAppointmentOpen(true);
+              }}
+              onAppointmentCancel={handleAppointmentCancellation}
+              onDateChange={setSelectedDate}
+            />
           </div>
 
           {/* Sidebar */}
