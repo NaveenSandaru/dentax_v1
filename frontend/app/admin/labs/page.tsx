@@ -1511,12 +1511,12 @@ const DentalLabModule = () => {
     const [selectedPriority, setSelectedPriority] = useState<string>("all");
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [acceptingOrder, setAcceptingOrder] = useState<boolean>(false);
+    const [rejectingOrder, setRejectingOrder] = useState<boolean>(false);
 
     useEffect(() => {
       const query = requestSearchQuery.toLowerCase();
-      console.log(orders);
       let filtered = orders.filter((or) => or.status === "request");
-      console.log(filtered);
+
       // Search filter
       if (query) {
         filtered = filtered.filter(
@@ -1537,9 +1537,30 @@ const DentalLabModule = () => {
 
     const handleRequestAcceptance = async (id: string) => {
       setAcceptingOrder(true);
-      setTimeout(() => {
+      try {
+        const res = await apiClient.put(`orders/${id}`, { status: "accepted" });
+        if (res.status !== 202) throw new Error("Error accepting order");
+        fetchOrders();
+        setSelectedOrder(null);
+      } catch (err: any) {
+        setToast({ type: "error", message: err.message, show: true });
+      } finally {
         setAcceptingOrder(false);
-      }, 1000);
+      }
+    };
+
+    const handleRequestRejection = async (id: string) => {
+      setRejectingOrder(true);
+      try {
+        const res = await apiClient.delete(`orders/${id}`);
+        if (res.status == 500) throw new Error("Error rejecting order");
+        fetchOrders();
+        setSelectedOrder(null);
+      } catch (err: any) {
+        setToast({ type: "error", message: err.message, show: true });
+      } finally {
+        setRejectingOrder(false);
+      }
     };
 
     const getStatusColor = (status: string) => {
@@ -1570,12 +1591,10 @@ const DentalLabModule = () => {
 
     return (
       <div className="bg-white rounded-lg shadow">
-        {/* Header & Filters */}
+        {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
-              Lab Requests
-            </h2>
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Lab Requests</h2>
           </div>
 
           {/* Search & Filter */}
@@ -1613,7 +1632,7 @@ const DentalLabModule = () => {
           </div>
         </div>
 
-        {/* Table View (Medium & Large Screens) */}
+        {/* Table View */}
         <div className="hidden md:block overflow-x-auto">
           {filteredRequests.length > 0 ? (
             <table className="w-full">
@@ -1646,24 +1665,10 @@ const DentalLabModule = () => {
                       {order.order_id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {order.dentist?.name || "N/A"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {order.dentist?.dentist_id || "N/A"}
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium text-gray-900">{order.dentist?.name || "N/A"}</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {order.patient?.name || "N/A"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {order.patient?.patient_id || "N/A"}
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium text-gray-900">{order.patient?.name || "N/A"}</p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {order.work_type?.work_type || "N/A"}
@@ -1684,20 +1689,13 @@ const DentalLabModule = () => {
                       {order.due_date?.split("T")[0] || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`text-sm font-medium ${getPriorityColor(
-                          order.priority
-                        )}`}
-                      >
+                      <span className={`text-sm font-medium ${getPriorityColor(order.priority)}`}>
                         {order.priority}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex justify-evenly items-center w-full gap-x-2">
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
+                        <button onClick={() => setSelectedOrder(order)} className="text-blue-600 hover:text-blue-900">
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
@@ -1705,11 +1703,7 @@ const DentalLabModule = () => {
                           onClick={() => handleRequestAcceptance(order.order_id.toString())}
                           disabled={acceptingOrder}
                         >
-                          {acceptingOrder ? (
-                            <Loader className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <CircleCheckBig className="h-4 w-4" />
-                          )}
+                          {acceptingOrder ? <Loader className="h-4 w-4 animate-spin" /> : <CircleCheckBig className="h-4 w-4" />}
                         </button>
                       </div>
                     </td>
@@ -1718,119 +1712,92 @@ const DentalLabModule = () => {
               </tbody>
             </table>
           ) : (
-            <p className="text-center text-gray-500 py-4">
-              No requests available
-            </p>
+            <p className="text-center text-gray-500 py-4">No requests available</p>
           )}
         </div>
 
-        {/* Mobile Card View */}
-        <div className="md:hidden">
-          <div className="divide-y divide-gray-200">
-            {filteredRequests.map((order) => (
-              <div key={order.order_id} className="p-4 hover:bg-gray-50">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <span className="text-sm font-medium text-gray-900">
-                      Request #{order.order_id}
-                    </span>
-                    <span
-                      className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                        order.status
-                      )}`}
-                    >
-                      {order.status}
-                    </span>
-                  </div>
-                  <span
-                    className={`text-sm font-medium ${getPriorityColor(
-                      order.priority
-                    )}`}
-                  >
-                    {order.priority} Priority
-                  </span>
-                </div>
-
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-start">
-                    <User className="h-4 w-4 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-xs text-gray-500">Patient</p>
-                      <p className="text-sm font-medium">
-                        {order.patient?.name || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <User className="h-4 w-4 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-xs text-gray-500">Dentist</p>
-                      <p className="text-sm font-medium">
-                        {order.dentist?.name || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <Package className="h-4 w-4 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-xs text-gray-500">Work Type</p>
-                      <p className="text-sm font-medium">
-                        {order.work_type?.work_type || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <Calendar className="h-4 w-4 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-xs text-gray-500">Due Date</p>
-                      <p className="text-sm font-medium">
-                        {order.due_date?.split("T")[0] || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 mr-2" />
-                    <div>
-                      <p className="text-xs text-gray-500">Lab</p>
-                      <p className="text-sm font-medium">
-                        {order.lab?.name || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-2 border-t border-gray-100">
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
-                    title="View Details"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button
-                    className="p-2 text-green-500 hover:bg-green-50 rounded-full"
-                    onClick={() => handleRequestAcceptance(order.order_id.toString())}
-                    disabled={acceptingOrder}
-                    title="Accept Request"
-                  >
-                    {acceptingOrder ? (
-                      <Loader className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <CircleCheckBig className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Request Details Modal */}
+        {selectedOrder && (
+          <RequestDetails
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            onAccept={handleRequestAcceptance}
+            onReject={handleRequestRejection}
+            acceptingOrder={acceptingOrder}
+            rejectingOrder={rejectingOrder}
+          />
+        )}
       </div>
     );
   };
+
+  const RequestDetails = ({ order, onClose, onAccept, onReject, acceptingOrder, rejectingOrder }: any) => (
+    <div className="fixed inset-0 bg-gray-500/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900">Order Details - {order.order_id}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 space-y-6">
+          {/* Patient & Order Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Patient Information</h3>
+              <p><span className="font-medium">Name:</span> {order.patient?.name || "N/A"}</p>
+              <p><span className="font-medium">Patient ID:</span> {order.patient?.patient_id || "N/A"}</p>
+              <p><span className="font-medium">Dentist:</span> Dr. {order.dentist?.name}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Order Information</h3>
+              <p><span className="font-medium">Work Type:</span> {order.work_type?.work_type || "N/A"}</p>
+              <p><span className="font-medium">Lab:</span> {order.lab?.name || "N/A"}</p>
+              <p><span className="font-medium">Due Date:</span> {order.due_date?.split("T")[0]}</p>
+            </div>
+          </div>
+
+          {/* Progress OR Accept/Reject */}
+          {order.status === "request" ? (
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={() => onAccept(order.order_id)}
+                disabled={acceptingOrder}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+              >
+                {acceptingOrder ? "Accepting..." : "Accept"}
+              </button>
+              <button
+                onClick={() => onReject(order.order_id)}
+                disabled={rejectingOrder}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+              >
+                {rejectingOrder ? "Rejecting..." : "Reject"}
+              </button>
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Progress Tracking</h3>
+              {stages?.map((stage, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className={`w-4 h-4 rounded-full ${stage.completed ? "bg-green-500" : "bg-gray-300"}`}></div>
+                  <span className={`flex-1 ${stage.completed ? "text-gray-900" : "text-gray-500"}`}>
+                    {stage.name}
+                  </span>
+                  {stage.completed && stage.date?.split("T")[0] && (
+                    <span className="text-sm text-gray-500">{stage.date.split("T")[0]}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   const WorkTypes = () => {
     interface WorkType {
@@ -2460,7 +2427,6 @@ const DentalLabModule = () => {
       </div>
     );
   }
-
 
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto">
