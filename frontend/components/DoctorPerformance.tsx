@@ -680,7 +680,7 @@ export default function DoctorPerformanceDashboard({ user, onClose }: Props) {
                 </div>
               </div>
             )}
-            {user.appointment_fee && (
+            {/*user.appointment_fee && (
               <div className="flex items-start gap-4">
                 <DollarSign className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -688,7 +688,7 @@ export default function DoctorPerformanceDashboard({ user, onClose }: Props) {
                   <p className="text-sm lg:text-base text-gray-600">LKR{user.appointment_fee}</p>
                 </div>
               </div>
-            )}
+            )*/}
             {user.work_days_from && user.work_days_to && (
               <div className="flex items-start gap-4">
                 <Calendar className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
@@ -715,7 +715,7 @@ export default function DoctorPerformanceDashboard({ user, onClose }: Props) {
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl xl:max-w-[1400px] max-h-[85vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-7xl xl:max-w-[1400px] md:max-h-[85vh] max-h-[80vh] overflow-y-auto p-0">
         <DialogHeader className="border-b border-gray-100 p-6 lg:p-8">
           <DialogTitle className="text-xl lg:text-2xl font-semibold text-gray-900">
             {isDentist ? 'Doctor Performance Dashboard' : 'Staff Profile'}

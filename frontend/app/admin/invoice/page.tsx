@@ -1054,7 +1054,7 @@ const InvoiceManagementPage: React.FC<InvoiceManagementProps> = ({ userRole = 'a
             }
           }}
         >
-          <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-4xl md:max-h-[90vh] max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-xl sm:text-2xl font-bold text-emerald-700">
@@ -1283,7 +1283,7 @@ const InvoiceManagementPage: React.FC<InvoiceManagementProps> = ({ userRole = 'a
             }
           }}
         >
-          <DialogContent className="max-w-md">
+          <DialogContent className="md:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-gray-900">Confirm Deletion</DialogTitle>
             </DialogHeader>

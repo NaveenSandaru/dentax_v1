@@ -310,7 +310,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[85vw] !max-w-none max-h-[90vh] overflow-y-auto overflow-x-visible">
+      <DialogContent className="md:w-[85vw] md:!max-w-none md:max-h-[90vh] max-h-[80vh] overflow-y-auto overflow-x-visible">
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold text-emerald-700">Create New Invoice</DialogTitle>
         </DialogHeader>
@@ -356,7 +356,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                       placeholder="Search by patient name, ID, or email..."
                       className={`w-full px-4 py-3 text-base border-2 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${!patientValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
                     />
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className="hidden sm:block absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     
                     {showPatientDropdown && patientSearchResults.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white shadow-2xl max-h-60 rounded-lg py-1 text-base border-2 border-emerald-200 overflow-auto focus:outline-none z-[9999]" style={{ zIndex: 9999 }}>
@@ -455,7 +455,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                       placeholder="Search by dentist name, ID, or email..."
                       className={`w-full px-4 py-3 text-base border-2 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${!dentistValidated ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
                     />
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className="hidden sm:block absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     
                     {showDentistDropdown && dentistSearchResults.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white shadow-2xl max-h-60 rounded-lg py-1 text-base border-2 border-emerald-200 overflow-auto focus:outline-none z-[9999]" style={{ zIndex: 9999 }}>

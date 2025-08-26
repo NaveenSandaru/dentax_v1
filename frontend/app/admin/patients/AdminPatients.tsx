@@ -1057,7 +1057,7 @@ const PatientManagement = () => {
                   </div>
                   <Button
                     onClick={() => handleConvertTempPatient(tempPatient)}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-4 py-2"
+                    className="bg-blue-500 hover:bg-blue-600text-white text-sm px-4 py-2"
                   >
                     Register
                   </Button>
@@ -1093,7 +1093,7 @@ const PatientManagement = () => {
         {/* Overlay Form */}
         {showOverlay && (
           <Dialog open={showOverlay} onOpenChange={setShowOverlay}>
-            <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-2xl md:max-h-[85vh] max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   {editingPatient ? 'Edit Patient' : 'Add New Patient'}
@@ -1287,7 +1287,7 @@ const PatientManagement = () => {
         {/* Convert Temp Patient Overlay */}
         {showConvertOverlay && convertingTempPatient && (
           <Dialog open={showConvertOverlay} onOpenChange={setShowConvertOverlay}>
-            <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-2xl md:max-h-[90vh] max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   Convert Temp Patient to a Patient
@@ -1425,7 +1425,7 @@ const PatientManagement = () => {
         {/* Add Temp Patient Overlay */}
         {showTempPatientOverlay && (
           <Dialog open={showTempPatientOverlay} onOpenChange={setShowTempPatientOverlay}>
-            <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-md md:max-h-[90vh] max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl">
                   Add Temporary Patient
