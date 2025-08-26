@@ -530,7 +530,7 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
         />
 
         {/* Overlay Content with improved design and proper scrolling */}
-        <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-7xl max-h-[85vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 border overflow-hidden">
+        <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-7xl md:max-h-[85vh] max-h-[80vh] flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-300 border overflow-hidden">
           {/* Enhanced Header */}
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 sm:px-4 py-3 flex items-start sm:items-center justify-between rounded-t-lg flex-shrink-0">
             <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
@@ -878,7 +878,7 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
                                   handleFileDownload(report.record_url)
                                 }
                               >
-                                <Download className="h-3 w-3 mr-1" />
+                                <Download className="hidden sm:block h-3 w-3 mr-1" />
                                 View
                               </Button>
                               <Button
@@ -1621,7 +1621,7 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
 
       {/* View Consent Form Dialog */}
       <Dialog open={isViewFormOpen} onOpenChange={setIsViewFormOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px] md:max-h-[85vh] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Consent Form Details</DialogTitle>
           </DialogHeader>
@@ -1761,7 +1761,7 @@ const PatientDetailsOverlay: React.FC<PatientDetailsOverlayProps> = ({
 
       {/* Read-Only Consent Form View Dialog */}
       <Dialog open={showReadOnlyView} onOpenChange={setShowReadOnlyView}>
-        <DialogContent className="sm:max-w-[85%] sm:w-[1100px] overflow-y-auto max-h-[85vh]">
+        <DialogContent className="sm:max-w-[85%] sm:w-[1100px] overflow-y-auto md:max-h-[85vh] max-h-[80vh]">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-2xl font-semibold text-gray-900">
               Consent Form - Read Only

@@ -152,7 +152,7 @@ export default function ViewUserDialog({ user, onClose, loading = false }: Props
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent className="md:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="md:max-w-2xl md:max-h-[85vh] max-h-[80vh] overflow-y-auto">
         <DialogHeader className="border-b border-gray-100 pb-6">
           <DialogTitle className="text-xl font-semibold text-gray-900">
             Staff Profile
@@ -240,11 +240,11 @@ export default function ViewUserDialog({ user, onClose, loading = false }: Props
                 <div className="space-y-4">
                   {user.service_types && renderInfoItem(<Briefcase className="w-4 h-4" />, "Service Types", user.service_types)}
                   {user.language && renderInfoItem(<Globe className="w-4 h-4" />, "Language", user.language)}
-                  {isDentist && user.appointment_fee !== undefined && user.appointment_fee !== null && renderInfoItem(
+                  {/*isDentist && user.appointment_fee !== undefined && user.appointment_fee !== null && renderInfoItem(
                     <DollarSign className="w-4 h-4" />, 
                     "Consultation Fee", 
                     `LKR${Number(user.appointment_fee).toFixed(2)}`
-                  )}
+                  )*/}
                 </div>
               </CardContent>
             </Card>
@@ -258,7 +258,7 @@ export default function ViewUserDialog({ user, onClose, loading = false }: Props
                 <div className="space-y-4">
                   {formatWorkDays() && renderInfoItem(<Calendar className="w-4 h-4" />, "Working Days", formatWorkDays())}
                   {formatWorkTime() && renderInfoItem(<Clock className="w-4 h-4" />, "Working Hours", formatWorkTime())}
-                  {user.appointment_duration && renderInfoItem(<Timer className="w-4 h-4" />, "Appointment Duration", user.appointment_duration)}
+                  {/*user.appointment_duration && renderInfoItem(<Timer className="w-4 h-4" />, "Appointment Duration", user.appointment_duration)*/}
                 </div>
               </CardContent>
             </Card>
