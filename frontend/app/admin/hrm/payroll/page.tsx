@@ -338,10 +338,10 @@ export default function PayrollPage() {
     <div className="w-full">
       <div className="space-y-6 pb-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center flex-col md:flex-row gap-4 md:gap-0 justify-between">
           <h2 className="text-2xl font-bold">Employees Salary Processing</h2>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mx-2 md:mx-0">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input

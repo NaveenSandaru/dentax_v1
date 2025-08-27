@@ -335,9 +335,7 @@ export default function TimeManagementPage() {
               </div>
             </CardContent>
           </Card>
-          
-
-          
+                    
           <Card className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
               <div className="flex items-center">
@@ -386,81 +384,158 @@ export default function TimeManagementPage() {
                   <div>
                     <CardTitle className="text-xl">Today's Attendance</CardTitle>
                     <CardDescription>
-                      Staff time tracking for {new Date().toLocaleDateString('en-US', { dateStyle: 'full' })}
+                      Staff time tracking for{" "}
+                      {new Date().toLocaleDateString("en-US", { dateStyle: "full" })}
                     </CardDescription>
                   </div>
-                  
                 </div>
               </CardHeader>
+
               <CardContent>
                 {loading ? (
                   <div className="text-center py-4">Loading attendance data...</div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableCaption>Staff attendance record for today</TableCaption>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Employee</TableHead>
-                          <TableHead>Clock In</TableHead>
-                          <TableHead>Clock Out</TableHead>
-                          <TableHead>Hours</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {attendanceRecords.map((record) => (
-                          <TableRow key={record.eid}>
-                            <TableCell className="font-medium">{record.name}</TableCell>
-                            <TableCell>{record.clock_in || "-"}</TableCell>
-                            <TableCell>{record.clock_out || "-"}</TableCell>
-                            <TableCell>{record.hours || "0"}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={getStatusBadgeColor(record.status)}>
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <Table>
+                        <TableCaption>Staff attendance record for today</TableCaption>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Employee</TableHead>
+                            <TableHead>Clock In</TableHead>
+                            <TableHead>Clock Out</TableHead>
+                            <TableHead>Hours</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {attendanceRecords.map((record) => (
+                            <TableRow key={record.eid}>
+                              <TableCell className="font-medium">{record.name}</TableCell>
+                              <TableCell>{record.clock_in || "-"}</TableCell>
+                              <TableCell>{record.clock_out || "-"}</TableCell>
+                              <TableCell>{record.hours || "0"}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={getStatusBadgeColor(record.status)}
+                                >
+                                  {record.status || "Unknown"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex space-x-2">
+                                  {!record.clock_in ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-green-600 hover:text-green-800"
+                                      onClick={() => handleClockIn(record.eid)}
+                                      disabled={clockingInEid === record.eid}
+                                    >
+                                      {clockingInEid === record.eid ? (
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
+                                      ) : (
+                                        <LogIn className="h-4 w-4 mr-1" />
+                                      )}
+                                      Clock In
+                                    </Button>
+                                  ) : !record.clock_out ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-red-600 hover:text-red-800"
+                                      onClick={() => handleClockOut(record.eid)}
+                                      disabled={clockingOutEid === record.eid}
+                                    >
+                                      {clockingOutEid === record.eid ? (
+                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                                      ) : (
+                                        <LogOut className="h-4 w-4 mr-1" />
+                                      )}
+                                      Clock Out
+                                    </Button>
+                                  ) : null}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="space-y-4 md:hidden">
+                      {attendanceRecords.map((record) => (
+                        <div
+                          key={record.eid}
+                          className="border rounded-lg p-4 shadow-sm bg-white"
+                        >
+                          <div className="font-medium text-lg">{record.name}</div>
+
+                          <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                            <div>
+                              <span className="font-medium">Clock In:</span>{" "}
+                              {record.clock_in || "-"}
+                            </div>
+                            <div>
+                              <span className="font-medium">Clock Out:</span>{" "}
+                              {record.clock_out || "-"}
+                            </div>
+                            <div>
+                              <span className="font-medium">Hours:</span>{" "}
+                              {record.hours || "0"}
+                            </div>
+                            <div>
+                              <span className="font-medium">Status:</span>{" "}
+                              <Badge
+                                variant="outline"
+                                className={getStatusBadgeColor(record.status)}
+                              >
                                 {record.status || "Unknown"}
                               </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex space-x-2">
-                                {!record.clock_in ? (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="text-green-600 hover:text-green-800"
-                                    onClick={() => handleClockIn(record.eid)}
-                                    disabled={clockingInEid === record.eid}
-                                  >
-                                    {clockingInEid === record.eid ? (
-                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
-                                    ) : (
-                                      <LogIn className="h-4 w-4 mr-1" />
-                                    )}
-                                    Clock In
-                                  </Button>
-                                ) : !record.clock_out ? (
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="text-red-600 hover:text-red-800"
-                                    onClick={() => handleClockOut(record.eid)}
-                                    disabled={clockingOutEid === record.eid}
-                                  >
-                                    {clockingOutEid === record.eid ? (
-                                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
-                                    ) : (
-                                      <LogOut className="h-4 w-4 mr-1" />
-                                    )}
-                                    Clock Out
-                                  </Button>
-                                ) : null}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 flex justify-end">
+                            {!record.clock_in ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:text-green-800"
+                                onClick={() => handleClockIn(record.eid)}
+                                disabled={clockingInEid === record.eid}
+                              >
+                                {clockingInEid === record.eid ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
+                                ) : (
+                                  <LogIn className="h-4 w-4 mr-1" />
+                                )}
+                                Clock In
+                              </Button>
+                            ) : !record.clock_out ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-800"
+                                onClick={() => handleClockOut(record.eid)}
+                                disabled={clockingOutEid === record.eid}
+                              >
+                                {clockingOutEid === record.eid ? (
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                                ) : (
+                                  <LogOut className="h-4 w-4 mr-1" />
+                                )}
+                                Clock Out
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>

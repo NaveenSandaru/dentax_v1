@@ -78,7 +78,7 @@ const PatientList = memo(({
   };
 
   return (
-    <div className="w-full lg:w-96 bg-emerald-50 border rounded-3xl border-emerald-200 flex flex-col overflow-hidden">
+    <div className="md:w-full w-[85%] lg:w-96 bg-emerald-50 border rounded-3xl border-emerald-200 flex flex-col overflow-hidden">
       <div className="p-4 border-b border-emerald-200 flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

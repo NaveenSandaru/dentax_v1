@@ -56,6 +56,23 @@ export default function LeavesManagementPage() {
     casual: 0,
     pending: 0
   });
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null);
+
+  // Function to trigger reject dialog
+  const confirmReject = (leave: LeaveRequest) => {
+    setSelectedLeave(leave);
+    setRejectDialogOpen(true);
+  };
+
+  // Function to handle confirm
+  const handleConfirmReject = async () => {
+    if (selectedLeave) {
+      await handleStatusChange(selectedLeave, "Rejected");
+      setRejectDialogOpen(false);
+      setSelectedLeave(null);
+    }
+};
   
   // Form state for new leave request
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -309,77 +326,162 @@ export default function LeavesManagementPage() {
           {loading ? (
             <div className="text-center py-4">Loading leave data...</div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableCaption>List of all employee leave requests</TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>From</TableHead>
-                    <TableHead>To</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {leaveRequests.length === 0 ? (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableCaption>List of all employee leave requests</TableCaption>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center">
-                        No leave requests found
-                      </TableCell>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>From</TableHead>
+                      <TableHead>To</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ) : (
-                    leaveRequests.map((leave, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">
-                          {leave.employee_name}
-                          {leave.job_title && <div className="text-xs text-muted-foreground">{leave.job_title}</div>}
-                        </TableCell>
-                        <TableCell>{leave.type}</TableCell>
-                        <TableCell>{leave.from_date}</TableCell>
-                        <TableCell>{leave.to_date}</TableCell>
-                        <TableCell>
-                          {leave.duration || calculateDuration(leave.from_date, leave.to_date)} days
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getStatusColor(leave.status)}>
-                            {leave.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {leave.status === 'Pending' && (
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleStatusChange(leave, 'Approved')}
-                              >
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 w-8 p-0"
-                                onClick={() => handleStatusChange(leave, 'Rejected')}
-                              >
-                                <X className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          )}
+                  </TableHeader>
+                  <TableBody>
+                    {leaveRequests.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center">
+                          No leave requests found
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                    ) : (
+                      leaveRequests.map((leave, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            {leave.employee_name}
+                            {leave.job_title && (
+                              <div className="text-xs text-muted-foreground">
+                                {leave.job_title}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>{leave.type}</TableCell>
+                          <TableCell>{leave.from_date}</TableCell>
+                          <TableCell>{leave.to_date}</TableCell>
+                          <TableCell>
+                            {leave.duration ||
+                              calculateDuration(leave.from_date, leave.to_date)}{" "}
+                            days
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={getStatusColor(leave.status)}
+                            >
+                              {leave.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {leave.status === "Pending" && (
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() =>
+                                    handleStatusChange(leave, "Approved")
+                                  }
+                                >
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() =>
+                                    confirmReject(leave)
+                                  }
+                                >
+                                  <X className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="space-y-4 md:hidden">
+                {leaveRequests.length === 0 ? (
+                  <div className="text-center py-4">No leave requests found</div>
+                ) : (
+                  leaveRequests.map((leave, index) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 shadow-sm bg-white"
+                    >
+                      <div className="font-medium text-lg">{leave.employee_name}</div>
+                      {leave.job_title && (
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {leave.job_title}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="font-medium">Type:</span> {leave.type}
+                        </div>
+                        <div>
+                          <span className="font-medium">From:</span> {leave.from_date}
+                        </div>
+                        <div>
+                          <span className="font-medium">To:</span> {leave.to_date}
+                        </div>
+                        <div>
+                          <span className="font-medium">Duration:</span>{" "}
+                          {leave.duration ||
+                            calculateDuration(leave.from_date, leave.to_date)}{" "}
+                          days
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(leave.status)}
+                        >
+                          {leave.status}
+                        </Badge>
+
+                        {leave.status === "Pending" && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleStatusChange(leave, "Approved")}
+                            >
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                              onClick={() => confirmReject(leave)}
+                            >
+                              <X className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
-      
+            
       {/* Add Leave Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -474,6 +576,27 @@ export default function LeavesManagementPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Confirmation Dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Rejection</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reject this leave request? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmReject}>
+              Reject Leave
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
