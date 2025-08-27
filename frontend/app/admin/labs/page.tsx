@@ -4,8 +4,6 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Loader, Calendar, Clock, User, MapPin, Phone, Mail, Package, FileText, AlertCircle, CheckCircle, Eye, Edit, Plus, Filter, X, CircleCheckBig, Trash2, Loader2 } from 'lucide-react';
 import { AuthContext } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
-import { headers } from 'next/headers';
 import { LabOrderForm } from '@/components/LabOrderForm';
 import { Search as SearchIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -18,6 +16,7 @@ import AddMaterialDialog from '@/components/AddMaterialDialog';
 import EditMaterialDialog from '@/components/EditMaterialDialog';
 import AddStageDialog from '@/components/AddStageDialog';
 import EditStageDialog from '@/components/EditStageDialog';
+
 // ======================== TYPES ========================
 
 type Lab = {
@@ -76,12 +75,12 @@ type OrderFile = {
 type PatientType = {
   patient_id: string;
   name: string;
-}
+};
 
 type DenstistType = {
   dentist_id: string;
   name: string;
-}
+};
 
 type Order = {
   order_id: number;
@@ -164,7 +163,7 @@ const DentalLabModule = () => {
         date: assignment?.date || null
       };
     });
-  }
+  };
 
   const getSelectedFileTypes = (checklist: typeof submissionChecklist) => {
     const selected: string[] = [];
@@ -199,7 +198,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingOrders(false);
     }
-  }
+  };
 
   const fetchStages = async () => {
     setLoadingStages(true);
@@ -222,7 +221,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingStages(false);
     }
-  }
+  };
 
   const fetchStageAssigns = async () => {
     setLoadingStageAssigns(true);
@@ -245,7 +244,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingStageAssigns(false);
     }
-  }
+  };
 
   const fetchLabs = async () => {
     setLoadingLabs(true);
@@ -268,7 +267,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingLabs(false);
     }
-  }
+  };
 
   const fetchWorkTypes = async () => {
     setLoadingWorkTypes(true);
@@ -291,7 +290,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingWorkTypes(false);
     }
-  }
+  };
 
   const fetchPatients = async () => {
     setLoadingPatients(true);
@@ -314,7 +313,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingPatients(false);
     }
-  }
+  };
 
   const fetchDentists = async () => {
     setLoadingDentists(true);
@@ -337,7 +336,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingDentists(false);
     }
-  }
+  };
 
   const fetchShades = async () => {
     setLoadingShades(true);
@@ -360,7 +359,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingShades(false);
     }
-  }
+  };
 
   const fetchMaterials = async () => {
     setLoadingMaterials(true);
@@ -383,7 +382,7 @@ const DentalLabModule = () => {
     finally {
       setLoadingMaterials(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (selectedOrder) {
@@ -1949,7 +1948,7 @@ const DentalLabModule = () => {
         </div>
       </div>
     )
-  }
+  };
 
   const Shades = () => {
     interface Shade {
@@ -2426,7 +2425,7 @@ const DentalLabModule = () => {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 overflow-auto">
