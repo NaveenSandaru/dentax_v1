@@ -267,7 +267,7 @@ export default function HomePage() {
             </div>
 
             {/* Right Column: Image */}
-            <div className="flex items-center justify-center h-[70vh] min-h-[500px]">
+            <div className="flex items-center justify-center md:h-[70vh] md:min-h-[500px]">
               <img
                 src="/mockup.png"
                 alt="Dentax Hero Image"
@@ -433,7 +433,6 @@ export default function HomePage() {
                 </Badge>
               )}
             </div>
-
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
